@@ -239,7 +239,12 @@ class ScenarioListFragment : Fragment(), PermissionsDialogFragment.PermissionDia
             return
         }
 
-        showMediaProjectionWarning()
+        if (scenarioViewModel.isScenarioRunning()) {
+            scenarioViewModel.loadScenario(scenario)
+            activity?.finish()
+        } else {
+            showMediaProjectionWarning()
+        }
     }
 
     /** Show the media projection start warning. */

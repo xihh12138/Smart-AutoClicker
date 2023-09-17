@@ -39,6 +39,6 @@ class ScenarioActivity : AppCompatActivity() {
         setSupportActionBar(findViewById(R.id.toolbar))
 
         supportActionBar?.title = resources.getString(R.string.activity_scenario_title)
-        scenarioViewModel.stopScenario()
+//        scenarioViewModel.stopScenario()
     }
 }

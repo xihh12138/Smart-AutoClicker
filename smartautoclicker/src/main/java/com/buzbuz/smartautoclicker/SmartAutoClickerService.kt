@@ -64,14 +64,17 @@ class SmartAutoClickerService : AccessibilityService(), AndroidExecutor {
     companion object {
         /** The identifier for the foreground notification of this service. */
         private const val NOTIFICATION_ID = 42
+
         /** The channel identifier for the foreground notification of this service. */
         private const val NOTIFICATION_CHANNEL_ID = "SmartAutoClickerService"
+
         /** The instance of the [LocalService], providing access for this service to the Activity. */
         private var LOCAL_SERVICE_INSTANCE: LocalService? = null
             set(value) {
                 field = value
                 LOCAL_SERVICE_CALLBACK?.invoke(field)
             }
+
         /** Callback upon the availability of the [LOCAL_SERVICE_INSTANCE]. */
         private var LOCAL_SERVICE_CALLBACK: ((LocalService?) -> Unit)? = null
             set(value) {
@@ -93,8 +96,10 @@ class SmartAutoClickerService : AccessibilityService(), AndroidExecutor {
 
     /** The engine for the detection. */
     private var detectorEngine: DetectorEngine? = null
+
     /** The root controller for the overlay ui. */
-    private var rootOverlayController: OverlayController? = null
+    private var rootOverlayController: MainMenu? = null
+
     /** True if the overlay is started, false if not. */
     private var isStarted: Boolean = false
 
@@ -124,7 +129,13 @@ class SmartAutoClickerService : AccessibilityService(), AndroidExecutor {
             startForeground(NOTIFICATION_ID, createNotification(scenario.name))
 
             detectorEngine = DetectorEngine.getDetectorEngine(this@SmartAutoClickerService).apply {
-                startScreenRecord(this@SmartAutoClickerService, resultCode, data, scenario, this@SmartAutoClickerService)
+                startScreenRecord(
+                    this@SmartAutoClickerService,
+                    resultCode,
+                    data,
+                    scenario,
+                    this@SmartAutoClickerService
+                )
             }
 
             Handler(Looper.getMainLooper()).postDelayed({
@@ -152,6 +163,16 @@ class SmartAutoClickerService : AccessibilityService(), AndroidExecutor {
             detectorEngine = null
 
             stopForeground(Service.STOP_FOREGROUND_REMOVE)
+        }
+
+        fun isRunning(): Boolean = isStarted
+
+        fun loadScenario(scenario: Scenario) {
+            startForeground(NOTIFICATION_ID, createNotification(scenario.name))
+
+            detectorEngine!!.updateScenario(scenario)
+
+            rootOverlayController!!.updateScenario(scenario)
         }
     }
 
@@ -239,8 +260,11 @@ class SmartAutoClickerService : AccessibilityService(), AndroidExecutor {
         rootOverlayController?.dump(writer, prefix) ?: writer.println("$prefix None")
     }
 
-    override fun onInterrupt() { /* Unused */ }
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) { /* Unused */ }
+    override fun onInterrupt() { /* Unused */
+    }
+
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) { /* Unused */
+    }
 }
 
 /** Tag for the logs. */

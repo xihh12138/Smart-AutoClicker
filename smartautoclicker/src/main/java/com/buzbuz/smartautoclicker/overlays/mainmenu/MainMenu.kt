@@ -54,7 +54,7 @@ import kotlinx.coroutines.launch
  *
  * @param context the Android Context for the overlay menu shown by this controller.
  */
-class MainMenu(context: Context, private val scenario: Scenario) : OverlayMenuController(context) {
+class MainMenu(context: Context, private var scenario: Scenario) : OverlayMenuController(context) {
 
     /** The view model for this menu. */
     private var viewModel: MainMenuModel? = MainMenuModel(context).apply {
@@ -222,5 +222,9 @@ class MainMenu(context: Context, private val scenario: Scenario) : OverlayMenuCo
                 }
             }
         }
+    }
+
+    fun updateScenario(scenario: Scenario) {
+        this.scenario = scenario
     }
 }

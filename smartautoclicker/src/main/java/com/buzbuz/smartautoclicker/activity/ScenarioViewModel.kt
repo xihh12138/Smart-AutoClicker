@@ -46,6 +46,7 @@ class ScenarioViewModel(application: Application) : AndroidViewModel(application
 
     /** The repository providing access to the database. */
     private val repository = Repository.getRepository(application)
+
     /** Callback upon the availability of the [SmartAutoClickerService]. */
     private val serviceConnection: (SmartAutoClickerService.LocalService?) -> Unit = { localService ->
         clickerService = localService
@@ -62,8 +63,10 @@ class ScenarioViewModel(application: Application) : AndroidViewModel(application
 
     /** Backing property for [menuState]. */
     private val _menuState = MutableStateFlow(MenuState.SELECTION)
+
     /** Current menu state. */
     val menuState: StateFlow<MenuState> = _menuState
+
     /** Current menu UI state. */
     val menuUiState: Flow<MenuUiState> = _menuState
         .combine(selectedForBackup) { menuState, selection ->
@@ -77,6 +80,7 @@ class ScenarioViewModel(application: Application) : AndroidViewModel(application
                     createBackupVisibility = false,
                     createBackupEnabled = false,
                 )
+
                 MenuState.EXPORT -> MenuUiState(
                     state = menuState,
                     searchVisibility = false,
@@ -87,6 +91,7 @@ class ScenarioViewModel(application: Application) : AndroidViewModel(application
                     createBackupEnabled = selection.isNotEmpty(),
                     createBackupAlpha = if (selection.isNotEmpty()) 255 else 127
                 )
+
                 MenuState.SELECTION -> MenuUiState(
                     state = menuState,
                     searchVisibility = true,
@@ -101,9 +106,15 @@ class ScenarioViewModel(application: Application) : AndroidViewModel(application
 
     /** The currently searched action name. Null if no is. */
     private val searchQuery = MutableStateFlow<String?>(null)
+
     /** Flow upon the list of scenarios. */
     val scenarioList: StateFlow<List<ScenarioItem>> =
-        combine(repository.scenarios, searchQuery, _menuState, selectedForBackup) { scenarios, query, menuState, backupSelection ->
+        combine(
+            repository.scenarios,
+            searchQuery,
+            _menuState,
+            selectedForBackup
+        ) { scenarios, query, menuState, backupSelection ->
             scenarios.mapNotNull { scenario ->
                 if (query.isNullOrEmpty() || scenario.name.contains(query.toString(), true)) {
                     ScenarioItem(
@@ -250,10 +261,16 @@ class ScenarioViewModel(application: Application) : AndroidViewModel(application
         clickerService?.start(resultCode, data, scenario)
     }
 
+    fun loadScenario(scenario: Scenario) {
+        clickerService?.loadScenario(scenario)
+    }
+
     /** Stop the overlay UI and release all associated resources. */
     fun stopScenario() {
         clickerService?.stop()
     }
+
+    fun isScenarioRunning(): Boolean = clickerService?.isRunning() == true
 
     /**
      * Update the action search query.
@@ -268,8 +285,10 @@ class ScenarioViewModel(application: Application) : AndroidViewModel(application
 enum class MenuState {
     /** The user can select a scenario to be played/edited.*/
     SELECTION,
+
     /** The user is searching for a scenario. */
     SEARCH,
+
     /** The user is selecting the scenarios to export. */
     EXPORT,
 }

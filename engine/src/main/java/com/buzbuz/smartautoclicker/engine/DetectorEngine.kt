@@ -71,6 +71,7 @@ class DetectorEngine(context: Context) {
 
         /** Tag for logs */
         private const val TAG = "DetectorEngine"
+
         /**
          * Waiting delay after getting a null image.
          * This is to avoid spamming when there is no image.
@@ -107,34 +108,43 @@ class DetectorEngine(context: Context) {
 
     /** Repository providing data for the scenario. */
     private val scenarioRepository = Repository.getRepository(context)
+
     /** Monitors the state of the screen. */
     private val screenMetrics = ScreenMetrics(context)
 
     /** Record the screen and provide images via [ScreenRecorder.acquireLatestImage]. */
     private val screenRecorder = ScreenRecorder()
+
     /** Process the events conditions to detect them on the screen. */
     private var scenarioProcessor: ScenarioProcessor? = null
+
     /** Detect the condition images on the screen image. */
     private var imageDetector: ImageDetector? = null
+
     /** The executor for the actions requiring an interaction with Android. */
     private var androidExecutor: AndroidExecutor? = null
 
     /** The scope for the flows declared in the detector engine. */
     private val detectorEngineScope = CoroutineScope(Job() + Dispatchers.IO)
+
     /** Coroutine scope for the image processing. */
     private var processingScope: CoroutineScope? = null
+
     /** Coroutine job for the image currently processed. */
     private var processingJob: Job? = null
+
     /** Coroutine job for the cleaning of the detection once stopped. */
     private var processingShutdownJob: Job? = null
 
     /** Backing property for [state].*/
     private val _state = MutableStateFlow(DetectorState.CREATED)
+
     /** Backing property for [isDebugging]. */
     private val _isDebugging = MutableStateFlow(false)
 
     /** Current state of the detector. */
     val state: StateFlow<DetectorState> = _state
+
     /** True if we are collecting debug data, false if not. */
     val isDebugging: StateFlow<Boolean> = _isDebugging
 
@@ -145,6 +155,7 @@ class DetectorEngine(context: Context) {
 
     /** The current scenario. */
     private val _scenario = MutableStateFlow<Scenario?>(null)
+
     /** The list of events for the [_scenario]. */
     val scenarioEvents: StateFlow<List<Event>> = _scenario
         .flatMapLatest {
@@ -157,6 +168,7 @@ class DetectorEngine(context: Context) {
             SharingStarted.Eagerly,
             emptyList()
         )
+
     /** The scenario with its end conditions. */
     private val scenarioEndConditions: StateFlow<Pair<Scenario, List<EndCondition>>?> = _scenario
         .flatMapLatest {
@@ -219,6 +231,11 @@ class DetectorEngine(context: Context) {
                 _scenario.emit(scenario)
             }
         }
+    }
+
+    fun updateScenario(scenario: Scenario) = processingScope?.launch {
+//        _state.emit(DetectorState.RECORDING)
+        _scenario.emit(scenario)
     }
 
     /**
@@ -299,7 +316,7 @@ class DetectorEngine(context: Context) {
                 },
                 androidExecutor = androidExecutor!!,
                 endConditionOperator = scenarioEndConditions.value!!.first.endConditionOperator,
-                endConditions =  scenarioEndConditions.value!!.second,
+                endConditions = scenarioEndConditions.value!!.second,
                 onEndConditionReached = { stopDetection() },
                 debugEngine = _debugEngine.value,
             )
@@ -427,15 +444,19 @@ class DetectorEngine(context: Context) {
 enum class DetectorState {
     /** The engine is created and ready to be used. */
     CREATED,
+
     /**
      * The engine is transitioning between two states.
      * During this state, all call to the engine will be ignored.
      */
     TRANSITIONING,
+
     /** The screen is being recorded. */
     RECORDING,
+
     /** The screen is being recorded and the detection is running. */
     DETECTING,
+
     /** The engine is destroyed and can no longer be used. */
     DESTROYED,
 }
