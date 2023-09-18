@@ -24,9 +24,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.viewModelScope
 
 import com.buzbuz.smartautoclicker.R
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.dropWhile
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -60,11 +66,21 @@ class ScenarioActivity : AppCompatActivity() {
     private fun handleIntent(intent: Intent) {
         intent.getStringExtra(EXTRA_IN_LOAD_SCENARIO_NAME)?.let { name ->
             scenarioViewModel.viewModelScope.launch {
-                withTimeoutOrNull(2000) {
-                    scenarioViewModel.scenarioList.takeWhile { it.isNotEmpty() }.first()
-                }?.find { it.scenario.name == name }?.let {
+                delay(500)
+                scenarioViewModel.scenarioList.value.find { it.scenario.name == name }?.let {
                     scenarioViewModel.loadScenario(it.scenario)
                 }
+//                withTimeoutOrNull(2000){
+//                    scenarioViewModel.scenarioList.takeWhile {
+//                        println("handleIntent:takeWhile it=$it")
+//                        it.isNotEmpty()
+//                    }.filterNotNull().firstOrNull()
+//                }?.let {
+//                    println("handleIntent:withTimeoutOrNull it=$it")
+//                    it.find { it.scenario.name == name }?.let {
+//                        scenarioViewModel.loadScenario(it.scenario)
+//                    }
+//                }
             }
         }
     }
