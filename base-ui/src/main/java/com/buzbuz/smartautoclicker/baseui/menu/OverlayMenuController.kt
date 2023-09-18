@@ -21,23 +21,15 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.util.Size
-import android.view.Gravity
-import android.view.HapticFeedbackConstants
-import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
+import android.view.*
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.DecelerateInterpolator
-
 import androidx.annotation.CallSuper
 import androidx.annotation.IdRes
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.forEach
 import androidx.lifecycle.Lifecycle
-
 import com.buzbuz.smartautoclicker.baseui.OverlayController
 import com.buzbuz.smartautoclicker.baseui.ScreenMetrics
 import com.buzbuz.smartautoclicker.ui.R
@@ -75,18 +67,23 @@ abstract class OverlayMenuController(context: Context) : OverlayController(conte
     internal companion object {
         /** Name of the preference file. */
         const val PREFERENCE_NAME = "OverlayMenuController"
+
         /** Preference key referring to the landscape X position of the menu during the last call to [dismiss]. */
         const val PREFERENCE_MENU_X_LANDSCAPE_KEY = "Menu_X_Landscape_Position"
+
         /** Preference key referring to the landscape Y position of the menu during the last call to [dismiss]. */
         const val PREFERENCE_MENU_Y_LANDSCAPE_KEY = "Menu_Y_Landscape_Position"
+
         /** Preference key referring to the portrait X position of the menu during the last call to [dismiss]. */
         const val PREFERENCE_MENU_X_PORTRAIT_KEY = "Menu_X_Portrait_Position"
+
         /** Preference key referring to the portrait Y position of the menu during the last call to [dismiss]. */
         const val PREFERENCE_MENU_Y_PORTRAIT_KEY = "Menu_Y_Portrait_Position"
     }
 
     /** Monitors the state of the screen. */
     protected val screenMetrics = ScreenMetrics(context)
+
     /** The layout parameters of the menu layout. */
     private val menuLayoutParams: WindowManager.LayoutParams = WindowManager.LayoutParams(
         WindowManager.LayoutParams.WRAP_CONTENT,
@@ -96,23 +93,31 @@ abstract class OverlayMenuController(context: Context) : OverlayController(conte
                 WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-        PixelFormat.TRANSLUCENT)
+        PixelFormat.TRANSLUCENT
+    )
+
     /** The shared preference storing the position of the menu in order to save/restore the last user position. */
     private val sharedPreferences = context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
+
     /** The Android window manager. Used to add/remove the overlay menu and view. */
     private val windowManager = context.getSystemService(WindowManager::class.java)!!
+
     /** Value of the alpha for a disabled item view in the menu. */
     @SuppressLint("ResourceType")
     private val disabledItemAlpha = context.resources.getFraction(R.dimen.alpha_menu_item_disabled, 1, 1)
 
     /** The root view of the menu overlay. Retrieved from [onCreateMenu] implementation. */
     private lateinit var menuLayout: ViewGroup
+
     /** The view displaying the background of the overlay. */
     private lateinit var menuBackground: ViewGroup
+
     /** Handles the window size computing when animating a resize of the overlay. */
     private lateinit var resizeController: OverlayWindowResizeController
+
     /** The hide overlay button, if provided. */
     private var hideOverlayButton: View? = null
+
     /** The move button, if provided. */
     private var moveButton: View? = null
 
@@ -122,16 +127,19 @@ abstract class OverlayMenuController(context: Context) : OverlayController(conte
      * button will have no effect.
      */
     protected var screenOverlayView: View? = null
+
     /** The layout parameters of the overlay view. */
-    private var overlayLayoutParams:  WindowManager.LayoutParams? = null
+    private var overlayLayoutParams: WindowManager.LayoutParams? = null
 
     /** The initial position of the overlay menu when pressing the move menu item. */
     private var moveInitialMenuPosition = 0 to 0
+
     /** The initial position of the touch event that as initiated the move of the overlay menu. */
     private var moveInitialTouchPosition = 0 to 0
 
     /** Listener upon the screen orientation changes. */
     private val orientationListener: (Context) -> Unit = { onOrientationChanged() }
+
     /** Tells if there is a hide overlay view button or not. */
     private var haveHideButton = false
 
@@ -160,13 +168,14 @@ abstract class OverlayMenuController(context: Context) : OverlayController(conte
      *
      * @return the layout parameters to apply to the overlay view.
      */
-    protected open fun onCreateOverlayViewLayoutParams(): WindowManager.LayoutParams = WindowManager.LayoutParams().apply {
-        copyFrom(menuLayoutParams)
-        screenMetrics.screenSize.let { size ->
-            width = size.x
-            height = size.y
+    protected open fun onCreateOverlayViewLayoutParams(): WindowManager.LayoutParams =
+        WindowManager.LayoutParams().apply {
+            copyFrom(menuLayoutParams)
+            screenMetrics.screenSize.let { size ->
+                width = size.x
+                height = size.y
+            }
         }
-    }
 
     @CallSuper
     override fun onCreate() {
@@ -227,7 +236,7 @@ abstract class OverlayMenuController(context: Context) : OverlayController(conte
             windowManager.addView(it, overlayLayoutParams)
         }
         windowManager.addView(menuLayout, menuLayoutParams)
-        hideOverlayButton?.let { setMenuItemViewEnabled(it, false , true) }
+        hideOverlayButton?.let { setMenuItemViewEnabled(it, false, true) }
 
         // Start the show animation
         menuBackground.startAnimation(
@@ -336,8 +345,8 @@ abstract class OverlayMenuController(context: Context) : OverlayController(conte
      *
      * @param layoutChanges the changes triggering a resize.
      */
-    protected fun animateLayoutChanges(layoutChanges: () -> Unit) {
-        resizeController.animateLayoutChanges(layoutChanges)
+    protected fun animateLayoutChanges(isForceChange: Boolean = false, layoutChanges: () -> Unit) {
+        resizeController.animateLayoutChanges(isForceChange, layoutChanges)
     }
 
     /**
@@ -367,7 +376,7 @@ abstract class OverlayMenuController(context: Context) : OverlayController(conte
             visibility = newVisibility
             if (haveHideButton) {
                 hideOverlayButton?.let {
-                    setMenuItemViewEnabled(it, visibility == View.VISIBLE , true)
+                    setMenuItemViewEnabled(it, visibility == View.VISIBLE, true)
                 }
             }
         }
@@ -381,7 +390,7 @@ abstract class OverlayMenuController(context: Context) : OverlayController(conte
      *
      * @return true if the event is handled, false if not.
      */
-    private fun onMoveTouched(event: MotionEvent) : Boolean {
+    private fun onMoveTouched(event: MotionEvent): Boolean {
         if (resizeController.isAnimating) return false
 
         return when (event.action) {
@@ -421,10 +430,11 @@ abstract class OverlayMenuController(context: Context) : OverlayController(conte
      * orientation.
      */
     private fun onOrientationChanged() {
-        saveMenuPosition(if (screenMetrics.orientation == Configuration.ORIENTATION_LANDSCAPE)
-            Configuration.ORIENTATION_PORTRAIT
-        else
-            Configuration.ORIENTATION_LANDSCAPE
+        saveMenuPosition(
+            if (screenMetrics.orientation == Configuration.ORIENTATION_LANDSCAPE)
+                Configuration.ORIENTATION_PORTRAIT
+            else
+                Configuration.ORIENTATION_LANDSCAPE
         )
         loadMenuPosition(screenMetrics.orientation)
 
@@ -479,5 +489,6 @@ abstract class OverlayMenuController(context: Context) : OverlayController(conte
 
 /** Duration of the show overlay menu animation. */
 private const val SHOW_ANIMATION_DURATION_MS = 250L
+
 /** Duration of the dismiss overlay menu animation. */
 private const val DISMISS_ANIMATION_DURATION_MS = 125L

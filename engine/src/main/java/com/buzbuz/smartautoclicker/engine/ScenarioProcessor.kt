@@ -18,19 +18,10 @@ package com.buzbuz.smartautoclicker.engine
 
 import android.graphics.Bitmap
 import android.media.Image
-
 import com.buzbuz.smartautoclicker.detection.DetectionResult
 import com.buzbuz.smartautoclicker.detection.ImageDetector
-import com.buzbuz.smartautoclicker.domain.AND
-import com.buzbuz.smartautoclicker.domain.Condition
-import com.buzbuz.smartautoclicker.domain.ConditionOperator
-import com.buzbuz.smartautoclicker.domain.EndCondition
-import com.buzbuz.smartautoclicker.domain.Event
-import com.buzbuz.smartautoclicker.domain.EXACT
-import com.buzbuz.smartautoclicker.domain.OR
-import com.buzbuz.smartautoclicker.domain.WHOLE_SCREEN
+import com.buzbuz.smartautoclicker.domain.*
 import com.buzbuz.smartautoclicker.engine.debugging.DebugEngine
-
 import kotlinx.coroutines.yield
 
 /**
@@ -60,11 +51,13 @@ internal class ScenarioProcessor(
 
     /** Execute the detected event actions. */
     private val actionExecutor = ActionExecutor(androidExecutor)
+
     /** Verifies the end conditions of a scenario. */
     private val endConditionVerifier = EndConditionVerifier(endConditions, endConditionOperator, onEndConditionReached)
 
     /** Tells if the screen metrics have been invalidated and should be updated. */
     private var invalidateScreenMetrics = true
+
     /** The bitmap of the currently processed image. Kept in order to avoid instantiating a new one everytime. */
     private var processedScreenBitmap: Bitmap? = null
 
@@ -133,7 +126,7 @@ internal class ScenarioProcessor(
      *
      * @param event the event to verify the conditions of.
      */
-    private suspend fun verifyConditions(event: Event) : ProcessorResult {
+    private suspend fun verifyConditions(event: Event): ProcessorResult {
         event.conditions?.forEachIndexed { index, condition ->
             // Verify if the condition is fulfilled.
             debugEngine?.onConditionProcessingStarted(condition)
@@ -194,7 +187,7 @@ internal class ScenarioProcessor(
      *
      * @return the result of the detection, or null of the detection is not possible.
      */
-    private fun checkCondition(condition: Condition) : DetectionResult? {
+    private fun checkCondition(condition: Condition): DetectionResult? {
         condition.path?.let { path ->
             bitmapSupplier(path, condition.area.width(), condition.area.height())?.let { conditionBitmap ->
                 return detect(condition, conditionBitmap)
@@ -213,11 +206,33 @@ internal class ScenarioProcessor(
      * @return the result of the detection.
      */
     private fun detect(condition: Condition, conditionBitmap: Bitmap): DetectionResult =
-         when (condition.detectionType) {
+        when (condition.detectionType) {
             EXACT -> imageDetector.detectCondition(conditionBitmap, condition.area, condition.threshold)
             WHOLE_SCREEN -> imageDetector.detectCondition(conditionBitmap, condition.threshold)
             else -> throw IllegalArgumentException("Unexpected detection type")
         }
+
+    fun newProcessor(
+        detectionQuality: Int,
+        events: List<Event>,
+        @ConditionOperator endConditionOperator: Int,
+        endConditions: List<EndCondition>,
+        onEndConditionReached: () -> Unit,
+        androidExecutor: AndroidExecutor,
+        debugEngine: DebugEngine? = null,
+    ): ScenarioProcessor {
+        return ScenarioProcessor(
+            imageDetector,
+            detectionQuality,
+            events,
+            bitmapSupplier,
+            androidExecutor,
+            endConditionOperator,
+            endConditions,
+            onEndConditionReached,
+            debugEngine
+        )
+    }
 }
 
 /**

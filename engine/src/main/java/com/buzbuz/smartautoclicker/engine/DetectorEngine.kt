@@ -23,35 +23,16 @@ import android.graphics.Rect
 import android.media.Image
 import android.media.projection.MediaProjectionManager
 import android.util.Log
-
-import com.buzbuz.smartautoclicker.domain.Repository
-import com.buzbuz.smartautoclicker.domain.Event
+import com.buzbuz.smartautoclicker.baseui.ScreenMetrics
 import com.buzbuz.smartautoclicker.detection.ImageDetector
 import com.buzbuz.smartautoclicker.detection.NativeDetector
-import com.buzbuz.smartautoclicker.baseui.ScreenMetrics
 import com.buzbuz.smartautoclicker.domain.EndCondition
+import com.buzbuz.smartautoclicker.domain.Event
+import com.buzbuz.smartautoclicker.domain.Repository
 import com.buzbuz.smartautoclicker.domain.Scenario
 import com.buzbuz.smartautoclicker.engine.debugging.DebugEngine
-
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 
 /**
  * Detects [Event] conditions on a display and execute its actions.
@@ -233,11 +214,6 @@ class DetectorEngine(context: Context) {
         }
     }
 
-    fun updateScenario(scenario: Scenario) = processingScope?.launch {
-//        _state.emit(DetectorState.RECORDING)
-        _scenario.emit(scenario)
-    }
-
     /**
      * Capture the provided area on the next [Image] of the screen.
      *
@@ -348,6 +324,43 @@ class DetectorEngine(context: Context) {
                     processScreenImages()
                 }
             }
+        }
+    }
+
+    /**
+     * Update current detection's [_scenario] if state equals [DetectorState.DETECTING],
+     * this method will also update [_debugEngine] and [scenarioProcessor], because they are related to scenario
+     **/
+    fun updateScenario(scenario: Scenario) = processingScope?.launch {
+        _scenario.emit(scenario)
+
+        // ---------- if oldState is DetectorState.RECORDING,we needn't do anything ----------
+        if (_state.value != DetectorState.DETECTING) return@launch
+
+        processingJob?.cancelAndJoin()
+
+        _state.value = DetectorState.TRANSITIONING
+
+        val scenarioEvents = withTimeoutOrNull(3_000) { scenarioEvents.take(2).lastOrNull() } ?: scenarioEvents.value
+        val scenarioEndConditions = scenarioEndConditions.value!!
+
+        _debugEngine.value?.let {
+            it.cancelCurrentProcessing()
+            _debugEngine.emit(DebugEngine(it.instantData, it.generateReport, scenario, scenarioEvents))
+        }
+        scenarioProcessor = scenarioProcessor?.newProcessor(
+            detectionQuality = scenarioEndConditions.first.detectionQuality,
+            events = scenarioEvents,
+            androidExecutor = androidExecutor!!,
+            endConditionOperator = scenarioEndConditions.first.endConditionOperator,
+            endConditions = scenarioEndConditions.second,
+            onEndConditionReached = { stopDetection() },
+            debugEngine = _debugEngine.value,
+        )
+
+        // ---------- At last,launch the ScreenImagesProcessing job ----------
+        processingJob = processingScope?.launch {
+            processScreenImages()
         }
     }
 

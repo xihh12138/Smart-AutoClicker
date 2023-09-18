@@ -87,3 +87,5 @@ lint/tmp/
 # signing
 signing.properties
 smartautoclicker/smartautoclicker.jks
+/.idea/deploymentTargetDropDown.xml
+/.idea/kotlinc.xml

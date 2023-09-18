@@ -16,12 +16,19 @@
  */
 package com.buzbuz.smartautoclicker.activity
 
+import android.content.Intent
 import android.os.Bundle
 
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.viewModelScope
 
 import com.buzbuz.smartautoclicker.R
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Entry point activity for the application.
@@ -40,5 +47,29 @@ class ScenarioActivity : AppCompatActivity() {
 
         supportActionBar?.title = resources.getString(R.string.activity_scenario_title)
 //        scenarioViewModel.stopScenario()
+
+        handleIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent) {
+        intent.getStringExtra(EXTRA_IN_LOAD_SCENARIO_NAME)?.let { name ->
+            scenarioViewModel.viewModelScope.launch {
+                withTimeoutOrNull(2000) {
+                    scenarioViewModel.scenarioList.takeWhile { it.isNotEmpty() }.first()
+                }?.find { it.scenario.name == name }?.let {
+                    scenarioViewModel.loadScenario(it.scenario)
+                }
+            }
+        }
+    }
+
+    companion object {
+        const val EXTRA_IN_LOAD_SCENARIO_NAME = "LOAD_SCENARIO_NAME"
     }
 }

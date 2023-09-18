@@ -168,6 +168,10 @@ class SmartAutoClickerService : AccessibilityService(), AndroidExecutor {
         fun isRunning(): Boolean = isStarted
 
         fun loadScenario(scenario: Scenario) {
+            if (!isStarted) {
+                return
+            }
+
             startForeground(NOTIFICATION_ID, createNotification(scenario.name))
 
             detectorEngine!!.updateScenario(scenario)

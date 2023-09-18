@@ -57,7 +57,8 @@ class OverlayWindowResizeController(
             container: ViewGroup?,
             view: View?,
             transitionType: Int
-        ) {}
+        ) {
+        }
 
         override fun endTransition(
             transition: LayoutTransition?,
@@ -81,8 +82,8 @@ class OverlayWindowResizeController(
      * Call this method when doing any view changes that will resize the window.
      * Setup the window size and execute the changes.
      */
-    fun animateLayoutChanges(layoutChanges: () -> Unit) {
-        if (isAnimating) return
+    fun animateLayoutChanges(isForceChange: Boolean, layoutChanges: () -> Unit) {
+        if (isAnimating && !isForceChange) return
         isAnimating = true
 
         // Freeze window size to expanded size
