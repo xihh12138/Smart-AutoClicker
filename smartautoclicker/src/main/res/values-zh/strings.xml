@@ -225,4 +225,5 @@
     <string name="dialog_debug_config_show_view">显示调试窗口</string>
     <string name="dialog_debug_config_generate_report">生成调试报告</string>
 
+    <string name="toast_start_scenario_x">开启脚本 %1$s</string>
 </resources>

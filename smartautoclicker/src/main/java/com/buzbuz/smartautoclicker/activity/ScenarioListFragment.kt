@@ -69,17 +69,22 @@ class ScenarioListFragment : Fragment(), PermissionsDialogFragment.PermissionDia
 
     /** ViewBinding containing the views for this fragment. */
     private lateinit var viewBinding: FragmentScenariosBinding
+
     /** ViewBinding containing the views for the loadable list merge layout. */
     private lateinit var listBinding: MergeLoadableListBinding
+
     /** Adapter displaying the click scenarios as a list. */
     private lateinit var scenariosAdapter: ScenarioAdapter
+
     /** The action menu for this fragment. */
     private lateinit var menu: Menu
+
     /** The result launcher for the projection permission dialog. */
     private lateinit var projectionActivityResult: ActivityResultLauncher<Intent>
 
     /** The current dialog being displayed. Null if not displayed. */
     private var dialog: AlertDialog? = null
+
     /** Scenario clicked by the user. */
     private var requestedScenario: Scenario? = null
 
@@ -99,16 +104,24 @@ class ScenarioListFragment : Fragment(), PermissionsDialogFragment.PermissionDia
             exportClickListener = ::onExportClicked,
         )
 
-        projectionActivityResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode != AppCompatActivity.RESULT_OK) {
-                Toast.makeText(requireContext(), R.string.toast_denied_screen_sharing_permission, Toast.LENGTH_SHORT).show()
-            } else {
-                requestedScenario?.let { scenario ->
-                    scenarioViewModel.loadScenario(result.resultCode, result.data!!, scenario)
-                    activity?.finish()
+        projectionActivityResult =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode != AppCompatActivity.RESULT_OK) {
+                    Toast.makeText(
+                        requireContext(),
+                        R.string.toast_denied_screen_sharing_permission,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    requestedScenario?.let { scenario ->
+                        scenarioViewModel.loadScenario(result.resultCode, result.data!!, scenario)
+                        Toast.makeText(
+                            requireContext(), getString(R.string.toast_start_scenario_x, scenario.name), Toast.LENGTH_SHORT
+                        ).show()
+//                        activity?.finish()
+                    }
                 }
             }
-        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -177,6 +190,7 @@ class ScenarioListFragment : Fragment(), PermissionsDialogFragment.PermissionDia
                 } else {
                     scenarioViewModel.setMenuState(MenuState.EXPORT)
                 }
+
             R.id.action_import -> showBackupDialog(true)
             R.id.action_cancel -> scenarioViewModel.setMenuState(MenuState.SELECTION)
             R.id.action_search -> scenarioViewModel.setMenuState(MenuState.SEARCH)
@@ -241,7 +255,10 @@ class ScenarioListFragment : Fragment(), PermissionsDialogFragment.PermissionDia
 
         if (scenarioViewModel.isScenarioRunning()) {
             scenarioViewModel.loadScenario(scenario)
-            activity?.finish()
+            Toast.makeText(
+                requireContext(), getString(R.string.toast_start_scenario_x, scenario.name), Toast.LENGTH_SHORT
+            ).show()
+//            activity?.finish()
         } else {
             showMediaProjectionWarning()
         }
@@ -358,5 +375,6 @@ class ScenarioListFragment : Fragment(), PermissionsDialogFragment.PermissionDia
 
 /** Tag for scenario list fragment. */
 const val FRAGMENT_TAG_SCENARIO_LIST = "ScenarioList"
+
 /** Tag for logs. */
 private const val TAG = "ScenarioListFragment"

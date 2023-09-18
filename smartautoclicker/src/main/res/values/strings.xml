@@ -229,4 +229,6 @@
     <string name="dialog_debug_config_title">Debugging</string>
     <string name="dialog_debug_config_show_view">Show debug view</string>
     <string name="dialog_debug_config_generate_report">Generate a report</string>
+
+    <string name="toast_start_scenario_x">Start scenario %1$s</string>
 </resources>
