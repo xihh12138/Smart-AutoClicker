@@ -158,7 +158,9 @@ class MainMenu(context: Context, private var scenario: Scenario) : OverlayMenuCo
 
     /** Change the UI state to detecting. */
     private fun toDetectingState() {
+        println("toDetectingState")
         animateLayoutChanges(true) {
+            println("toDetectingState layoutChanges")
             viewBinding.btnPlay.setImageDrawable(playToPauseDrawable)
             setMenuItemVisibility(viewBinding.btnStop, false)
             setMenuItemVisibility(viewBinding.btnClickList, false)
@@ -168,13 +170,16 @@ class MainMenu(context: Context, private var scenario: Scenario) : OverlayMenuCo
 
     /** Change the UI state to idle. */
     private fun toIdleState() {
+        println("toIdleState")
         if (isFirstStateUpdate) {
             viewBinding.btnPlay.setImageResource(R.drawable.ic_play_arrow)
             isFirstStateUpdate = false
             return
         }
 
+        println("toIdleState not FirstStateUpdate")
         animateLayoutChanges(true) {
+            println("toIdleState layoutChanges")
             viewBinding.btnPlay.setImageDrawable(pauseToPlayDrawable)
             setMenuItemVisibility(viewBinding.btnStop, true)
             setMenuItemVisibility(viewBinding.btnClickList, true)

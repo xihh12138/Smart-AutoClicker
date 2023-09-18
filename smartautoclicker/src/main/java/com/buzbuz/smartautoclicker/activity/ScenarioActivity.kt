@@ -66,8 +66,17 @@ class ScenarioActivity : AppCompatActivity() {
     private fun handleIntent(intent: Intent) {
         intent.getStringExtra(EXTRA_IN_LOAD_SCENARIO_NAME)?.let { name ->
             scenarioViewModel.viewModelScope.launch {
-                delay(500)
-                scenarioViewModel.scenarioList.value.find { it.scenario.name == name }?.let {
+                var scenarioList = scenarioViewModel.scenarioList.value
+                var time = 10
+
+                while (scenarioList.isEmpty() && time > 0) {
+                    delay(200)
+                    scenarioList = scenarioViewModel.scenarioList.value
+                    time--
+                }
+
+                println("scenarioList=$scenarioList")
+                scenarioList.find { it.scenario.name == name }?.let {
                     scenarioViewModel.loadScenario(it.scenario)
                 }
 //                withTimeoutOrNull(2000){
