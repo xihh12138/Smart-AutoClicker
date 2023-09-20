@@ -21,29 +21,26 @@ import android.content.Context
 import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
-
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
-
 import com.buzbuz.smartautoclicker.R
 import com.buzbuz.smartautoclicker.baseui.dialog.OverlayDialogController
 import com.buzbuz.smartautoclicker.baseui.dialog.setCustomTitle
+import com.buzbuz.smartautoclicker.databinding.DialogEventConfigBinding
 import com.buzbuz.smartautoclicker.domain.AND
 import com.buzbuz.smartautoclicker.domain.Event
 import com.buzbuz.smartautoclicker.domain.OR
-import com.buzbuz.smartautoclicker.databinding.DialogEventConfigBinding
 import com.buzbuz.smartautoclicker.extensions.setLeftRightCompoundDrawables
-import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.ConditionConfigDialog
-import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.ConditionSelectorMenu
-import com.buzbuz.smartautoclicker.overlays.eventconfig.action.ActionConfigDialog
 import com.buzbuz.smartautoclicker.overlays.copy.actions.ActionCopyDialog
 import com.buzbuz.smartautoclicker.overlays.copy.conditions.ConditionCopyDialog
+import com.buzbuz.smartautoclicker.overlays.eventconfig.action.ActionConfigDialog
+import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.ConditionConfigDialog
+import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.ConditionSelectorMenu
 import com.buzbuz.smartautoclicker.overlays.utils.MultiChoiceDialog
 import com.buzbuz.smartautoclicker.overlays.utils.OnAfterTextChangedListener
-
 import kotlinx.coroutines.launch
 
 /**
@@ -72,6 +69,7 @@ class EventConfigDialog(
         attachToLifecycle(this@EventConfigDialog)
         setConfigEvent(event)
     }
+
     /** The view model managing this dialog sub overlays. */
     private var subOverlayViewModel: ConfigSubOverlayModel? = ConfigSubOverlayModel(context).apply {
         attachToLifecycle(this@EventConfigDialog)
@@ -81,7 +79,10 @@ class EventConfigDialog(
     private lateinit var viewBinding: DialogEventConfigBinding
 
     /** TouchHelper applied to [actionsAdapter] allowing to drag and drop the items. */
-    private val itemTouchHelper = ItemTouchHelper(ActionReorderTouchHelper())
+    private val actionItemTouchHelper = ItemTouchHelper(ActionReorderTouchHelper())
+
+    /** TouchHelper applied to [conditionsAdapter] allowing to drag and drop the items. */
+    private val conditionItemTouchHelper = ItemTouchHelper(ConditionTouchHelper())
 
     /** Adapter displaying all actions for the event displayed by this dialog. */
     private val actionsAdapter = ActionsAdapter(
@@ -96,6 +97,7 @@ class EventConfigDialog(
         },
         actionReorderListener = { actions -> viewModel?.updateActionOrder(actions) }
     )
+
     /** Adapter displaying all conditions for the event displayed by this dialog. */
     private val conditionsAdapter = ConditionAdapter(
         addConditionClickedListener = {
@@ -110,6 +112,7 @@ class EventConfigDialog(
         bitmapProvider = { bitmap, onLoaded ->
             viewModel?.getConditionBitmap(bitmap, onLoaded)
         },
+        conditionReorderListener = { conditions -> viewModel?.updateConditionOrder(conditions) }
     )
 
     override fun onCreateDialog(): AlertDialog.Builder {
@@ -142,7 +145,8 @@ class EventConfigDialog(
 
             listConditions.adapter = conditionsAdapter
             listActions.adapter = actionsAdapter
-            itemTouchHelper.attachToRecyclerView(listActions)
+            actionItemTouchHelper.attachToRecyclerView(listActions)
+            conditionItemTouchHelper.attachToRecyclerView(listConditions)
         }
 
         lifecycleScope.launch {
@@ -169,13 +173,19 @@ class EventConfigDialog(
                             when (conditionOperator) {
                                 AND -> {
                                     viewBinding.textConditionOperatorDesc.apply {
-                                        setLeftRightCompoundDrawables(R.drawable.ic_all_conditions, R.drawable.ic_chevron)
+                                        setLeftRightCompoundDrawables(
+                                            R.drawable.ic_all_conditions,
+                                            R.drawable.ic_chevron
+                                        )
                                         text = context.getString(R.string.condition_operator_and)
                                     }
                                 }
                                 OR -> {
                                     viewBinding.textConditionOperatorDesc.apply {
-                                        setLeftRightCompoundDrawables(R.drawable.ic_one_condition, R.drawable.ic_chevron)
+                                        setLeftRightCompoundDrawables(
+                                            R.drawable.ic_one_condition,
+                                            R.drawable.ic_chevron
+                                        )
                                         text = context.getString(R.string.condition_operator_or)
                                     }
                                 }
@@ -186,7 +196,7 @@ class EventConfigDialog(
 
                 launch {
                     viewModel?.conditionListItems?.collect { conditions ->
-                        conditionsAdapter.submitList(conditions)
+                        conditionsAdapter.submitList(conditions.toMutableList())
                     }
                 }
 
@@ -229,7 +239,12 @@ class EventConfigDialog(
                 showSubOverlay(MultiChoiceDialog(
                     context = context,
                     dialogTitle = R.string.dialog_action_type_title,
-                    choices = listOf(ActionTypeChoice.Click, ActionTypeChoice.Swipe, ActionTypeChoice.Pause, ActionTypeChoice.Intent),
+                    choices = listOf(
+                        ActionTypeChoice.Click,
+                        ActionTypeChoice.Swipe,
+                        ActionTypeChoice.Pause,
+                        ActionTypeChoice.Intent
+                    ),
                     onChoiceSelected = { choiceClicked ->
                         viewModel?.let { model ->
                             subOverlayViewModel?.requestSubOverlay(
@@ -257,7 +272,7 @@ class EventConfigDialog(
             is SubOverlay.ActionConfig -> {
                 showSubOverlay(
                     overlayController = ActionConfigDialog(
-                        context= context,
+                        context = context,
                         action = overlayType.action,
                         onConfirmClicked = {
                             if (overlayType.index != -1) {
@@ -315,7 +330,8 @@ class EventConfigDialog(
                 ))
             }
 
-            is SubOverlay.None -> { /* Nothing to do */ }
+            is SubOverlay.None -> { /* Nothing to do */
+            }
         }
 
         subOverlayViewModel?.consumeRequest()

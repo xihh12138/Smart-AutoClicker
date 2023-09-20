@@ -287,6 +287,24 @@ class EventConfigModel(context: Context) : OverlayViewModel(context) {
     }
 
     /**
+     * Update the priority of the actions.
+     * @param actions the new actions order.
+     */
+    fun updateConditionOrder(conditions: List<ConditionListItem>) {
+        configuredEvent.value?.let { event ->
+            viewModelScope.launch {
+                val newConditions = conditions.mapNotNull {
+                    when (it) {
+                        is ConditionListItem.AddConditionItem -> null
+                        is ConditionListItem.ConditionItem -> it.condition
+                    }
+                }.toMutableList()
+                configuredEvent.value = event.copy(conditions = newConditions)
+            }
+        }
+    }
+
+    /**
      * Get the bitmap corresponding to a condition.
      * Loading is async and the result notified via the onBitmapLoaded argument.
      *

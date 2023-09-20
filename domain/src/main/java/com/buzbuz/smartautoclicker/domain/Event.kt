@@ -20,6 +20,9 @@ import androidx.annotation.IntDef
 
 import com.buzbuz.smartautoclicker.database.room.entity.CompleteEventEntity
 import com.buzbuz.smartautoclicker.database.room.entity.EventEntity
+import com.buzbuz.smartautoclicker.database.room.entity.sortByPriority
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Event of a scenario.
@@ -89,22 +92,26 @@ data class Event(
 internal fun EventEntity.toEvent() = Event(id, scenarioId, name, conditionOperator, priority, stopAfter = stopAfter)
 
 /** @return the complete event for this entity. */
-internal fun CompleteEventEntity.toEvent() = Event(
-    id = event.id,
-    scenarioId = event.scenarioId,
-    name= event.name,
-    conditionOperator = event.conditionOperator,
-    priority = event.priority,
-    stopAfter = event.stopAfter,
-    actions = actions.sortedBy { it.action.priority }.map { it.toAction() }.toMutableList(),
-    conditions = conditions.map { it.toCondition() }.toMutableList(),
-)
+internal suspend fun CompleteEventEntity.toEvent() = withContext(Dispatchers.IO) {
+    Event(
+        id = event.id,
+        scenarioId = event.scenarioId,
+        name = event.name,
+        conditionOperator = event.conditionOperator,
+        priority = event.priority,
+        stopAfter = event.stopAfter,
+        actions = actions.sortByPriority().map { it.toAction() }.toMutableList(),
+        conditions = conditions.sortByPriority().map { it.toCondition() }.toMutableList(),
+    )
+}
 
 /** Defines the operators to be applied between the conditions. */
 @IntDef(AND, OR)
 @Retention(AnnotationRetention.SOURCE)
 annotation class ConditionOperator
+
 /** All conditions must be fulfilled. */
 const val AND = 1
+
 /** Only one of the conditions must be fulfilled. */
 const val OR = 2

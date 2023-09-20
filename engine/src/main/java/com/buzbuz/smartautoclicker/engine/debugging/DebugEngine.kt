@@ -17,13 +17,11 @@
 package com.buzbuz.smartautoclicker.engine.debugging
 
 import android.graphics.Rect
-
+import com.buzbuz.smartautoclicker.detection.DetectionResult
 import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.domain.Event
-import com.buzbuz.smartautoclicker.detection.DetectionResult
 import com.buzbuz.smartautoclicker.domain.Scenario
 import com.buzbuz.smartautoclicker.engine.ProcessorResult
-
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
@@ -37,15 +35,19 @@ class DebugEngine(
 ) {
     /** Record the detection session duration. */
     private val sessionRecorder = Recorder()
+
     /** Record all images processed. */
     private val imageRecorder = Recorder()
+
     /** Map of event id to their recorder. */
     private val eventsRecorderMap: MutableMap<Long, Recorder> = mutableMapOf()
+
     /** Map of condition id to their recorder. */
     private val conditionsRecorderMap: MutableMap<Long, ConditionRecorder> = mutableMapOf()
 
     /** The event currently processed. */
     private var currProcEvtId: Long? = null
+
     /** The condition currently processed. */
     private var currProcCondId: Long? = null
 
@@ -55,8 +57,10 @@ class DebugEngine(
 
     /** The DebugInfo for the current image. */
     private val currentInfo = MutableSharedFlow<DebugInfo>()
+
     /** The DebugInfo for the current image. */
     val lastResult = currentInfo
+
     /** The DebugInfo for the last positive detection. */
     val lastPositiveInfo = currentInfo
         .filter { it.detectionResult.isDetected }

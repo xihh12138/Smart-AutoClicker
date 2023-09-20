@@ -150,9 +150,10 @@ abstract class EventDao {
             addIntentExtras(completeAction.intentExtras)
         }
 
-        event.conditions.forEach {
-            it.id = 0
-            it.eventId = eventId
+        event.conditions.forEachIndexed { index, condition ->
+            condition.id = 0
+            condition.eventId = eventId
+            condition.priority = index
         }
         addConditions(event.conditions)
 
@@ -260,6 +261,11 @@ abstract class EventDao {
      */
     private suspend fun updateConditions(eventId: Long, conditions: List<ConditionEntity>): List<ConditionEntity> {
         ConditionsUpdater.let { conditionsUpdater ->
+            // Update action priorities
+            conditions.forEachIndexed { index, condition ->
+                condition.priority = index
+            }
+
             conditionsUpdater.refreshUpdateValues(
                 oldList = getConditions(eventId),
                 newList = conditions

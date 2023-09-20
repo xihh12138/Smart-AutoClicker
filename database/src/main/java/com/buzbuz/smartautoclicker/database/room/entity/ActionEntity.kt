@@ -93,9 +93,9 @@ data class ActionEntity(
 
     // ActionType.INTENT
     @ColumnInfo(name = "isAdvanced") val isAdvanced: Boolean? = null,
-    @ColumnInfo(name = "isBroadcast") val isBroadcast: Boolean ? = null,
+    @ColumnInfo(name = "isBroadcast") val isBroadcast: Boolean? = null,
     @ColumnInfo(name = "intent_action") val intentAction: String? = null,
-    @ColumnInfo(name = "component_name") val componentName: String ? = null,
+    @ColumnInfo(name = "component_name") val componentName: String? = null,
     @ColumnInfo(name = "flags") val flags: Int? = null,
 )
 
@@ -109,10 +109,13 @@ data class ActionEntity(
 enum class ActionType {
     /** A single tap on the screen. */
     CLICK,
+
     /** A swipe on the screen. */
     SWIPE,
+
     /** A pause, waiting before the next action. */
     PAUSE,
+
     /** An Android Intent, allowing to interact with other applications. */
     INTENT,
 }
@@ -121,6 +124,7 @@ enum class ActionType {
 internal class ActionTypeStringConverter {
     @TypeConverter
     fun fromString(value: String): ActionType = ActionType.valueOf(value)
+
     @TypeConverter
     fun toString(date: ActionType): String = date.toString()
 }
@@ -143,3 +147,5 @@ data class CompleteActionEntity(
     )
     val intentExtras: List<IntentExtraEntity>,
 )
+
+fun Iterable<CompleteActionEntity>.sortByPriority() = sortedBy { it.action.priority }

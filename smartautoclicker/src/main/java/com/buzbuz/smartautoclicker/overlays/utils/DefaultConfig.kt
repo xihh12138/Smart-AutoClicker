@@ -62,6 +62,7 @@ fun newDefaultEvent(context: Context, scenarioId: Long, scenarioEventsSize: Int)
 fun newDefaultCondition(context: Context, eventId: Long, area: Rect, bitmap: Bitmap) =
     Condition(
         eventId = eventId,
+        priority = 0,
         name = context.resources.getString(R.string.default_condition_name),
         bitmap = bitmap,
         area = area,

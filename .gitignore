@@ -87,4 +87,5 @@ lint/tmp/
 # signing
 signing.properties
 smartautoclicker/smartautoclicker.jks
+/.idea/shelf
 /.idea

@@ -20,9 +20,8 @@ import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Rect
-
-import com.buzbuz.smartautoclicker.domain.*
 import com.buzbuz.smartautoclicker.database.room.entity.*
+import com.buzbuz.smartautoclicker.domain.*
 
 /** Data set for the database tests. */
 internal object TestsData {
@@ -127,8 +126,10 @@ internal object TestsData {
         priority: Int,
         clickOnCondition: Boolean = x != null && y != null,
     ) = CompleteActionEntity(
-        action = ActionEntity(id, eventId, priority, name, ActionType.CLICK, x = x, y = y,
-            clickOnCondition = clickOnCondition, pressDuration = pressDuration),
+        action = ActionEntity(
+            id, eventId, priority, name, ActionType.CLICK, x = x, y = y,
+            clickOnCondition = clickOnCondition, pressDuration = pressDuration
+        ),
         intentExtras = emptyList(),
     )
 
@@ -164,8 +165,10 @@ internal object TestsData {
         eventId: Long,
         priority: Int,
     ) = CompleteActionEntity(
-        action = ActionEntity(id, eventId, priority, name, ActionType.SWIPE, fromX = fromX, fromY = fromY, toX = toX,
-            toY = toY, swipeDuration = swipeDuration),
+        action = ActionEntity(
+            id, eventId, priority, name, ActionType.SWIPE, fromX = fromX, fromY = fromY, toX = toX,
+            toY = toY, swipeDuration = swipeDuration
+        ),
         intentExtras = emptyList(),
     )
 
@@ -178,7 +181,7 @@ internal object TestsData {
         toX: Int? = SWIPE_TO_X_POSITION,
         toY: Int? = SWIPE_TO_Y_POSITION,
         eventId: Long,
-    ) : Action.Swipe = Action.Swipe(id, eventId, name, swipeDuration, fromX, fromY, toX, toY)
+    ): Action.Swipe = Action.Swipe(id, eventId, name, swipeDuration, fromX, fromY, toX, toY)
 
 
     /* ------- Pause Action Data ------- */
@@ -229,8 +232,10 @@ internal object TestsData {
         priority: Int,
         intentExtras: List<IntentExtraEntity> = emptyList()
     ) = CompleteActionEntity(
-        action = ActionEntity(id, eventId, priority, name, ActionType.INTENT, isAdvanced = isAdvanced,
-            isBroadcast = isBroadcast, intentAction = action, componentName = componentName, flags = flags),
+        action = ActionEntity(
+            id, eventId, priority, name, ActionType.INTENT, isAdvanced = isAdvanced,
+            isBroadcast = isBroadcast, intentAction = action, componentName = componentName, flags = flags
+        ),
         intentExtras = intentExtras,
     )
 
@@ -284,6 +289,7 @@ internal object TestsData {
 
     fun getNewConditionEntity(
         id: Long = CONDITION_ID,
+        priority: Int = 0,
         name: String = CONDITION_NAME,
         path: String = CONDITION_PATH,
         left: Int = CONDITION_LEFT,
@@ -293,10 +299,11 @@ internal object TestsData {
         threshold: Int = CONDITION_THRESHOLD,
         detectionType: Int = CONDITION_DETECTION_TYPE,
         eventId: Long
-    ) = ConditionEntity(id, eventId, name, path, left, top, right, bottom, threshold, detectionType, true)
+    ) = ConditionEntity(id, eventId, priority, name, path, left, top, right, bottom, threshold, detectionType, true)
 
     fun getNewCondition(
         id: Long = CONDITION_ID,
+        priority: Int = 0,
         name: String = CONDITION_NAME,
         path: String? = CONDITION_PATH,
         left: Int = CONDITION_LEFT,
@@ -307,5 +314,16 @@ internal object TestsData {
         detectionType: Int = CONDITION_DETECTION_TYPE,
         bitmap: Bitmap? = null,
         eventId: Long
-    ) = Condition(id, eventId, name, path, Rect(left, top, right, bottom), threshold, detectionType, true, bitmap)
+    ) = Condition(
+        id,
+        eventId,
+        priority,
+        name,
+        path,
+        Rect(left, top, right, bottom),
+        threshold,
+        detectionType,
+        true,
+        bitmap
+    )
 }

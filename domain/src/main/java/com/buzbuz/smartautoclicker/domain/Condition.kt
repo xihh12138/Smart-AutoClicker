@@ -37,6 +37,7 @@ import com.buzbuz.smartautoclicker.database.room.entity.ConditionEntity
 data class Condition(
     var id: Long = 0,
     var eventId: Long,
+    var priority: Int,
     var name: String,
     var path: String? = null,
     var area: Rect,
@@ -50,6 +51,7 @@ data class Condition(
     internal fun toEntity() = ConditionEntity(
         id,
         eventId,
+        priority,
         name,
         path!!,
         area.left,
@@ -76,13 +78,25 @@ data class Condition(
 
 /** @return the condition for this entity. */
 internal fun ConditionEntity.toCondition(): Condition =
-    Condition(id, eventId, name, path, Rect(areaLeft, areaTop, areaRight, areaBottom), threshold, detectionType, shouldBeDetected)
+    Condition(
+        id,
+        eventId,
+        priority,
+        name,
+        path,
+        Rect(areaLeft, areaTop, areaRight, areaBottom),
+        threshold,
+        detectionType,
+        shouldBeDetected
+    )
 
 /** Defines the detection type to apply to a condition. */
 @IntDef(EXACT, WHOLE_SCREEN)
 @Retention(AnnotationRetention.SOURCE)
 annotation class DetectionType
+
 /** The condition must be detected at the exact same position. */
 const val EXACT = 1
+
 /** The condition can be detected anywhere on the screen. */
 const val WHOLE_SCREEN = 2

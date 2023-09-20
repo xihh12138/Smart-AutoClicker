@@ -17,25 +17,12 @@
 package com.buzbuz.smartautoclicker.database.room
 
 import android.content.Context
-
-import androidx.room.AutoMigration
-import androidx.room.Database
-import androidx.room.Room
-import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
-
+import androidx.room.*
 import com.buzbuz.smartautoclicker.database.room.dao.ConditionDao
 import com.buzbuz.smartautoclicker.database.room.dao.EndConditionDao
 import com.buzbuz.smartautoclicker.database.room.dao.EventDao
 import com.buzbuz.smartautoclicker.database.room.dao.ScenarioDao
-import com.buzbuz.smartautoclicker.database.room.entity.ActionEntity
-import com.buzbuz.smartautoclicker.database.room.entity.ActionTypeStringConverter
-import com.buzbuz.smartautoclicker.database.room.entity.ConditionEntity
-import com.buzbuz.smartautoclicker.database.room.entity.EndConditionEntity
-import com.buzbuz.smartautoclicker.database.room.entity.EventEntity
-import com.buzbuz.smartautoclicker.database.room.entity.IntentExtraEntity
-import com.buzbuz.smartautoclicker.database.room.entity.IntentExtraTypeStringConverter
-import com.buzbuz.smartautoclicker.database.room.entity.ScenarioEntity
+import com.buzbuz.smartautoclicker.database.room.entity.*
 import com.buzbuz.smartautoclicker.database.room.migrations.*
 
 /**
@@ -59,7 +46,7 @@ import com.buzbuz.smartautoclicker.database.room.migrations.*
     version = CLICK_DATABASE_VERSION,
     exportSchema = true,
     autoMigrations = [
-        AutoMigration (from = 7, to = 8)
+        AutoMigration(from = 8, to = 9)
     ]
 )
 @TypeConverters(ActionTypeStringConverter::class, IntentExtraTypeStringConverter::class)
@@ -67,10 +54,13 @@ abstract class ClickDatabase : RoomDatabase() {
 
     /** The data access object for the scenario in the database. */
     abstract fun scenarioDao(): ScenarioDao
+
     /** The data access object for the events in the database. */
     abstract fun eventDao(): EventDao
+
     /** The data access object for the conditions in the database. */
     abstract fun conditionDao(): ConditionDao
+
     /** The data access object for the end conditions in the database. */
     abstract fun endConditionDao(): EndConditionDao
 
@@ -101,6 +91,7 @@ abstract class ClickDatabase : RoomDatabase() {
                         Migration4to5,
                         Migration5to6,
                         Migration6to7,
+                        Migration8to9,
                     )
                     .build()
 
@@ -112,4 +103,4 @@ abstract class ClickDatabase : RoomDatabase() {
 }
 
 /** Current version of the database. */
-const val CLICK_DATABASE_VERSION = 8
+const val CLICK_DATABASE_VERSION = 9

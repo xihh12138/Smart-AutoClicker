@@ -24,17 +24,17 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-
 import com.buzbuz.smartautoclicker.R
-import com.buzbuz.smartautoclicker.domain.Condition
-import com.buzbuz.smartautoclicker.domain.EXACT
 import com.buzbuz.smartautoclicker.databinding.ItemConditionCardBinding
 import com.buzbuz.smartautoclicker.databinding.ItemNewCopyCardBinding
+import com.buzbuz.smartautoclicker.domain.Condition
+import com.buzbuz.smartautoclicker.domain.EXACT
 import com.buzbuz.smartautoclicker.overlays.utils.setIconTint
-
 import kotlinx.coroutines.Job
+import java.util.*
 
 /**
  * Adapter displaying the conditions for the event displayed by the dialog.
@@ -49,8 +49,17 @@ class ConditionAdapter(
     private val addConditionClickedListener: () -> Unit,
     private val copyConditionClickedListener: () -> Unit,
     private val conditionClickedListener: (Int, Condition) -> Unit,
-    private val bitmapProvider: (Condition, onBitmapLoaded: (Bitmap?) -> Unit) -> Job?
+    private val bitmapProvider: (Condition, onBitmapLoaded: (Bitmap?) -> Unit) -> Job?,
+    private val conditionReorderListener: (List<ConditionListItem>) -> Unit,
 ) : ListAdapter<ConditionListItem, RecyclerView.ViewHolder>(ConditionDiffUtilCallback) {
+
+    /** The list of actions to be shown by this adapter.*/
+    private var conditions: MutableList<ConditionListItem>? = null
+
+    override fun submitList(list: MutableList<ConditionListItem>?) {
+        conditions = list
+        super.submitList(list)
+    }
 
     override fun getItemViewType(position: Int): Int =
         when (getItem(position)) {
@@ -84,6 +93,24 @@ class ConditionAdapter(
         }
     }
 
+    /**
+     * Swap the position of two actions in the list.
+     *
+     * @param from the position of the click to be moved.
+     * @param to the new position of the click to be moved.
+     */
+    fun swapActions(from: Int, to: Int) {
+        conditions?.let {
+            Collections.swap(it, from, to)
+            notifyItemMoved(from, to)
+        }
+    }
+
+    /** Notify for an item drag and drop completion. */
+    fun notifyMoveFinished() {
+        conditionReorderListener(currentList)
+    }
+
     override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
         if (holder is ConditionViewHolder) {
             holder.onUnbind()
@@ -93,7 +120,7 @@ class ConditionAdapter(
 }
 
 /** DiffUtil Callback comparing two ActionItem when updating the [ConditionAdapter] list. */
-object ConditionDiffUtilCallback: DiffUtil.ItemCallback<ConditionListItem>() {
+object ConditionDiffUtilCallback : DiffUtil.ItemCallback<ConditionListItem>() {
     override fun areItemsTheSame(oldItem: ConditionListItem, newItem: ConditionListItem): Boolean = when {
         oldItem is ConditionListItem.AddConditionItem && newItem is ConditionListItem.AddConditionItem -> true
         oldItem is ConditionListItem.ConditionItem && newItem is ConditionListItem.ConditionItem ->
@@ -101,7 +128,8 @@ object ConditionDiffUtilCallback: DiffUtil.ItemCallback<ConditionListItem>() {
         else -> false
     }
 
-    override fun areContentsTheSame(oldItem: ConditionListItem, newItem: ConditionListItem): Boolean = oldItem == newItem
+    override fun areContentsTheSame(oldItem: ConditionListItem, newItem: ConditionListItem): Boolean =
+        oldItem == newItem
 }
 
 /** View holder for the add condition item. */
@@ -184,5 +212,52 @@ class ConditionViewHolder(
     fun onUnbind() {
         bitmapLoadingJob?.cancel()
         bitmapLoadingJob = null
+    }
+}
+
+/** ItemTouchHelper attached to the adapter */
+class ConditionTouchHelper : ItemTouchHelper.SimpleCallback(0, 0) {
+
+    /** Tells if the user is currently dragging an item. */
+    private var isDragging: Boolean = false
+
+    override fun onMove(
+        recyclerView: RecyclerView,
+        viewHolder: RecyclerView.ViewHolder,
+        target: RecyclerView.ViewHolder
+    ): Boolean {
+        isDragging = true
+        (recyclerView.adapter as ConditionAdapter).swapActions(
+            viewHolder.bindingAdapterPosition,
+            target.bindingAdapterPosition
+        )
+        return true
+    }
+
+    override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
+        super.clearView(recyclerView, viewHolder)
+
+        if (isDragging) {
+            (recyclerView.adapter as ConditionAdapter).notifyMoveFinished()
+            isDragging = false
+        }
+    }
+
+    override fun canDropOver(
+        recyclerView: RecyclerView,
+        current: RecyclerView.ViewHolder,
+        target: RecyclerView.ViewHolder
+    ): Boolean {
+        if (target is AddConditionViewHolder) return false
+        return true
+    }
+
+    override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+        val dragFlags = if (viewHolder.bindingAdapterPosition == recyclerView.adapter!!.itemCount - 1) 0
+        else ItemTouchHelper.START or ItemTouchHelper.END
+        return makeMovementFlags(dragFlags, 0)
+    }
+
+    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) { /* Nothing do to */
     }
 }

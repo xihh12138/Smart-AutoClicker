@@ -16,11 +16,7 @@
  */
 package com.buzbuz.smartautoclicker.database.room.entity
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
-import androidx.room.PrimaryKey
+import androidx.room.*
 import kotlinx.serialization.Serializable
 
 /**
@@ -58,8 +54,9 @@ import kotlinx.serialization.Serializable
 )
 @Serializable
 data class ConditionEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name= "id") var id: Long,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") var id: Long,
     @ColumnInfo(name = "eventId") var eventId: Long,
+    @ColumnInfo(name = "priority", defaultValue = "0") var priority: Int,
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "path") val path: String,
     @ColumnInfo(name = "area_left") val areaLeft: Int,
@@ -70,3 +67,13 @@ data class ConditionEntity(
     @ColumnInfo(name = "detection_type") val detectionType: Int,
     @ColumnInfo(name = "shouldBeDetected") val shouldBeDetected: Boolean,
 )
+
+
+fun Iterable<ConditionEntity>.sortByPriority() = sortedWith { o1, o2 ->
+    val comp = o1.priority.compareTo(o2.priority)
+    if (comp == 0) {
+        o1.id.compareTo(o2.id)
+    } else {
+        comp
+    }
+}

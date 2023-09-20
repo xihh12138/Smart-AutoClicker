@@ -55,7 +55,7 @@ class ScenarioSerializerTests {
                 CompleteEventEntity(
                     event = EventEntity(1, 1, "Event", 1, 0, null),
                     conditions = listOf(
-                        ConditionEntity(1, 1, "Condition", "/toto/tutu", 1, 2, 3, 4, 5, 1, true)
+                        ConditionEntity(1, 1, 0, "Condition", "/toto/tutu", 1, 2, 3, 4, 5, 1, true)
                     ),
                     actions = listOf(
                         CompleteActionEntity(

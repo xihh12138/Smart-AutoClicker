@@ -39,6 +39,7 @@ import com.buzbuz.smartautoclicker.database.room.entity.EventEntity
 import com.buzbuz.smartautoclicker.database.room.entity.IntentExtraEntity
 import com.buzbuz.smartautoclicker.database.room.entity.IntentExtraType
 import com.buzbuz.smartautoclicker.database.room.entity.ScenarioEntity
+import com.buzbuz.smartautoclicker.database.room.entity.sortByPriority
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -171,13 +172,13 @@ internal class ScenarioSerializer {
             val event = getJsonObject("event", true)?.deserializeEventCompat()
                 ?: return@mapNotNull null
 
-            val conditions = getJsonArray("conditions")?.deserializeConditionsCompat()
+            val conditions = getJsonArray("conditions")?.deserializeConditionsCompat()?.sortByPriority()
             if (conditions.isNullOrEmpty()) {
                 Log.i(TAG, "Can't deserialize this complete event, there is no conditions")
                 return@mapNotNull null
             }
 
-            val completeActions = getJsonArray("actions")?.deserializeCompleteActionsCompat()
+            val completeActions = getJsonArray("actions")?.deserializeCompleteActionsCompat()?.sortByPriority()
             if (completeActions.isNullOrEmpty()) {
                 Log.i(TAG, "Can't deserialize this complete event, there is no actions")
                 return@mapNotNull null
@@ -211,6 +212,7 @@ internal class ScenarioSerializer {
         with (condition.jsonObject) {
             val id = getLong("id", true) ?: return@mapNotNull null
             val eventId = getLong("eventId", true) ?: return@mapNotNull null
+            val priority = getInt("priority")?.coerceAtLeast(0) ?: 0
             val path = getString("path", true) ?: return@mapNotNull null
             val areaLeft = getInt("areaLeft", true) ?: return@mapNotNull null
             val areaTop = getInt("areaTop", true) ?: return@mapNotNull null
@@ -220,6 +222,7 @@ internal class ScenarioSerializer {
             ConditionEntity(
                 id = id,
                 eventId = eventId,
+                priority = priority,
                 path = path,
                 areaLeft = areaLeft,
                 areaTop = areaTop,

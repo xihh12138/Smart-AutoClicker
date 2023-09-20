@@ -86,8 +86,10 @@ internal object TestsData {
         priority: Int,
         clickOnCondition: Boolean = x != null && y != null,
     ) = CompleteActionEntity(
-        action = ActionEntity(id, eventId, priority, name, ActionType.CLICK, x = x, y = y,
-            clickOnCondition = clickOnCondition, pressDuration = pressDuration),
+        action = ActionEntity(
+            id, eventId, priority, name, ActionType.CLICK, x = x, y = y,
+            clickOnCondition = clickOnCondition, pressDuration = pressDuration
+        ),
         intentExtras = emptyList(),
     )
 
@@ -113,8 +115,10 @@ internal object TestsData {
         eventId: Long,
         priority: Int,
     ) = CompleteActionEntity(
-        action = ActionEntity(id, eventId, priority, name, ActionType.SWIPE, fromX = fromX, fromY = fromY, toX = toX,
-            toY = toY, swipeDuration = swipeDuration),
+        action = ActionEntity(
+            id, eventId, priority, name, ActionType.SWIPE, fromX = fromX, fromY = fromY, toX = toX,
+            toY = toY, swipeDuration = swipeDuration
+        ),
         intentExtras = emptyList(),
     )
 
@@ -159,8 +163,10 @@ internal object TestsData {
         priority: Int,
         intentExtras: List<IntentExtraEntity> = emptyList()
     ) = CompleteActionEntity(
-        action = ActionEntity(id, eventId, priority, name, ActionType.INTENT, isAdvanced = isAdvanced,
-            isBroadcast = isBroadcast, intentAction = action, componentName = componentName, flags = flags),
+        action = ActionEntity(
+            id, eventId, priority, name, ActionType.INTENT, isAdvanced = isAdvanced,
+            isBroadcast = isBroadcast, intentAction = action, componentName = componentName, flags = flags
+        ),
         intentExtras = intentExtras,
     )
 
@@ -195,6 +201,7 @@ internal object TestsData {
 
     fun getNewConditionEntity(
         id: Long = CONDITION_ID,
+        priority: Int = 0,
         name: String = CONDITION_NAME,
         path: String = CONDITION_PATH,
         left: Int = CONDITION_LEFT,
@@ -204,7 +211,7 @@ internal object TestsData {
         threshold: Int = CONDITION_THRESHOLD,
         detectionType: Int = CONDITION_DETECTION_TYPE,
         eventId: Long
-    ) = ConditionEntity(id, eventId, name, path, left, top, right, bottom, threshold, detectionType, true)
+    ) = ConditionEntity(id, eventId, priority, name, path, left, top, right, bottom, threshold, detectionType, true)
 
     fun CompleteEventEntity.cloneEvent() = copy(
         event = event.copy(),
