@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2022 Nain57
+ * Copyright (C) 2022 Kevin Buzeau
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 plugins {
@@ -43,7 +43,7 @@ android {
         debug {
             externalNativeBuild {
                 cmake {
-                    cppFlags ""
+                    cppFlags "-Wl,--build-id"
                     arguments "-DCMAKE_BUILD_TYPE=Debug"
                 }
             }
@@ -51,7 +51,7 @@ android {
         release {
             externalNativeBuild {
                 cmake {
-                    cppFlags ""
+                    cppFlags "-Wl,--build-id"
                     arguments "-DANDROID_SDK_ROOT=${project.android.sdkDirectory}",
                             "-DCMAKE_BUILD_TYPE=Release",
                             "-DOPENCV_ENABLE_NONFREE=OFF",
@@ -107,15 +107,12 @@ android {
     externalNativeBuild {
         cmake {
             path "src/CMakeLists.txt"
-            version "3.18.1"
+            version "3.22.1"
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = '1.8'
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 }
 

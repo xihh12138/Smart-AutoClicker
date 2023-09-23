@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2022 Nain57
+ * Copyright (C) 2023 Kevin Buzeau
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,96 +12,134 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <android/log.h>
 #include <android/bitmap.h>
+#include <memory>
+#include <opencv2/imgproc/imgproc_c.h>
 
+#include "bitmap/androidBitmap.hpp"
 #include "detector.hpp"
 
 using namespace cv;
 using namespace smartautoclicker;
 
 void Detector::setScreenMetrics(JNIEnv *env, jobject screenImage, double detectionQuality) {
-    // Get screen info from the android bitmap format
-    currentImage = bitmapRGBA888ToMat(env, screenImage);
+    // Initial the current image mat. When the size of the image change (e.g. rotation), this method should be called
+    // to update it.
+    fullSizeColorCurrentImage = createColorMatFromARGB8888BitmapData(env, screenImage);
 
     // Select the scale ratio depending on the screen size.
     // We reduce the size to improve the processing time, but we don't want it to be too small because it will impact
     // the performance of the detection.
-    if (currentImage->rows > currentImage->cols && currentImage->rows > detectionQuality) {
-        scaleRatio = detectionQuality / currentImage->rows;
-    } else if (currentImage->cols > detectionQuality) {
-        scaleRatio = detectionQuality / currentImage->cols;
-    } else {
+    auto maxImageDim = max(fullSizeColorCurrentImage->rows, fullSizeColorCurrentImage->cols);
+    if (maxImageDim <= detectionQuality) {
         scaleRatio = 1;
+    } else {
+        scaleRatio = detectionQuality / maxImageDim;
     }
-
-    // Set the current scaled image size
-    scale(*currentImage, *currentImageScaled, scaleRatio);
 }
 
 void Detector::setScreenImage(JNIEnv *env, jobject screenImage) {
     // Get screen info from the android bitmap format
-    currentImage = bitmapRGBA888ToMat(env, screenImage);
+    fullSizeColorCurrentImage = createColorMatFromARGB8888BitmapData(env, screenImage);
+
+    // Convert to gray for template matching
+    cv::Mat fullSizeGrayCurrentImage(fullSizeColorCurrentImage->rows, fullSizeColorCurrentImage->cols, CV_8UC1);
+    cv::cvtColor(*fullSizeColorCurrentImage, fullSizeGrayCurrentImage, cv::COLOR_RGBA2GRAY);
+
     // Scale down the image and store it apart (the cache image is not resized)
-    resize(*currentImage, *currentImageScaled, currentImageScaled->size(), scaleRatio, scaleRatio, INTER_AREA);
+    resize(fullSizeGrayCurrentImage, *scaledGrayCurrentImage, Size(), scaleRatio, scaleRatio, INTER_AREA);
 }
 
 DetectionResult Detector::detectCondition(JNIEnv *env, jobject conditionImage, int threshold) {
+    return detectCondition(
+        env,
+        conditionImage,
+        cv::Rect(0, 0, fullSizeColorCurrentImage->cols, fullSizeColorCurrentImage->rows),
+        threshold
+    );
+}
+
+DetectionResult Detector::detectCondition(JNIEnv *env, jobject conditionImage, int x, int y, int width, int height, int threshold) {
+    return detectCondition(env, conditionImage, cv::Rect(x, y, width, height), threshold);
+}
+
+DetectionResult Detector::detectCondition(JNIEnv *env, jobject conditionImage, cv::Rect fullSizeDetectionRoi, int threshold) {
     // Reset the results cache
     detectionResult.reset();
 
     // setScreenImage haven't been called first
-    if (currentImageScaled->empty()) {
+    if (scaledGrayCurrentImage->empty()) {
         __android_log_print(ANDROID_LOG_ERROR, "Detector",
                             "detectCondition caught an exception");
         jclass je = env->FindClass("java/lang/Exception");
-        env->ThrowNew(je, "Can't detect condition, current image is null !");
+        env->ThrowNew(je, "Can't detect condition, scaledGrayCurrentImage is empty !");
         return detectionResult;
     }
 
-    // Get the condition image information from the android bitmap format, and scale it to the processing size
-    scale(*bitmapRGBA888ToMat(env, conditionImage), *currentCondition, scaleRatio);
-
-    // If the condition is bigger than the screen image, it can't match.
-    if (currentCondition->rows >= currentImageScaled->rows || currentCondition->cols >= currentImageScaled->cols) {
+    // Get and check the detection area in normal and scaled size
+    if (isRoiOutOfBounds(fullSizeDetectionRoi, *fullSizeColorCurrentImage)) {
+        __android_log_print(ANDROID_LOG_ERROR, "Detector",
+                            "Full size ROI is invalid, %1d/%2d %3d/%4d in %5d/%6d",
+                            fullSizeDetectionRoi.x, fullSizeDetectionRoi.y, fullSizeDetectionRoi.width, fullSizeDetectionRoi.height,
+                            fullSizeColorCurrentImage->cols, fullSizeColorCurrentImage->rows);
+        return detectionResult;
+    }
+    auto scaledDetectionRoi = getScaledRoi(fullSizeDetectionRoi.x, fullSizeDetectionRoi.y, fullSizeDetectionRoi.width, fullSizeDetectionRoi.height);
+    if (isRoiOutOfBounds(scaledDetectionRoi, *scaledGrayCurrentImage)) {
+        __android_log_print(ANDROID_LOG_ERROR, "Detector",
+                            "Scaled ROI is invalid, %1d/%2d %3d/%4d in %5d/%6d",
+                            scaledDetectionRoi.x, scaledDetectionRoi.y, scaledDetectionRoi.width, scaledDetectionRoi.height,
+                            scaledGrayCurrentImage->cols, scaledGrayCurrentImage->rows);
         return detectionResult;
     }
 
-    // Get the matching results for the whole screen
-    auto matchingResults = matchTemplate(*currentImageScaled, *currentCondition);
+    // Crop the scaled gray current image to only get the detection area
+    auto croppedGrayCurrentImage = Mat(*scaledGrayCurrentImage, scaledDetectionRoi);
 
-    Rect roi;
-    detectionResult.isDetected = false;
+    // Get the condition image information from the android bitmap format.
+    auto fullSizeColorCondition = createColorMatFromARGB8888BitmapData(env, conditionImage);
+    auto scaledGrayCondition = scaleAndChangeToGray(*fullSizeColorCondition);
+
+    // Get the matching results
+    auto matchingResults = matchTemplate(croppedGrayCurrentImage, *scaledGrayCondition);
+
     // Until a condition is detected or none fits
+    cv::Rect scaledMatchingRoi;
+    cv::Rect fullSizeMatchingRoi;
+    detectionResult.isDetected = false;
     while (!detectionResult.isDetected) {
         // Find the max value and its position in the result
         locateMinMax(*matchingResults, detectionResult);
         // If the maximum for the whole picture is below the threshold, we will never find.
         if (!isValidMatching(detectionResult, threshold)) break;
 
-        // Candidate region of interest
-        roi = Rect(detectionResult.maxLoc.x, detectionResult.maxLoc.y,
-                   detectionResult.maxLoc.x + currentCondition->cols <= matchingResults->cols ?
-                        currentCondition->cols : matchingResults->cols - detectionResult.maxLoc.x,
-                   detectionResult.maxLoc.y + currentCondition->rows <= matchingResults->rows ?
-                        currentCondition->rows : matchingResults->rows - detectionResult.maxLoc.y);
+        // Calculate the ROI based on the maximum location
+        scaledMatchingRoi = getDetectionResultScaledCroppedRoi(scaledGrayCondition->cols, scaledGrayCondition->rows);
+        fullSizeMatchingRoi = getDetectionResultFullSizeRoi(fullSizeDetectionRoi, fullSizeColorCondition->cols, fullSizeColorCondition->rows);
+        if (isRoiOutOfBounds(scaledMatchingRoi, *scaledGrayCurrentImage) || isRoiOutOfBounds(fullSizeMatchingRoi, *fullSizeColorCurrentImage)) {
+            // Roi is out of bounds, invalid match
+            markRoiAsInvalidInResults(*matchingResults,scaledMatchingRoi);
+            continue;
+        }
 
         // Check if the colors are matching in the candidate area.
-        double colorDiff = getColorDiff(Mat(*currentImageScaled, roi), *currentCondition);
+        auto fullSizeColorCroppedCurrentImage = Mat(*fullSizeColorCurrentImage, fullSizeMatchingRoi);
+        double colorDiff = getColorDiff(fullSizeColorCroppedCurrentImage, *fullSizeColorCondition);
         if (colorDiff < threshold) {
             detectionResult.isDetected = true;
         } else {
             // Colors are invalid, modify the matching result to indicate that.
-            matchingResults->operator()(roi).setTo(1 - colorDiff / 100);
+            markRoiAsInvalidInResults(*matchingResults,scaledMatchingRoi);
         }
     }
 
     // If the condition is detected, compute the position of the detection and add it to the results.
     if (detectionResult.isDetected) {
-        detectionResult.centerX = (detectionResult.maxLoc.x + (int)(currentCondition->cols / 2)) / scaleRatio;
-        detectionResult.centerY = (detectionResult.maxLoc.y + (int)(currentCondition->rows / 2)) / scaleRatio;
+        detectionResult.centerX = fullSizeMatchingRoi.x + ((int) (fullSizeMatchingRoi.width / 2));
+        detectionResult.centerY = fullSizeMatchingRoi.y + ((int) (fullSizeMatchingRoi.height / 2));
     } else {
         detectionResult.centerX = 0;
         detectionResult.centerY = 0;
@@ -110,62 +148,25 @@ DetectionResult Detector::detectCondition(JNIEnv *env, jobject conditionImage, i
     return detectionResult;
 }
 
-DetectionResult Detector::detectCondition(JNIEnv *env, jobject conditionImage, int x, int y, int width, int height, int threshold) {
-    // Reset the results cache
-    detectionResult.reset();
+std::unique_ptr<Mat> Detector::scaleAndChangeToGray(const cv::Mat& fullSizeColored) const {
+    // Convert the condition into a gray mat
+    cv::Mat fullSizeGrayCondition(fullSizeColored.rows, fullSizeColored.cols, CV_8UC1);
+    cv::cvtColor(fullSizeColored, fullSizeGrayCondition, cv::COLOR_RGBA2GRAY);
 
-    // setScreenImage haven't been called first
-    if (currentImage->empty()) {
-        __android_log_print(ANDROID_LOG_ERROR, "Detector",
-                            "detectCondition caught an exception");
-        jclass je = env->FindClass("java/lang/Exception");
-        env->ThrowNew(je, "Can't detect condition, current image is null !");
-        return detectionResult;
-    }
+    // Scale it
+    auto scaledGrayCondition = Mat(max((int) (fullSizeGrayCondition.rows * scaleRatio), 1),
+                                   max((int) (fullSizeGrayCondition.cols * scaleRatio), 1),
+                                   CV_8UC1);
+    resize(fullSizeGrayCondition, scaledGrayCondition, Size(), scaleRatio, scaleRatio, INTER_AREA);
 
-    // If the condition area isn't on the screen, no matching.
-    if (x < 0 || width < 0 || x + width > currentImage->cols || y < 0 || height < 0 || y + height > currentImage->rows) {
-        return detectionResult;
-    }
-
-    // Crop the image at the condition position. This is like a screenshot at the same place than condition.
-    auto croppedImage = Mat(*currentImage, Rect(x, y , width, height));
-    // Get the condition image information from the android bitmap format. This image as the same size than the
-    // croppedImage one.
-    auto condition = bitmapRGBA888ToMat(env, conditionImage);
-    // Apply template matching of the condition on the cropped image and find the best match
-    locateMinMax(*matchTemplate(croppedImage, *condition), detectionResult);
-
-    // Check if both images have the same shapes.
-    if (!isValidMatching(detectionResult, threshold)) {
-        detectionResult.isDetected = false;
-        detectionResult.centerX = 0;
-        detectionResult.centerY = 0;
-        return detectionResult;
-    }
-
-    // Now check to colors
-    double colorDiff = getColorDiff(croppedImage, *condition);
-    if (colorDiff < threshold) {
-        // Valid color, its a detection !
-        detectionResult.isDetected = true;
-    } else {
-        // Invalid color. Update the confidence rate and false as not detected.
-        detectionResult.maxVal = 1 - colorDiff / 100;
-        detectionResult.isDetected = false;
-    }
-
-    // Update detection coordinates.
-    detectionResult.centerX = x + (int)(width / 2);
-    detectionResult.centerY = y + (int)(height / 2);
-
-    return detectionResult;
+    return std::make_unique<cv::Mat>(scaledGrayCondition);
 }
 
 std::unique_ptr<Mat> Detector::matchTemplate(const Mat& image, const Mat& condition) {
-    std::unique_ptr<Mat> resultMat(new Mat(image.rows - condition.rows + 1,image.cols - condition.cols + 1,CV_8UC4));
-    cv::matchTemplate(image, condition, *resultMat, TM_CCOEFF_NORMED);
-    return resultMat;
+    cv::Mat resultMat(image.rows - condition.rows + 1, image.cols - condition.cols + 1, CV_32F);
+    cv::matchTemplate(image, condition, resultMat, cv::TM_CCOEFF_NORMED);
+
+    return std::make_unique<cv::Mat>(resultMat);
 }
 
 void Detector::locateMinMax(const Mat& matchingResult, DetectionResult& results) {
@@ -187,28 +188,37 @@ double Detector::getColorDiff(const cv::Mat& image, const cv::Mat& condition) {
     return (diff * 100) / (255 * 3);
 }
 
-std::unique_ptr<Mat> Detector::bitmapRGBA888ToMat(JNIEnv *env, jobject bitmap) {
-    try {
-        AndroidBitmapInfo info;
-        void *pixels = nullptr;
-
-        CV_Assert(AndroidBitmap_getInfo(env, bitmap, &info) >= 0);
-        CV_Assert(info.format == ANDROID_BITMAP_FORMAT_RGBA_8888);
-        CV_Assert(AndroidBitmap_lockPixels(env, bitmap, &pixels) >= 0);
-        CV_Assert(pixels);
-        std::unique_ptr<Mat> dst(new Mat((int) info.height, (int) info.width, CV_8UC4, pixels));
-        AndroidBitmap_unlockPixels(env, bitmap);
-        return dst;
-    } catch (...) {
-        AndroidBitmap_unlockPixels(env, bitmap);
-        __android_log_print(ANDROID_LOG_ERROR, "native-lib",
-                            "bitmapRGBA888ToMat caught an exception");
-        jclass je = env->FindClass("java/lang/Exception");
-        env->ThrowNew(je, "Unknown exception in JNI code {bitmapRGBA888ToMat}");
-        return nullptr;
-    }
+cv::Rect Detector::getDetectionResultScaledCroppedRoi(int scaledWidth, int scaledHeight) const {
+    return {
+        detectionResult.maxLoc.x,
+        detectionResult.maxLoc.y,
+        scaledWidth,
+        scaledHeight
+    };
 }
 
-void Detector::scale(const cv::Mat& src, cv::Mat& dest, const double& ratio) {
-    resize(src, dest, Size(), ratio, ratio, INTER_AREA);
+cv::Rect Detector::getDetectionResultFullSizeRoi(const cv::Rect& fullSizeDetectionRoi, int fullSizeWidth, int fullSizeHeight) const {
+    return {
+            fullSizeDetectionRoi.x + cvRound(detectionResult.maxLoc.x / scaleRatio),
+            fullSizeDetectionRoi.y + cvRound(detectionResult.maxLoc.y / scaleRatio),
+            fullSizeWidth,
+            fullSizeHeight
+    };
+}
+
+cv::Rect Detector::getScaledRoi(const int x, const int y, const int width, const int height) const {
+    return {
+        cvRound(x * scaleRatio),
+        cvRound(y * scaleRatio),
+        cvRound(width * scaleRatio),
+        cvRound(height * scaleRatio)
+    };
+}
+
+bool Detector::isRoiOutOfBounds(const cv::Rect& roi, const cv::Mat& image) {
+    return 0 > roi.x || 0 > roi.width || roi.x + roi.width > image.cols || 0 > roi.y || 0 > roi.height || roi.y + roi.height > image.rows;
+}
+
+void Detector::markRoiAsInvalidInResults(const cv::Mat& results, const Rect& roi) {
+    cv::rectangle(results, roi, cv::Scalar(0), CV_FILLED);
 }

@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2022 Nain57
+ * Copyright (C) 2023 Kevin Buzeau
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,60 +12,40 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <jni.h>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "types/detectionResult.hpp"
+
 namespace smartautoclicker {
-
-    class DetectionResult {
-    public:
-        bool isDetected;
-        double centerX;
-        double centerY;
-
-        double minVal;
-        double maxVal;
-        cv::Point minLoc;
-        cv::Point maxLoc;
-
-        void reset() {
-            isDetected = false;
-            centerX = 0;
-            centerY = 0;
-            minVal = 0;
-            maxVal = 0;
-            minLoc.x = 0;
-            minLoc.y = 0;
-            maxLoc.x = 0;
-            maxLoc.y = 0;
-        }
-    };
 
     class Detector {
 
     private:
         double scaleRatio = 1;
 
-        std::unique_ptr<cv::Mat> currentImage = nullptr;
-        std::unique_ptr<cv::Mat> currentImageScaled = std::make_unique<cv::Mat>();
-        std::unique_ptr<cv::Mat> currentCondition = std::make_unique<cv::Mat>();
+        std::unique_ptr<cv::Mat> fullSizeColorCurrentImage = nullptr;
+        std::unique_ptr<cv::Mat> scaledGrayCurrentImage = std::make_unique<cv::Mat>();
 
         DetectionResult detectionResult;
 
-        static std::unique_ptr<cv::Mat> bitmapRGBA888ToMat(JNIEnv *env, jobject bitmap);
-
-        static void scale(const cv::Mat& src, cv::Mat& dest, const double& ratio);
+        std::unique_ptr<cv::Mat> scaleAndChangeToGray(const cv::Mat &fullSizeColored) const;
 
         static std::unique_ptr<cv::Mat> matchTemplate(const cv::Mat& image, const cv::Mat& condition);
-
         static void locateMinMax(const cv::Mat& matchingResult, DetectionResult& results);
-
         static bool isValidMatching(const DetectionResult& results, const int threshold);
-
         static double getColorDiff(const cv::Mat& image, const cv::Mat& condition);
+
+        cv::Rect getDetectionResultScaledCroppedRoi(int scaledWidth, int scaledHeight) const;
+        cv::Rect getDetectionResultFullSizeRoi(const cv::Rect& detectionRoi, int fullSizeWidth, int fullSizeHeight) const;
+        cv::Rect getScaledRoi(const int x, const int y, const int width, const int height) const;
+        static bool isRoiOutOfBounds(const cv::Rect &roi, const cv::Mat &image);
+        static void markRoiAsInvalidInResults(const cv::Mat& results, const cv::Rect& roi);
+
+        DetectionResult detectCondition(JNIEnv *env, jobject conditionImage, cv::Rect fullSizeDetectionRoi, int threshold);
 
     public:
 
@@ -76,7 +56,6 @@ namespace smartautoclicker {
         void setScreenImage(JNIEnv *env, jobject screenImage);
 
         DetectionResult detectCondition(JNIEnv *env, jobject conditionImage, int threshold);
-
         DetectionResult detectCondition(JNIEnv *env, jobject conditionImage, int x, int y, int width, int height, int threshold);
     };
 }

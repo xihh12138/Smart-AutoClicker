@@ -14,7 +14,7 @@
 # along with this program; If not, see <http://www.gnu.org/licenses/>.
 
 # Sets the minimum version of CMake required to build the native library.
-cmake_minimum_required(VERSION 3.18.1)
+cmake_minimum_required(VERSION 3.22.1)
 
 # Declares and names the project.
 project("smartautoclicker")
@@ -30,6 +30,8 @@ add_library( # Sets the name of the library.
         SHARED
 
         # Provides a relative path to your source file(s).
+        main/cpp/types/detectionResult.hpp
+        main/cpp/bitmap/androidBitmap.hpp
         main/cpp/smartautoclicker.cpp
         main/cpp/detector.cpp
         main/cpp/detector.hpp)
