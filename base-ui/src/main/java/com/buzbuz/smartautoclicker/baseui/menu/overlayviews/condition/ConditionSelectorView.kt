@@ -23,16 +23,15 @@ import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.BitmapDrawable
+import android.util.Size
 import android.view.KeyEvent.ACTION_DOWN
 import android.view.KeyEvent.ACTION_UP
 import android.view.MotionEvent
 import android.view.View
-
 import androidx.core.content.res.use
 import androidx.core.graphics.minus
-
-import com.buzbuz.smartautoclicker.baseui.menu.overlayviews.condition.hints.HintsController
 import com.buzbuz.smartautoclicker.baseui.ScreenMetrics
+import com.buzbuz.smartautoclicker.baseui.menu.overlayviews.condition.hints.HintsController
 import com.buzbuz.smartautoclicker.ui.R
 
 /**
@@ -49,32 +48,39 @@ class ConditionSelectorView(
     context: Context,
     private val screenMetrics: ScreenMetrics,
     private val onSelectorValidityChanged: (Boolean) -> Unit,
+    selectorDefaultSize: Size? = null
 ) : View(context) {
 
     /** Controls the display of the bitmap captured. */
     private lateinit var capture: Capture
+
     /** Controls the display of the selector. */
     private lateinit var selector: Selector
+
     /** Controls the display of the user hints around the selector. */
     private lateinit var hintsIcons: HintsController
+
     /** Controls the animations. */
     private lateinit var animations: Animations
 
     /** Tells if the view have ignored a touch event due to a animation running or being hidden. */
     private var haveTouchEventIgnored = false
+
     /** Tells if the selector is at a valid position relatively to the capture position. */
     private var isSelectorValid = false
+
     /** Used during selector validation. kept here to avoid instantiation at each touch event. */
     private val selectorValidityTempValue = RectF()
 
     /** Get the attributes from the style file and initialize all components. */
     init {
-        context.obtainStyledAttributes(R.style.OverlaySelectorView_Condition, R.styleable.ConditionSelectorView).use { ta ->
-            animations = Animations(ta)
-            capture = Capture(context, ta, screenMetrics, ::invalidate)
-            selector = Selector(context, ta, screenMetrics, ::invalidate)
-            hintsIcons = HintsController(context, ta, screenMetrics, ::invalidate)
-        }
+        context.obtainStyledAttributes(R.style.OverlaySelectorView_Condition, R.styleable.ConditionSelectorView)
+            .use { ta ->
+                animations = Animations(ta)
+                capture = Capture(context, ta, screenMetrics, ::invalidate)
+                selector = Selector(context, ta, screenMetrics, ::invalidate, selectorDefaultSize)
+                hintsIcons = HintsController(context, ta, screenMetrics, ::invalidate)
+            }
     }
 
     /** Setup the position changes callbacks. */
@@ -160,8 +166,10 @@ class ConditionSelectorView(
         }
 
         val selectionArea = selector.getSelectionArea(capture.captureArea, capture.zoomLevel)
-        return selectionArea to Bitmap.createBitmap(capture.screenCapture!!.bitmap, selectionArea.left,
-            selectionArea.top, selectionArea.width(), selectionArea.height())
+        return selectionArea to Bitmap.createBitmap(
+            capture.screenCapture!!.bitmap, selectionArea.left,
+            selectionArea.top, selectionArea.width(), selectionArea.height()
+        )
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {

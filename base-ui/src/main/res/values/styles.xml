@@ -23,5 +23,7 @@
     <style name="OverlaySelectorView.Click" />
     <!-- Style for the condition selector -->
     <style name="OverlaySelectorView.Condition"/>
+    <!-- Style for the condition detect area selector -->
+    <style name="OverlaySelectorView.Condition.DetectArea"/>
 
 </resources>

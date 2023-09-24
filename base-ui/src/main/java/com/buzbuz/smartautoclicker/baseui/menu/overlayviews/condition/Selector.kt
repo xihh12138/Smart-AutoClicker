@@ -25,16 +25,14 @@ import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.RectF
+import android.util.Size
 import android.view.GestureDetector
 import android.view.KeyEvent.ACTION_UP
 import android.view.MotionEvent
-
 import androidx.core.graphics.toRect
-
 import com.buzbuz.smartautoclicker.baseui.ScreenMetrics
 import com.buzbuz.smartautoclicker.extensions.translate
 import com.buzbuz.smartautoclicker.ui.R
-
 import kotlin.math.max
 import kotlin.math.min
 
@@ -51,7 +49,8 @@ internal class Selector(
     styledAttrs: TypedArray,
     screenMetrics: ScreenMetrics,
     viewInvalidator: () -> Unit,
-): SelectorViewComponent(screenMetrics, viewInvalidator) {
+    selectorDefaultSize: Size? = null
+) : SelectorViewComponent(screenMetrics, viewInvalidator) {
 
     /** Listener for the [gestureDetector] handling the move/resize gesture. */
     private val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
@@ -66,30 +65,46 @@ internal class Selector(
             return true
         }
     }
+
     /** Gesture detector for the move/resize of the capture. */
     private val gestureDetector = GestureDetector(context, gestureListener)
+
     /** The type of gesture currently executed by the user. */
     var currentGesture: GestureType? = null
         private set
 
     /** Default size of the selector area. */
-    private val selectorDefaultSize = PointF(
+    private val selectorDefaultSize = selectorDefaultSize?.let { size ->
+        val width = size.width.takeIf { it != 0 } ?: (styledAttrs.getDimensionPixelSize(
+            R.styleable.ConditionSelectorView_defaultWidth,
+            100
+        ) / 2)
+        val height = size.height.takeIf { it != 0 } ?: (styledAttrs.getDimensionPixelSize(
+            R.styleable.ConditionSelectorView_defaultHeight,
+            100
+        ) / 2)
+
+        Size(width, height)
+    } ?: Size(
         styledAttrs.getDimensionPixelSize(
             R.styleable.ConditionSelectorView_defaultWidth,
             100
-        ).toFloat() / 2f,
+        ) / 2,
         styledAttrs.getDimensionPixelSize(
             R.styleable.ConditionSelectorView_defaultHeight,
             100
-        ).toFloat() / 2f
+        ) / 2
     )
+
     /** The size of the selector handle. */
     private val handleSize = styledAttrs.getDimensionPixelSize(
         R.styleable.ConditionSelectorView_resizeHandleSize,
         10
     ).toFloat()
+
     /** The size of the handle within the view. */
     private val innerHandleSize = handleSize / INNER_HANDLE_RATIO
+
     /** Difference between the center of the selector and its inner content. */
     private var selectorAreaOffset: Int = kotlin.math.ceil(
         styledAttrs.getDimensionPixelSize(
@@ -97,6 +112,7 @@ internal class Selector(
             4
         ).toFloat() / 2
     ).toInt()
+
     /** The radius of the corner for the selector. */
     private val cornerRadius = styledAttrs.getDimensionPixelSize(
         R.styleable.ConditionSelectorView_cornerRadius,
@@ -116,6 +132,7 @@ internal class Selector(
         )
         alpha = 0
     }
+
     /** Paint for the background of the selector. */
     private val backgroundPaint = Paint().apply {
         isAntiAlias = true
@@ -125,16 +142,21 @@ internal class Selector(
             Color.TRANSPARENT
         )
     }
+
     /** The transparency of the background color of the selector. */
     private val selectorBackgroundAlpha: Int = backgroundPaint.color.shr(24)
+
     /** The path for drawing the selector transparent background and content. */
     private val selectorDrawingPath = Path().apply {
         fillType = Path.FillType.EVEN_ODD
     }
+
     /** The minimum size of the selector. Size is relative to the [maxArea]. */
     private val selectorMinimumSize = PointF()
+
     /** The area where the selector should be drawn. */
     private val selectorArea = RectF()
+
     /** Area within the selector that represents the zone to be capture to creates a event condition. */
     val selectedArea = RectF()
 
@@ -148,6 +170,7 @@ internal class Selector(
             backgroundPaint.alpha = value
             invalidate()
         }
+
     /** Transparency of the selector. */
     var selectorAlpha: Int = 255
         set(value) {
@@ -189,10 +212,10 @@ internal class Selector(
     /** Reset the selector to its original position. */
     private fun resetSelectorPosition() {
         selectorArea.apply {
-            left = maxArea.centerX() - selectorDefaultSize.x
-            top = maxArea.centerY() - selectorDefaultSize.y
-            right = maxArea.centerX() + selectorDefaultSize.x
-            bottom = maxArea.centerY() + selectorDefaultSize.y
+            left = maxArea.centerX() - selectorDefaultSize.width
+            top = maxArea.centerY() - selectorDefaultSize.height
+            right = maxArea.centerX() + selectorDefaultSize.width
+            bottom = maxArea.centerY() + selectorDefaultSize.height
         }
         selectorMinimumSize.apply {
             x = maxArea.width() * SELECTOR_MINIMUM_WIDTH_RATIO
@@ -209,7 +232,7 @@ internal class Selector(
             consumed = true
         }
 
-        if  (event.action == ACTION_UP) {
+        if (event.action == ACTION_UP) {
             currentGesture = null
             consumed = true
         }
@@ -221,14 +244,19 @@ internal class Selector(
         currentGesture = when {
             ResizeLeft.getGestureArea(selectedArea, handleSize, innerHandleSize).contains(eventX, eventY) ->
                 ResizeLeft
+
             ResizeTop.getGestureArea(selectedArea, handleSize, innerHandleSize).contains(eventX, eventY) ->
                 ResizeTop
+
             ResizeRight.getGestureArea(selectedArea, handleSize, innerHandleSize).contains(eventX, eventY) ->
                 ResizeRight
+
             ResizeBottom.getGestureArea(selectedArea, handleSize, innerHandleSize).contains(eventX, eventY) ->
                 ResizeBottom
+
             MoveSelector.getGestureArea(selectedArea, handleSize, innerHandleSize).contains(eventX, eventY) ->
                 MoveSelector
+
             else -> null
         }
 
@@ -251,18 +279,22 @@ internal class Selector(
                     selectorArea.left + translateX,
                     selectorArea.right - selectorMinimumSize.x
                 )
+
                 ResizeTop -> selectorArea.top = min(
                     selectorArea.top + translateY,
                     selectorArea.bottom - selectorMinimumSize.y
                 )
+
                 ResizeRight -> selectorArea.right = max(
                     selectorArea.right + translateX,
                     selectorArea.left + selectorMinimumSize.x
                 )
+
                 ResizeBottom -> selectorArea.bottom = max(
                     selectorArea.bottom + translateY,
                     selectorArea.top + selectorMinimumSize.y
                 )
+
                 MoveSelector -> {
                     moveResult.set(selectorArea)
                     moveResult.translate(translateX, translateY)
@@ -271,6 +303,7 @@ internal class Selector(
                         selectorArea.set(moveResult)
                     }
                 }
+
                 ZoomCapture -> return
             }
 
@@ -325,7 +358,9 @@ internal class Selector(
 
 /** The ratio of the maximum width to be considered as the minimum width. */
 private const val SELECTOR_MINIMUM_WIDTH_RATIO = 0.10f
+
 /** The ratio of the maximum height to be considered as the minimum height. */
 private const val SELECTOR_MINIMUM_HEIGHT_RATIO = 0.05f
+
 /** Ratio between the handle and the inner handle */
 private const val INNER_HANDLE_RATIO = 3f

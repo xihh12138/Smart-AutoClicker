@@ -22,6 +22,7 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.text.Editable
 import android.util.Log
+import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.SeekBar
@@ -31,6 +32,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.buzbuz.smartautoclicker.R
+import com.buzbuz.smartautoclicker.baseui.ScreenMetrics
 import com.buzbuz.smartautoclicker.baseui.dialog.OverlayDialogController
 import com.buzbuz.smartautoclicker.baseui.dialog.setCustomTitle
 import com.buzbuz.smartautoclicker.databinding.DialogConditionConfigBinding
@@ -107,6 +109,9 @@ class ConditionConfigDialog(
                         context = context,
                         onConditionSelected = { area, _ ->
                             viewModel?.setDetectionArea(area)
+                        },
+                        ScreenMetrics(context).screenSize.let { size ->
+                            Size(size.x, 0)
                         }
                     ),
                     hideCurrent = true,

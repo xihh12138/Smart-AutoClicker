@@ -21,6 +21,7 @@ import android.graphics.Bitmap
 import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
+import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -42,7 +43,8 @@ import com.buzbuz.smartautoclicker.engine.DetectorEngine
  */
 class ConditionSelectorMenu(
     context: Context,
-    private val onConditionSelected: (Rect, Bitmap) -> Unit
+    private val onConditionSelected: (Rect, Bitmap) -> Unit,
+    selectorDefaultSize: Size? = null
 ) : OverlayMenuController(context) {
 
     private companion object {
@@ -53,18 +55,23 @@ class ConditionSelectorMenu(
         @IntDef(SELECTION, CAPTURE, ADJUST)
         @Retention(AnnotationRetention.SOURCE)
         private annotation class ConditionCaptureState
+
         /** User is selecting the screenshot to take. */
         private const val SELECTION = 1
+
         /** User have clicked on the capture button and we are waiting for the screenshot result. */
         private const val CAPTURE = 2
+
         /** User is selecting a part of the capture for the event condition. */
         private const val ADJUST = 3
     }
 
     /** The view binding for the overlay menu. */
     private lateinit var viewBinding: OverlayValidationMenuBinding
+
     /** The view displaying the screenshot and the selector for the capture. */
-    private val selectorView = ConditionSelectorView(context, screenMetrics, ::onSelectorValidityChanged)
+    private val selectorView =
+        ConditionSelectorView(context, screenMetrics, ::onSelectorValidityChanged, selectorDefaultSize)
 
     /** The current state of the overlay. */
     @ConditionCaptureState
@@ -78,11 +85,13 @@ class ConditionSelectorMenu(
                     setOverlayViewVisibility(View.GONE)
                     selectorView.hide = true
                 }
+
                 CAPTURE -> {
                     setMenuVisibility(View.GONE)
                     setOverlayViewVisibility(View.VISIBLE)
                     selectorView.hide = true
                 }
+
                 ADJUST -> {
                     viewBinding.btnConfirm.setImageResource(R.drawable.ic_confirm)
                     setMenuVisibility(View.VISIBLE)
