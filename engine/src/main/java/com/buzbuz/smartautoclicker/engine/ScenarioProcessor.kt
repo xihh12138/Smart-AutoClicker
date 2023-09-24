@@ -41,7 +41,7 @@ internal class ScenarioProcessor(
     private val imageDetector: ImageDetector,
     private val detectionQuality: Int,
     private val events: List<Event>,
-    private val bitmapSupplier: (String, Int, Int) -> Bitmap?,
+    private val bitmapSupplier: (String, bitmapWidth: Int, bitmapHeight: Int) -> Bitmap?,
     androidExecutor: AndroidExecutor,
     @ConditionOperator endConditionOperator: Int,
     endConditions: List<EndCondition>,
@@ -207,7 +207,10 @@ internal class ScenarioProcessor(
      */
     private fun detect(condition: Condition, conditionBitmap: Bitmap): DetectionResult =
         when (condition.detectionType) {
-            EXACT -> imageDetector.detectCondition(conditionBitmap, condition.area, condition.threshold)
+            EXACT, DETECT_AREA -> imageDetector.detectCondition(
+                conditionBitmap, condition.detectArea, condition.threshold
+            )
+
             WHOLE_SCREEN -> imageDetector.detectCondition(conditionBitmap, condition.threshold)
             else -> throw IllegalArgumentException("Unexpected detection type")
         }

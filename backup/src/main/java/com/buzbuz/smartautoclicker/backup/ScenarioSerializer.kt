@@ -218,6 +218,10 @@ internal class ScenarioSerializer {
             val areaTop = getInt("areaTop", true) ?: return@mapNotNull null
             val areaRight = getInt("areaRight", true) ?: return@mapNotNull null
             val areaBottom = getInt("areaBottom", true) ?: return@mapNotNull null
+            val detectAreaLeft = getInt("detectAreaLeft", true) ?: areaLeft
+            val detectAreaTop = getInt("detectAreaTop", true) ?: areaTop
+            val detectAreaRight = getInt("detectAreaRight", true) ?: areaRight
+            val detectAreaBottom = getInt("detectAreaBottom", true) ?: areaBottom
 
             ConditionEntity(
                 id = id,
@@ -228,6 +232,10 @@ internal class ScenarioSerializer {
                 areaTop = areaTop,
                 areaRight = areaRight,
                 areaBottom = areaBottom,
+                detectAreaLeft = detectAreaLeft,
+                detectAreaTop = detectAreaTop,
+                detectAreaRight = detectAreaRight,
+                detectAreaBottom = detectAreaBottom,
                 name = getString("name") ?: "",
                 shouldBeDetected = getBoolean("shouldBeDetected") ?: true,
                 detectionType = getInt("detectionType")

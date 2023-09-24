@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 9,
-    "identityHash": "5333d8912e4724fa7f0876368750867b",
+    "identityHash": "07bf35cd6e730655304a37b25e29bbc8",
     "entities": [
       {
         "tableName": "action_table",
@@ -272,7 +272,7 @@
       },
       {
         "tableName": "condition_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `eventId` INTEGER NOT NULL, `priority` INTEGER NOT NULL DEFAULT 0, `name` TEXT NOT NULL, `path` TEXT NOT NULL, `area_left` INTEGER NOT NULL, `area_top` INTEGER NOT NULL, `area_right` INTEGER NOT NULL, `area_bottom` INTEGER NOT NULL, `threshold` INTEGER NOT NULL DEFAULT 1, `detection_type` INTEGER NOT NULL, `shouldBeDetected` INTEGER NOT NULL, FOREIGN KEY(`eventId`) REFERENCES `event_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `eventId` INTEGER NOT NULL, `priority` INTEGER NOT NULL DEFAULT 0, `name` TEXT NOT NULL, `path` TEXT NOT NULL, `area_left` INTEGER NOT NULL, `area_top` INTEGER NOT NULL, `area_right` INTEGER NOT NULL, `area_bottom` INTEGER NOT NULL, `detect_area_left` INTEGER NOT NULL DEFAULT 0, `detect_area_top` INTEGER NOT NULL DEFAULT 0, `detect_area_right` INTEGER NOT NULL DEFAULT 0, `detect_area_bottom` INTEGER NOT NULL DEFAULT 0, `threshold` INTEGER NOT NULL DEFAULT 1, `detection_type` INTEGER NOT NULL, `shouldBeDetected` INTEGER NOT NULL, FOREIGN KEY(`eventId`) REFERENCES `event_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -328,6 +328,34 @@
             "columnName": "area_bottom",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "detectAreaLeft",
+            "columnName": "detect_area_left",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "detectAreaTop",
+            "columnName": "detect_area_top",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "detectAreaRight",
+            "columnName": "detect_area_right",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "detectAreaBottom",
+            "columnName": "detect_area_bottom",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
           },
           {
             "fieldPath": "threshold",
@@ -530,7 +558,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5333d8912e4724fa7f0876368750867b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '07bf35cd6e730655304a37b25e29bbc8')"
     ]
   }
 }

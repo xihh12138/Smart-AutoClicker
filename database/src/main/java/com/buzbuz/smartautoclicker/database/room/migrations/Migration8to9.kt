@@ -32,6 +32,10 @@ object Migration8to9 : Migration(8, 9) {
     override fun migrate(database: SupportSQLiteDatabase) {
         database.apply {
             execSQL(addConditionPriorityColumn)
+            execSQL(addConditionDetectAreaLeftColumn)
+            execSQL(addConditionDetectAreaTopColumn)
+            execSQL(addConditionDetectAreaRightColumn)
+            execSQL(addConditionDetectAreaBottomColumn)
         }
     }
 
@@ -39,5 +43,29 @@ object Migration8to9 : Migration(8, 9) {
     private val addConditionPriorityColumn = """
         ALTER TABLE `condition_table`
         ADD COLUMN `priority` INTEGER DEFAULT 0 NOT NULL
+    """.trimIndent()
+
+    /** Create the table for the end conditions. */
+    private val addConditionDetectAreaLeftColumn = """
+        ALTER TABLE `condition_table`
+        ADD COLUMN `detect_area_left` INTEGER DEFAULT 0 NOT NULL
+    """.trimIndent()
+
+    /** Create the table for the end conditions. */
+    private val addConditionDetectAreaTopColumn = """
+        ALTER TABLE `condition_table`
+        ADD COLUMN `detect_area_top` INTEGER DEFAULT 0 NOT NULL
+    """.trimIndent()
+
+    /** Create the table for the end conditions. */
+    private val addConditionDetectAreaRightColumn = """
+        ALTER TABLE `condition_table`
+        ADD COLUMN `detect_area_right` INTEGER DEFAULT 0 NOT NULL
+    """.trimIndent()
+
+    /** Create the table for the end conditions. */
+    private val addConditionDetectAreaBottomColumn = """
+        ALTER TABLE `condition_table`
+        ADD COLUMN `detect_area_bottom` INTEGER DEFAULT 0 NOT NULL
     """.trimIndent()
 }

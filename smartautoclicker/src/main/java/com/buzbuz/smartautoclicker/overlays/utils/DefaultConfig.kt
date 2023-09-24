@@ -66,6 +66,7 @@ fun newDefaultCondition(context: Context, eventId: Long, area: Rect, bitmap: Bit
         name = context.resources.getString(R.string.default_condition_name),
         bitmap = bitmap,
         area = area,
+        detectArea = Rect(area),
         threshold = context.resources.getInteger(R.integer.default_condition_threshold),
         detectionType = EXACT,
         shouldBeDetected = true,

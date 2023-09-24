@@ -180,6 +180,7 @@ class EventConfigDialog(
                                         text = context.getString(R.string.condition_operator_and)
                                     }
                                 }
+
                                 OR -> {
                                     viewBinding.textConditionOperatorDesc.apply {
                                         setLeftRightCompoundDrawables(
@@ -327,7 +328,7 @@ class EventConfigDialog(
                         }
                     },
                     onDeleteClicked = { viewModel?.removeCondition(overlayType.condition) }
-                ))
+                ), hideCurrent = true)
             }
 
             is SubOverlay.None -> { /* Nothing to do */

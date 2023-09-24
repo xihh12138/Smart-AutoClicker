@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
  * Copyright (C) 2022 Nain57
  *
  * This program is free software; you can redistribute it and/or
@@ -15,8 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; If not, see <http://www.gnu.org/licenses/>.
 -->
-<androidx.core.widget.NestedScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -29,9 +27,9 @@
         tools:layout_gravity="center">
 
         <androidx.cardview.widget.CardView
+            style="@style/HeaderCardView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            style="@style/HeaderCardView">
+            android:layout_height="wrap_content">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -39,13 +37,13 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/HeaderTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/dialog_condition_name_title"
                     android:labelFor="@+id/edit_name"
-                    style="@style/HeaderTitle"/>
+                    android:text="@string/dialog_condition_name_title" />
 
-                <include layout="@layout/include_view_separator"/>
+                <include layout="@layout/include_view_separator" />
 
                 <EditText
                     android:id="@id/edit_name"
@@ -64,9 +62,9 @@
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
+            style="@style/HeaderCardView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            style="@style/HeaderCardView">
+            android:layout_height="wrap_content">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -74,58 +72,68 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/HeaderTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/dialog_condition_detection_details_title"
                     android:labelFor="@+id/edit_name"
-                    style="@style/HeaderTitle"/>
+                    android:text="@string/dialog_condition_detection_details_title" />
 
                 <ImageView
                     android:id="@+id/image_condition"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
                     android:layout_marginTop="@dimen/margin_vertical_small"
                     android:layout_marginBottom="@dimen/margin_vertical_small"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="@string/content_desc_image_condition"
                     android:maxWidth="@dimen/dialog_condition_max_width"
                     android:maxHeight="@dimen/dialog_condition_max_height"
-                    android:adjustViewBounds="true"
-                    android:layout_gravity="center_horizontal"
                     android:scaleType="fitCenter"
-                    android:contentDescription="@string/content_desc_image_condition"
                     tools:layout_width="150dp"
-                    tools:src="@drawable/ic_click"/>
+                    tools:src="@drawable/ic_click" />
 
-                <include layout="@layout/include_view_separator"/>
+                <include layout="@layout/include_view_separator" />
 
                 <TextView
                     android:id="@+id/condition_detection_should_appear"
                     style="@style/ItemView.Small"
+                    android:drawablePadding="@dimen/margin_horizontal_small"
                     android:gravity="center_vertical"
                     android:textSize="@dimen/text_size_list_item_text"
-                    android:drawablePadding="@dimen/margin_horizontal_small"
-                    tools:drawableStart="@drawable/ic_confirm"
                     tools:drawableEnd="@drawable/ic_chevron"
-                    tools:text="@string/dialog_condition_should_be_detected"/>
+                    tools:drawableStart="@drawable/ic_confirm"
+                    tools:text="@string/dialog_condition_should_be_detected" />
 
-                <include layout="@layout/include_view_separator"/>
+                <include layout="@layout/include_view_separator" />
 
                 <TextView
                     android:id="@+id/condition_detection_type"
                     style="@style/ItemView.Small"
+                    android:drawablePadding="@dimen/margin_horizontal_small"
                     android:gravity="center_vertical"
                     android:textSize="@dimen/text_size_list_item_text"
-                    android:drawablePadding="@dimen/margin_horizontal_small"
                     tools:drawableEnd="@drawable/ic_chevron"
-                    tools:text="@string/dialog_condition_type_whole_screen"/>
+                    tools:text="@string/dialog_condition_type_whole_screen" />
+
+                <TextView
+                    android:id="@+id/condition_detection_type_value"
+                    style="@style/ItemView.Small"
+                    android:drawablePadding="@dimen/margin_horizontal_small"
+                    android:gravity="center_vertical"
+                    android:textSize="@dimen/text_size_list_item_text"
+                    android:visibility="gone"
+                    android:drawableEnd="@drawable/ic_chevron"
+                    tools:text="@string/dialog_condition_type_whole_screen" />
 
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
+            style="@style/HeaderCardView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            style="@style/HeaderCardView">
+            android:layout_height="wrap_content">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -133,10 +141,10 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/HeaderTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/dialog_condition_threshold_title"
-                    style="@style/HeaderTitle"/>
+                    android:text="@string/dialog_condition_threshold_title" />
 
                 <TextView
                     android:id="@+id/text_diff_threshold"
@@ -144,11 +152,11 @@
                     android:layout_marginStart="@dimen/margin_horizontal_small"
                     android:layout_marginEnd="@dimen/margin_horizontal_small"
                     android:gravity="center_vertical"
-                    android:textSize="@dimen/text_size_list_item_text"
                     android:text="@string/dialog_condition_threshold_value"
-                    tools:text="Value: 12%"/>
+                    android:textSize="@dimen/text_size_list_item_text"
+                    tools:text="Value: 12%" />
 
-                <include layout="@layout/include_view_separator"/>
+                <include layout="@layout/include_view_separator" />
 
                 <SeekBar
                     android:id="@+id/seekbar_diff_threshold"
@@ -156,8 +164,8 @@
                     android:layout_height="@dimen/item_height"
                     android:layout_marginStart="@dimen/margin_horizontal_small"
                     android:layout_marginEnd="@dimen/margin_horizontal_small"
-                    android:inputType="number"
-                    android:importantForAutofill="no"/>
+                    android:importantForAutofill="no"
+                    android:inputType="number" />
 
 
             </LinearLayout>

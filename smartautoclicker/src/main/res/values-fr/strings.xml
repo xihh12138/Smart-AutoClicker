@@ -68,9 +68,11 @@
     <string name="dialog_condition_name_title">Nom</string>
     <string name="dialog_condition_delete">Supprimer</string>
     <string name="dialog_condition_at">à la position [%1$d,%2$d] [%3$d,%4$d]</string>
+    <string name="dialog_condition_in">Dans la région [%1$d,%2$d] [%3$d,%4$d]</string>
     <string name="dialog_condition_type_title">Type de détection</string>
     <string name="dialog_condition_type_whole_screen">Sur tout l\'écran</string>
     <string name="dialog_condition_type_exact_position">À la même position</string>
+    <string name="dialog_condition_type_detect_area">Dans la zone de détection</string>
     <string name="dialog_condition_threshold_title">Différence tolérée</string>
     <string name="dialog_condition_threshold_value">Tolérance: %1$d %%</string>
     <string name="dialog_condition_should_be_detected">Visible</string>

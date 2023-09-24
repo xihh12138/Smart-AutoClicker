@@ -132,9 +132,11 @@
     <string name="dialog_condition_detection_details_title">检测细节</string>
     <string name="dialog_condition_delete">删除</string>
     <string name="dialog_condition_at">位置 [%1$d,%2$d] [%3$d,%4$d]</string>
+    <string name="dialog_condition_in">区域 [%1$d,%2$d] [%3$d,%4$d]</string>
     <string name="dialog_condition_type_title">检测类型</string>
     <string name="dialog_condition_type_whole_screen">屏幕上的任意位置</string>
     <string name="dialog_condition_type_exact_position">在相同位置</string>
+    <string name="dialog_condition_type_detect_area">在检测区域内</string>
     <string name="dialog_condition_threshold_title">容差</string>
     <string name="dialog_condition_threshold_value">容差: %1$d %%</string>
     <string name="dialog_condition_should_be_detected">当图像可见时点击</string>

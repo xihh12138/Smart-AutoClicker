@@ -29,7 +29,8 @@ import com.buzbuz.smartautoclicker.database.room.entity.ConditionEntity
  * @param eventId the identifier of the event for this condition.
  * @param name the name of the condition.
  * @param path the path to the bitmap that should be matched for detection.
- * @param area the area of the screen to detect.
+ * @param area  The initial area when the detection condition is created.
+ * @param detectArea the area of the screen really to detect.
  * @param threshold the accepted difference between the conditions and the screen content, in percent (0-100%).
  * @param detectionType the type of detection for this condition. Must be one of [DetectionType].
  * @param bitmap the bitmap for the condition. Not set when fetched from the repository.
@@ -40,7 +41,8 @@ data class Condition(
     var priority: Int,
     var name: String,
     var path: String? = null,
-    var area: Rect,
+    val area: Rect,
+    var detectArea: Rect,
     var threshold: Int,
     @DetectionType val detectionType: Int,
     val shouldBeDetected: Boolean,
@@ -58,6 +60,10 @@ data class Condition(
         area.top,
         area.right,
         area.bottom,
+        detectArea.left,
+        detectArea.top,
+        detectArea.right,
+        detectArea.bottom,
         threshold,
         detectionType,
         shouldBeDetected,
@@ -73,6 +79,7 @@ data class Condition(
     fun deepCopy(): Condition = copy(
         path = path,
         area = Rect(area),
+        detectArea = Rect(detectArea),
     )
 }
 
@@ -85,13 +92,14 @@ internal fun ConditionEntity.toCondition(): Condition =
         name,
         path,
         Rect(areaLeft, areaTop, areaRight, areaBottom),
+        Rect(detectAreaLeft, detectAreaTop, detectAreaRight, detectAreaBottom),
         threshold,
         detectionType,
         shouldBeDetected
     )
 
 /** Defines the detection type to apply to a condition. */
-@IntDef(EXACT, WHOLE_SCREEN)
+@IntDef(EXACT, WHOLE_SCREEN, DETECT_AREA)
 @Retention(AnnotationRetention.SOURCE)
 annotation class DetectionType
 
@@ -100,3 +108,6 @@ const val EXACT = 1
 
 /** The condition can be detected anywhere on the screen. */
 const val WHOLE_SCREEN = 2
+
+/** The condition can be detected only in the detection area. */
+const val DETECT_AREA = 3

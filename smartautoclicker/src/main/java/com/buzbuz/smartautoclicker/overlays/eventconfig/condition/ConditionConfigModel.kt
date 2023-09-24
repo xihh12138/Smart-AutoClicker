@@ -18,17 +18,17 @@ package com.buzbuz.smartautoclicker.overlays.eventconfig.condition
 
 import android.content.Context
 import android.graphics.Bitmap
-
+import android.graphics.Rect
 import com.buzbuz.smartautoclicker.baseui.OverlayViewModel
-import com.buzbuz.smartautoclicker.domain.Repository
 import com.buzbuz.smartautoclicker.domain.Condition
+import com.buzbuz.smartautoclicker.domain.DETECT_AREA
 import com.buzbuz.smartautoclicker.domain.EXACT
-import com.buzbuz.smartautoclicker.domain.WHOLE_SCREEN
-
+import com.buzbuz.smartautoclicker.domain.Repository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.take
@@ -47,14 +47,20 @@ class ConditionConfigModel(context: Context) : OverlayViewModel(context) {
 
     /** The condition being configured by the user. Defined using [setConfigCondition]. */
     private val configuredCondition = MutableStateFlow<Condition?>(null)
+
     /** The type of detection currently selected by the user. */
     val name: Flow<String?> = configuredCondition.map { it?.name }.take(1)
+
     /** Tells if the condition should be present or not on the screen. */
     val shouldBeDetected: Flow<Boolean> = configuredCondition.mapNotNull { it?.shouldBeDetected }
+
     /** The type of detection currently selected by the user. */
-    val detectionType: Flow<Int> = configuredCondition.mapNotNull { it?.detectionType }
+    val detectionTypeAndValue: Flow<DetectionTypeAndValue> =
+        configuredCondition.filterNotNull().map { DetectionTypeAndValue(it.detectionType, it.detectArea) }
+
     /** The condition threshold value currently edited by the user. */
     val threshold: Flow<Int> = configuredCondition.mapNotNull { it?.threshold }
+
     /** Tells if the configured condition is valid and can be saved. */
     val isValidCondition: Flow<Boolean> = configuredCondition.map { condition ->
         condition != null && condition.name.isNotEmpty()
@@ -74,7 +80,8 @@ class ConditionConfigModel(context: Context) : OverlayViewModel(context) {
 
     /** @return the condition containing all user changes. */
     fun getConfiguredCondition(): Condition =
-        configuredCondition.value ?: throw IllegalStateException("Can't get the configured condition, none were defined.")
+        configuredCondition.value
+            ?: throw IllegalStateException("Can't get the configured condition, none were defined.")
 
     /**
      * Set the configured condition name.
@@ -97,8 +104,15 @@ class ConditionConfigModel(context: Context) : OverlayViewModel(context) {
     fun toggleDetectionType() {
         configuredCondition.value?.let { condition ->
             configuredCondition.value = condition.copy(
-                detectionType = if (condition.detectionType == EXACT) WHOLE_SCREEN else EXACT
+                detectionType = if (condition.detectionType == DETECT_AREA) EXACT else condition.detectionType + 1,
             )
+        } ?: throw IllegalStateException("Can't toggle condition should be detected, condition is null!")
+    }
+
+    /** Toggle between exact and whole screen for the detection type. */
+    fun setDetectionArea(detectionArea: Rect) {
+        configuredCondition.value?.let { condition ->
+            configuredCondition.value = condition.copy(detectArea = detectionArea)
         } ?: throw IllegalStateException("Can't toggle condition should be detected, condition is null!")
     }
 
@@ -144,3 +158,5 @@ class ConditionConfigModel(context: Context) : OverlayViewModel(context) {
 
 /** The maximum threshold value selectable by the user. */
 const val MAX_THRESHOLD = 20
+
+data class DetectionTypeAndValue(val type: Int, val area: Rect)
