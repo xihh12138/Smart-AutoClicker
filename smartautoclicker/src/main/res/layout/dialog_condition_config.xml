@@ -123,7 +123,7 @@
                     android:gravity="center_vertical"
                     android:textSize="@dimen/text_size_list_item_text"
                     android:visibility="gone"
-                    android:drawableEnd="@drawable/ic_chevron"
+                    tools:drawableEnd="@drawable/ic_chevron"
                     tools:text="@string/dialog_condition_type_whole_screen" />
 
             </LinearLayout>

@@ -302,7 +302,7 @@ class EventConfigDialog(
 
             is SubOverlay.ConditionCapture -> {
                 showSubOverlay(
-                    overlayController = ConditionSelectorMenu(
+                    ConditionSelectorMenu(
                         context = context,
                         onConditionSelected = { area, bitmap ->
                             viewModel?.let { model ->

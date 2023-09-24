@@ -74,27 +74,18 @@ internal class Selector(
         private set
 
     /** Default size of the selector area. */
-    private val selectorDefaultSize = selectorDefaultSize?.let { size ->
-        val width = size.width.takeIf { it != 0 } ?: (styledAttrs.getDimensionPixelSize(
+    private val selectorDefaultSize = selectorDefaultSize.let { size ->
+        val width = size?.width?.takeIf { it != 0 } ?: (styledAttrs.getDimensionPixelSize(
             R.styleable.ConditionSelectorView_defaultWidth,
             100
         ) / 2)
-        val height = size.height.takeIf { it != 0 } ?: (styledAttrs.getDimensionPixelSize(
+        val height = size?.height?.takeIf { it != 0 } ?: (styledAttrs.getDimensionPixelSize(
             R.styleable.ConditionSelectorView_defaultHeight,
             100
         ) / 2)
 
         Size(width, height)
-    } ?: Size(
-        styledAttrs.getDimensionPixelSize(
-            R.styleable.ConditionSelectorView_defaultWidth,
-            100
-        ) / 2,
-        styledAttrs.getDimensionPixelSize(
-            R.styleable.ConditionSelectorView_defaultHeight,
-            100
-        ) / 2
-    )
+    }
 
     /** The size of the selector handle. */
     private val handleSize = styledAttrs.getDimensionPixelSize(

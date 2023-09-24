@@ -46,6 +46,8 @@
     <string name="dialog_event_list_add">Créer</string>
     <string name="dialog_event_list_reorder">Réorganiser</string>
     <string name="dialog_event_list_no_events">Aucun évènement.\nAppuyez sur \'Créer\' pour en créer un.</string>
+    <string name="dialog_event_list_delete_title">Supprimer un événement</string>
+    <string name="dialog_event_list_delete_message">Le événement %1$s va être supprimé. Êtes vous sûr ?</string>
     <string name="dialog_event_add_title">Ajouter un nouvel évènement</string>
     <string name="dialog_event_add_create">Créer</string>
     <string name="dialog_event_add_copy">Copier depuis un autre évènement</string>

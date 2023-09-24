@@ -51,6 +51,8 @@
     <string name="dialog_event_list_add">New</string>
     <string name="dialog_event_list_reorder">Reorder</string>
     <string name="dialog_event_list_no_events">No events.\nClick on \'New\' to create one. </string>
+    <string name="dialog_event_list_delete_title">Delete Event</string>
+    <string name="dialog_event_list_delete_message">This will delete %1$s. Are you sure ?</string>
 
     <string name="dialog_event_add_title">Add new event</string>
     <string name="dialog_event_add_create">Create</string>

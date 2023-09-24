@@ -17,6 +17,7 @@
 package com.buzbuz.smartautoclicker.overlays.eventlist
 
 import android.content.Context
+import android.content.DialogInterface
 import android.view.LayoutInflater
 import android.view.View
 import androidx.annotation.IdRes
@@ -39,6 +40,7 @@ import com.buzbuz.smartautoclicker.overlays.copy.events.EventCopyDialog
 import com.buzbuz.smartautoclicker.overlays.debugging.DebugConfigDialog
 import com.buzbuz.smartautoclicker.overlays.eventconfig.EventConfigDialog
 import com.buzbuz.smartautoclicker.overlays.scenariosettings.ScenarioSettingsDialog
+import com.buzbuz.smartautoclicker.overlays.utils.AlertOverlayDialog
 import com.buzbuz.smartautoclicker.overlays.utils.LoadableListDialog
 
 import kotlinx.coroutines.launch
@@ -60,12 +62,16 @@ class EventListDialog(
         attachToLifecycle(this@EventListDialog)
         setScenario(scenario)
     }
+
     /** ViewBinding containing the views for this dialog. */
     private lateinit var viewBinding: DialogEventListBinding
+
     /** ViewBinding containing the views for the buttons of this dialog. */
     private lateinit var buttonsViewBinding: IncludeEventListButtonsBinding
+
     /** Adapter displaying the list of events. */
     private lateinit var eventAdapter: EventListAdapter
+
     /** TouchHelper applied to [eventAdapter] when in [REORDER] mode allowing to drag and drop the items. */
     private val itemTouchHelper = ItemTouchHelper(EventReorderTouchHelper())
 
@@ -92,7 +98,7 @@ class EventListDialog(
     override fun onDialogCreated(dialog: AlertDialog) {
         super.onDialogCreated(dialog)
         eventAdapter = EventListAdapter(::showEventConfigDialog) { deletedEvent ->
-            viewModel?.deleteEvent(deletedEvent)
+            showConfirmDeleteEventDialog(deletedEvent)
         }
 
         listBinding.list.apply {
@@ -111,7 +117,7 @@ class EventListDialog(
                 launch {
                     viewModel?.uiMode?.collect { mode ->
                         eventAdapter.mode = mode
-                        when(mode) {
+                        when (mode) {
                             EDITION -> toEditionMode()
                             REORDER -> toReorderMode()
                         }
@@ -146,12 +152,13 @@ class EventListDialog(
         when (viewId) {
             R.id.btn_new_event -> viewModel?.getNewEvent(context)?.let { showEventConfigDialog(it) }
             R.id.btn_copy_event -> showEventCopyDialog()
-            R.id.btn_move_events ->  viewModel?.setUiMode(REORDER)
+            R.id.btn_move_events -> viewModel?.setUiMode(REORDER)
             R.id.btn_scenario_settings -> showScenarioSettingsDialog()
             R.id.btn_cancel -> {
                 eventAdapter.cancelReorder()
                 viewModel?.setUiMode(EDITION)
             }
+
             R.id.btn_confirm -> when (viewModel?.uiMode?.value) {
                 EDITION -> dismiss()
                 REORDER -> viewModel?.apply {
@@ -219,11 +226,13 @@ class EventListDialog(
     /** Opens the dialog allowing the user to copy a click. */
     private fun showEventCopyDialog() {
         viewModel?.let {
-            showSubOverlay(EventCopyDialog(
-                context = context,
-                scenarioId = it.scenarioId.value!!,
-                onEventSelected = ::showEventConfigDialog
-            ))
+            showSubOverlay(
+                EventCopyDialog(
+                    context = context,
+                    scenarioId = it.scenarioId.value!!,
+                    onEventSelected = ::showEventConfigDialog
+                )
+            )
         }
     }
 
@@ -256,6 +265,20 @@ class EventListDialog(
         showSubOverlay(
             overlayController = DebugConfigDialog(context),
             hideCurrent = false,
+        )
+    }
+
+    private fun showConfirmDeleteEventDialog(event: Event) {
+        showSubOverlay(
+            AlertOverlayDialog(
+                context,
+                R.string.dialog_event_list_delete_title,
+                context.resources.getString(R.string.dialog_event_list_delete_message, event.name),
+                onPositive = {
+                    viewModel?.deleteEvent(event)
+                    dismiss()
+                }
+            )
         )
     }
 }
