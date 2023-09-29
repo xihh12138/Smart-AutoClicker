@@ -20,6 +20,7 @@ import android.animation.LayoutTransition
 import android.util.Size
 import android.view.View
 import android.view.ViewGroup
+import java.util.LinkedList
 
 /**
  * Controls the resize of an overlay window.
@@ -52,21 +53,25 @@ class OverlayWindowResizeController(
     /** Monitor the transitions triggered by animateLayoutChanges on the [resizedContainer]. */
     private val transitionListener = object : LayoutTransition.TransitionListener {
 
+        private val transitingViews = LinkedList<View>()
+
         override fun startTransition(
             transition: LayoutTransition?,
             container: ViewGroup?,
-            view: View?,
+            view: View,
             transitionType: Int
         ) {
+            transitingViews.add(view)
         }
 
         override fun endTransition(
             transition: LayoutTransition?,
             container: ViewGroup?,
-            view: View?,
+            view: View,
             transitionType: Int
         ) {
-            if (view != null && view.id == resizedContainer.id && isChangeTransition(transitionType)) {
+            transitingViews.remove(view)
+            if (transitingViews.isEmpty() && isChangeTransition(transitionType)) {
                 // The view resize animation is over, restore the window size to wrap the content.
                 windowSizeListener(Size(backgroundViewGroup.width, backgroundViewGroup.height))
                 isAnimating = false
