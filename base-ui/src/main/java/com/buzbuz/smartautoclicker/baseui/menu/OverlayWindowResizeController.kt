@@ -71,10 +71,14 @@ class OverlayWindowResizeController(
             transitionType: Int
         ) {
             transitingViews.remove(view)
-            if (transitingViews.isEmpty() && isChangeTransition(transitionType)) {
+
+            if (transitingViews.isEmpty()) {
+                isAnimating = false
+            }
+
+            if (view.id == resizedContainer.id && isChangeTransition(transitionType)) {
                 // The view resize animation is over, restore the window size to wrap the content.
                 windowSizeListener(Size(backgroundViewGroup.width, backgroundViewGroup.height))
-                isAnimating = false
             }
         }
     }
