@@ -314,11 +314,12 @@ internal class BackupEngineImpl(
                     },
                     conditions = completeEventEntity.conditions.map { conditionEntity ->
                         conditionEntity.run {
+                            //area is related with bitmap's size,so we can't change it yet
                             copy(
-                                areaLeft = areaLeft.times(adjustWidthRate).toInt(),
-                                areaTop = areaTop.times(adjustHeightRate).toInt(),
-                                areaRight = areaRight.times(adjustWidthRate).toInt(),
-                                areaBottom = areaBottom.times(adjustHeightRate).toInt(),
+//                                areaLeft = areaLeft.times(adjustWidthRate).toInt(),
+//                                areaTop = areaTop.times(adjustHeightRate).toInt(),
+//                                areaRight = areaRight.times(adjustWidthRate).toInt(),
+//                                areaBottom = areaBottom.times(adjustHeightRate).toInt(),
                                 detectAreaLeft = detectAreaLeft.times(adjustWidthRate).toInt(),
                                 detectAreaTop = detectAreaTop.times(adjustHeightRate).toInt(),
                                 detectAreaRight = detectAreaRight.times(adjustWidthRate).toInt(),
