@@ -20,6 +20,7 @@ import android.content.ContentResolver
 import android.graphics.Point
 import android.net.Uri
 import android.util.Log
+import android.util.Size
 
 import com.buzbuz.smartautoclicker.backup.ext.readEntryFile
 import com.buzbuz.smartautoclicker.backup.ext.writeEntryFile
@@ -152,9 +153,12 @@ internal class BackupEngineImpl(
         }
     }
 
-    override suspend fun loadBackup(zipFileUri: Uri, screenSize: Point, progress: BackupEngine.BackupProgress) {
+    override suspend fun loadBackup(
+        zipFileUri: Uri, screenSize: Point, needAdjustCoords: Boolean, progress: BackupEngine.BackupProgress
+    ) {
         Log.d(TAG, "Load backup: $zipFileUri")
 
+        val screenSize = Size(screenSize.x, screenSize.y)
         var screenCompatWarning = false
         var currentProgress = 0
         var failureCount = 0
@@ -171,16 +175,23 @@ internal class BackupEngineImpl(
                                     Log.d(TAG, "Extract scenario file ${zipEntry.name}.")
 
                                     scenarioSerializer.deserialize(zipStream)?.let { backup ->
-                                        scenarioList.add(backup.scenario)
+                                        val backupScreenSize = Size(backup.screenWidth, backup.screenHeight)
+
+                                        val scenario = if (needAdjustCoords) {
+                                            backup.scenario.adjustCoordinate(backupScreenSize, screenSize)
+                                        } else {
+                                            backup.scenario
+                                        }
+
+                                        scenarioList.add(scenario)
 
                                         if (!screenCompatWarning) {
-                                            screenCompatWarning =
-                                                screenSize != Point(backup.screenWidth, backup.screenHeight)
+                                            screenCompatWarning = screenSize != backupScreenSize
                                         }
 
                                         currentProgress++
                                         progress.onProgressChanged(currentProgress, null)
-                                    } ?:let {
+                                    } ?: let {
                                         Log.w(TAG, "Can't deserialize ${zipEntry.name}.")
                                         failureCount++
                                     }
@@ -191,7 +202,8 @@ internal class BackupEngineImpl(
                                     extractConditionFromZip(zipStream, zipEntry)
                                 }
 
-                                else -> { /* Ignore other files */ }
+                                else -> { /* Ignore other files */
+                                }
                             }
                         }
                 }
@@ -247,7 +259,7 @@ internal class BackupEngineImpl(
      * @param completeScenario the scenario to verify.
      * @return true if the scenario is correct, false if not.
      */
-    private fun verifyExtractedScenario(completeScenario: CompleteScenario) : Boolean {
+    private fun verifyExtractedScenario(completeScenario: CompleteScenario): Boolean {
         Log.d(TAG, "Verifying scenario ${completeScenario.scenario.id}")
 
         completeScenario.events.forEach { completeEvent ->
@@ -278,9 +290,50 @@ internal class BackupEngineImpl(
             }
         }
     }
+
+    private fun CompleteScenario.adjustCoordinate(oldScreenSize: Size, newScreenSize: Size): CompleteScenario {
+        val adjustWidthRate = newScreenSize.width.toFloat() / oldScreenSize.width
+        val adjustHeightRate = newScreenSize.height.toFloat() / oldScreenSize.height
+
+        return copy(
+            events = events.map { completeEventEntity ->
+                completeEventEntity.copy(
+                    actions = completeEventEntity.actions.map { completeActionEntity ->
+                        completeActionEntity.copy(
+                            action = completeActionEntity.action.run {
+                                copy(
+                                    x = x?.times(adjustWidthRate)?.toInt(),
+                                    y = y?.times(adjustHeightRate)?.toInt(),
+                                    fromX = fromX?.times(adjustWidthRate)?.toInt(),
+                                    fromY = fromY?.times(adjustHeightRate)?.toInt(),
+                                    toX = toX?.times(adjustWidthRate)?.toInt(),
+                                    toY = toY?.times(adjustHeightRate)?.toInt(),
+                                )
+                            }
+                        )
+                    },
+                    conditions = completeEventEntity.conditions.map { conditionEntity ->
+                        conditionEntity.run {
+                            copy(
+                                areaLeft = areaLeft.times(adjustWidthRate).toInt(),
+                                areaTop = areaTop.times(adjustHeightRate).toInt(),
+                                areaRight = areaRight.times(adjustWidthRate).toInt(),
+                                areaBottom = areaBottom.times(adjustHeightRate).toInt(),
+                                detectAreaLeft = detectAreaLeft.times(adjustWidthRate).toInt(),
+                                detectAreaTop = detectAreaTop.times(adjustHeightRate).toInt(),
+                                detectAreaRight = detectAreaRight.times(adjustWidthRate).toInt(),
+                                detectAreaBottom = detectAreaBottom.times(adjustHeightRate).toInt(),
+                            )
+                        }
+                    }
+                )
+            }
+        )
+    }
 }
 
 /** json file extension. */
 private const val FILE_EXTENSION_JSON = ".json"
+
 /** Tag for logs. */
 private const val TAG = "BackupEngine"

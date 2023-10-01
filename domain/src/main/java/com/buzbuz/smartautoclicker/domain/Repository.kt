@@ -179,6 +179,7 @@ interface Repository {
      * @return the list containing all conditions.
      */
     fun getAllConditions(): Flow<List<Condition>>
+
     /**
      * Add a new event.
      * It must be complete in order to be added or it will be skipped.
@@ -244,5 +245,5 @@ interface Repository {
      *
      * @return a flow on the backup import progress.
      */
-    fun restoreScenarioBackup(zipFileUri: Uri, screenSize: Point): Flow<Backup>
+    fun restoreScenarioBackup(zipFileUri: Uri, screenSize: Point, needAdjustCoords: Boolean): Flow<Backup>
 }

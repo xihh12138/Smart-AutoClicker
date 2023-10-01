@@ -41,14 +41,17 @@ internal class RepositoryImpl internal constructor(
     database: ClickDatabase,
     private val bitmapManager: BitmapManager,
     private val backupEngine: com.buzbuz.smartautoclicker.backup.BackupEngine,
-): Repository {
+) : Repository {
 
     /** The Dao for accessing the database. */
     private val scenarioDao = database.scenarioDao()
+
     /** The Dao for accessing the database. */
     private val eventDao = database.eventDao()
+
     /** The Dao for accessing the conditions. */
     private val conditionsDao = database.conditionDao()
+
     /** The Dao for accessing the scenario end conditions. */
     private val endConditionDao = database.endConditionDao()
 
@@ -66,7 +69,7 @@ internal class RepositoryImpl internal constructor(
         val removedConditionsPath = mutableListOf<String>()
         eventDao.getEventsIds(scenario.id).forEach { eventId ->
             conditionsDao.getConditionsPath(eventId).forEach { path ->
-                if (!removedConditionsPath.contains(path))  removedConditionsPath.add(path)
+                if (!removedConditionsPath.contains(path)) removedConditionsPath.add(path)
             }
         }
 
@@ -79,10 +82,11 @@ internal class RepositoryImpl internal constructor(
             scenarioEntity.toScenario()
         }
 
-    override fun getScenarioWithEndConditionsFlow(scenarioId: Long) = scenarioDao.getScenarioWithEndConditionsFlow(scenarioId)
-        .map { scenarioWithEndConditions ->
-            scenarioWithEndConditions.scenario.toScenario() to scenarioWithEndConditions.endConditions.map { it.toEndCondition() }
-        }
+    override fun getScenarioWithEndConditionsFlow(scenarioId: Long) =
+        scenarioDao.getScenarioWithEndConditionsFlow(scenarioId)
+            .map { scenarioWithEndConditions ->
+                scenarioWithEndConditions.scenario.toScenario() to scenarioWithEndConditions.endConditions.map { it.toEndCondition() }
+            }
 
     override suspend fun getScenarioWithEndConditions(scenarioId: Long): Pair<Scenario, List<EndCondition>> {
         val scenarioWithEndConditions = scenarioDao.getScenarioWithEndConditions(scenarioId)
@@ -110,7 +114,8 @@ internal class RepositoryImpl internal constructor(
 
     override fun getAllActions(): Flow<List<Action>> = eventDao.getAllActions().mapList { it.toAction() }
 
-    override fun getAllConditions(): Flow<List<Condition>> = conditionsDao.getAllConditions().mapList { it.toCondition() }
+    override fun getAllConditions(): Flow<List<Condition>> =
+        conditionsDao.getAllConditions().mapList { it.toCondition() }
 
     override suspend fun addEvent(event: Event): Boolean {
         event.conditions?.let {
@@ -146,7 +151,8 @@ internal class RepositoryImpl internal constructor(
         clearRemovedConditionsBitmaps(removedConditions)
     }
 
-    override suspend fun getBitmap(path: String, width: Int, height: Int) = bitmapManager.loadBitmap(path, width, height)
+    override suspend fun getBitmap(path: String, width: Int, height: Int) =
+        bitmapManager.loadBitmap(path, width, height)
 
     override fun cleanCache() {
         bitmapManager.releaseCache()
@@ -182,7 +188,7 @@ internal class RepositoryImpl internal constructor(
         bitmapManager.deleteBitmaps(deletedPaths)
     }
 
-    override fun createScenarioBackup(zipFileUri: Uri, scenarios: List<Long>, screenSize: Point) = channelFlow  {
+    override fun createScenarioBackup(zipFileUri: Uri, scenarios: List<Long>, screenSize: Point) = channelFlow {
         launch {
             backupEngine.createBackup(
                 zipFileUri,
@@ -201,11 +207,12 @@ internal class RepositoryImpl internal constructor(
         }
     }
 
-    override fun restoreScenarioBackup(zipFileUri: Uri, screenSize: Point) = channelFlow {
+    override fun restoreScenarioBackup(zipFileUri: Uri, screenSize: Point, needAdjustCoords: Boolean) = channelFlow {
         launch {
             backupEngine.loadBackup(
                 zipFileUri,
                 screenSize,
+                needAdjustCoords,
                 com.buzbuz.smartautoclicker.backup.BackupEngine.BackupProgress(
                     onError = { send(Backup.Error) },
                     onProgressChanged = { current, max -> send(Backup.Loading(current, max)) },

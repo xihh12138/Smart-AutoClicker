@@ -30,9 +30,12 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.sample
+import kotlinx.coroutines.launch
 
 /** */
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -40,12 +43,15 @@ class DebugModel(context: Context) : OverlayViewModel(context) {
 
     /** Debug configuration shared preferences. */
     private val sharedPreferences: SharedPreferences = context.getDebugConfigPreferences()
+
     /** The detector engine. */
     private var detectorEngine: DetectorEngine = DetectorEngine.getDetectorEngine(context)
 
     /** The last result of detection. Only available if in debug detection. */
     private val debugLastResult = detectorEngine.debugEngine
-        .flatMapLatest { it.lastResult }
+        .flatMapLatest { it.lastResult }.onEach {
+            println("DebugEngine:debugLastResult info(${it.detectionResult.isDetected})=$it")
+        }
 
     /** Tells if the current detection is running in debug mode. */
     val isDebugging = detectorEngine.isDebugging.map { debugging ->
@@ -104,5 +110,6 @@ data class LastPositiveDebugInfo(
 
 /** Delay before removing the last positive result display in debug. */
 private const val POSITIVE_VALUE_DISPLAY_TIMEOUT_MS = 1500L
+
 /** Sampling on the current confidence rate for the display. */
 private const val CONFIDENCE_RATE_SAMPLING_TIME_MS = 450L

@@ -93,6 +93,15 @@ internal class ScenarioSerializer {
                 Log.d(TAG, "Not the current version, use compat serialization.")
                 jsonBackup.deserializeCompleteScenarioCompat()
             }
+        }?.run {
+            copy(
+                events = events.map { completeEventEntity ->
+                    completeEventEntity.copy(
+                        actions = completeEventEntity.actions.sortByPriority(),
+                        conditions = completeEventEntity.conditions.sortByPriority(),
+                    )
+                }
+            )
         }
 
         if (scenario == null) {
@@ -172,13 +181,13 @@ internal class ScenarioSerializer {
             val event = getJsonObject("event", true)?.deserializeEventCompat()
                 ?: return@mapNotNull null
 
-            val conditions = getJsonArray("conditions")?.deserializeConditionsCompat()?.sortByPriority()
+            val conditions = getJsonArray("conditions")?.deserializeConditionsCompat()
             if (conditions.isNullOrEmpty()) {
                 Log.i(TAG, "Can't deserialize this complete event, there is no conditions")
                 return@mapNotNull null
             }
 
-            val completeActions = getJsonArray("actions")?.deserializeCompleteActionsCompat()?.sortByPriority()
+            val completeActions = getJsonArray("actions")?.deserializeCompleteActionsCompat()
             if (completeActions.isNullOrEmpty()) {
                 Log.i(TAG, "Can't deserialize this complete event, there is no actions")
                 return@mapNotNull null

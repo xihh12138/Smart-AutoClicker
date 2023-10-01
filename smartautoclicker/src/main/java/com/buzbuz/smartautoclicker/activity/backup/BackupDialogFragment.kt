@@ -44,8 +44,10 @@ class BackupDialogFragment : DialogFragment() {
 
         /** Tag for backup dialog fragment. */
         const val FRAGMENT_TAG_BACKUP_DIALOG = "BackupDialog"
+
         /** Key for this fragment argument. Tells if the backup is an import (true) or export (false). */
         private const val FRAGMENT_ARG_KEY_IS_IMPORT = ":backup:fragment_args_key_is_import"
+
         /** Key for this fragment argument. Contains the list of scenario identifier to export (LongArray). */
         private const val FRAGMENT_ARG_KEY_SCENARIO_LIST = ":backup:fragment_args_key_scenario_list"
 
@@ -55,7 +57,7 @@ class BackupDialogFragment : DialogFragment() {
          * @param exportScenarios the list of scenario identifier to be exported. Ignored for import.
          * @return the new fragment.
          */
-        fun newInstance(isImport: Boolean, exportScenarios: Collection<Long>? = null) : BackupDialogFragment {
+        fun newInstance(isImport: Boolean, exportScenarios: Collection<Long>? = null): BackupDialogFragment {
             return BackupDialogFragment().apply {
                 arguments = Bundle().apply {
                     putBoolean(FRAGMENT_ARG_KEY_IS_IMPORT, isImport)
@@ -69,13 +71,16 @@ class BackupDialogFragment : DialogFragment() {
 
     /** The view model containing the backup state. */
     private val backupViewModel: BackupViewModel by viewModels()
+
     /** The view binding on the views of this dialog.*/
     private lateinit var viewBinding: DialogBackupBinding
+
     /** The result launcher for the file picker activity. Provides the uri for the backup file. */
     private lateinit var backupActivityResult: ActivityResultLauncher<Intent>
 
     /** Fragment argument. True for import, false for export. */
-    private val isImport: Boolean by lazy { arguments?.getBoolean(FRAGMENT_ARG_KEY_IS_IMPORT)?: false }
+    private val isImport: Boolean by lazy { arguments?.getBoolean(FRAGMENT_ARG_KEY_IS_IMPORT) ?: false }
+
     /** Fragment argument, export only. The list of scenario identifier to be exported. */
     private val exportScenarios: List<Long> by lazy {
         arguments?.getLongArray(FRAGMENT_ARG_KEY_SCENARIO_LIST)?.toList() ?: emptyList()
@@ -88,7 +93,11 @@ class BackupDialogFragment : DialogFragment() {
 
         backupActivityResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == AppCompatActivity.RESULT_OK) {
-                result.data?.data?.also { uri -> backupViewModel.startBackup(uri, isImport, exportScenarios) }
+                result.data?.data?.also { uri ->
+                    backupViewModel.startBackup(
+                        uri, isImport, viewBinding.cbAdjustCoordinate.isChecked, exportScenarios
+                    )
+                }
             }
         }
 
@@ -139,6 +148,7 @@ class BackupDialogFragment : DialogFragment() {
                     )
                 }
             }
+            cbAdjustCoordinate.visibility = if (isImport) state.fileSelectionVisibility else View.GONE
 
             loading.visibility = state.loadingVisibility
 

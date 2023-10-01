@@ -21,17 +21,14 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.view.View
-
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-
 import com.buzbuz.smartautoclicker.R
 import com.buzbuz.smartautoclicker.baseui.ScreenMetrics
-import com.buzbuz.smartautoclicker.domain.Repository
 import com.buzbuz.smartautoclicker.domain.Backup
-
+import com.buzbuz.smartautoclicker.domain.Repository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -47,11 +44,13 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
 
     /** The repository providing access to the database. */
     private val repository = Repository.getRepository(application)
+
     /** The metrics of the screen.  */
     private val screenMetrics = ScreenMetrics(application.applicationContext)
 
     /** The state of the backup. Null if not started yet. */
     private val _backupState = MutableStateFlow<BackupDialogUiState?>(null)
+
     /** The current UI state of the backup. Null if not started yet. */
     val backupState: StateFlow<BackupDialogUiState?> = _backupState
 
@@ -84,12 +83,13 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
      * @param uri the uri of the file provided by [createBackupFileCreationIntent] or
      * [createBackupRestorationFileSelectionIntent] intent data result.
      * @param isImport true for an import, false for an export.
+     * @param needAdjustCoords true for a coordinate adjustment when import, false for no adjustment
      * @param scenarios the list of scenario to be exported. Ignored for an import.
      */
-    fun startBackup(uri: Uri, isImport: Boolean, scenarios: List<Long> = emptyList()) {
+    fun startBackup(uri: Uri, isImport: Boolean, needAdjustCoords: Boolean, scenarios: List<Long> = emptyList()) {
         viewModelScope.launch(Dispatchers.IO) {
             if (isImport) {
-                repository.restoreScenarioBackup(uri, screenMetrics.screenSize).collect { backup ->
+                repository.restoreScenarioBackup(uri, screenMetrics.screenSize, needAdjustCoords).collect { backup ->
                     updateBackupState(backup, true)
                 }
             } else {
@@ -129,7 +129,7 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
         dialogOkButtonEnabled = false,
         dialogCancelButtonEnabled = true,
         fileSelectionText = if (isImport) getContext().getString(R.string.dialog_backup_import_select_file)
-                            else getContext().getString(R.string.dialog_backup_create_select_file),
+        else getContext().getString(R.string.dialog_backup_create_select_file),
     )
 
     /**
@@ -146,8 +146,15 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
         iconStatusVisibility = View.GONE,
         dialogOkButtonEnabled = false,
         dialogCancelButtonEnabled = false,
-        textStatusText = if (isImport) getContext().getString(R.string.dialog_backup_import_progress, backup.progress ?: 0)
-                         else getContext().getString(R.string.dialog_backup_create_progress, backup.progress ?: 0, backup.maxProgress ?: 0)
+        textStatusText = if (isImport) getContext().getString(
+            R.string.dialog_backup_import_progress,
+            backup.progress ?: 0
+        )
+        else getContext().getString(
+            R.string.dialog_backup_create_progress,
+            backup.progress ?: 0,
+            backup.maxProgress ?: 0
+        )
     )
 
     /** @return Get the verification backup UI state. */
@@ -176,7 +183,7 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
         dialogOkButtonEnabled = false,
         dialogCancelButtonEnabled = true,
         textStatusText = if (isImport) getContext().getString(R.string.dialog_backup_import_error)
-                         else getContext().getString(R.string.dialog_backup_create_error),
+        else getContext().getString(R.string.dialog_backup_create_error),
         iconStatus = R.drawable.ic_cancel,
         iconTint = Color.RED,
     )
@@ -193,6 +200,7 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
             !isImport -> getContext().getString(R.string.dialog_backup_create_completed)
             backup.failureCount == 0 ->
                 getContext().getString(R.string.dialog_backup_import_completed, backup.successCount)
+
             else -> {
                 iconStatus = R.drawable.ic_warning
                 getContext().getString(

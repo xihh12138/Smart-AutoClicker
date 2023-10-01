@@ -61,7 +61,7 @@ interface BackupEngine {
      * @param screenSize the size of this device screen.
      * @param progress the object notified about the backup import progress.
      */
-    suspend fun loadBackup(zipFileUri: Uri, screenSize: Point, progress: BackupProgress)
+    suspend fun loadBackup(zipFileUri: Uri, screenSize: Point, needAdjustCoords: Boolean, progress: BackupProgress)
 
     /**
      * Notifies for a backup progress and state.
