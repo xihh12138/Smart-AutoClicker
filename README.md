@@ -5,14 +5,14 @@
 </p>
 
 <br>
- 
+
 ## Introduction
 
 Smart AutoClicker is an Android application allowing to automate repetitive task by clicking automatically for you on the screen. Unlike the regular auto clicker application, the clicks aren't based on timers to execute the clicks. Instead, it allows you to capture an image from a part of your screen and execute the click once this image is detected again.
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-     alt="Get it on F-Droid"
-     height="80">](https://f-droid.org/packages/com.buzbuz.smartautoclicker/)
+alt="Get it on F-Droid"
+height="80">](https://f-droid.org/packages/com.buzbuz.smartautoclicker/)
 
 <br>
 
@@ -47,10 +47,11 @@ Smart AutoClicker is an Android application allowing to automate repetitive task
 - 可以调整识别条件的顺序（高）✅
 - 识别条件支持指定识别区域，目前是只允许选择识别条件坐标（还不能修改）和整个屏幕（高）✅
 - 修复悬浮窗偶尔会无法点击的bug（高）✅
-- 导入备份文件时可选"是否根据当前设备屏幕像素与备份文件屏幕像素比例调整识别条件和操作的坐标"（高）✅
-- 增加模拟返回键、模拟home键、模拟最近任务键动作（Action）（高）
-- 增加全局动作（Action）（高）
+- 导入备份文件时可选"是否根据当前设备屏幕像素与备份文件屏幕像素比例调整识别条件和操作的坐标"（高）❌（实验了证明这个功能没什么用，除非能同步调整图片的分辨率）
+- 增加随机点击动作（Action）（高）✅
 - 支持添加当前页面Activity/进程检测的识别条件（高）
+- 增加模拟返回键、模拟home键、模拟最近任务键动作（Action）（高）
+- 增加全局事件（Event）（高）
 - 排查指定识别区域有时不会检测到的问题（高）
 - 识别条件和操作支持修改坐标（高）
 - 复用识别条件、操作时按照所属脚本分类展示（高）

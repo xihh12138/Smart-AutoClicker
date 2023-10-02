@@ -31,6 +31,7 @@ import com.buzbuz.smartautoclicker.domain.putExtra
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import kotlin.random.Random
 
 /**
  * Execute the actions of an event.
@@ -63,15 +64,39 @@ internal class ActionExecutor(private val androidExecutor: AndroidExecutor) {
         val clickPath = Path()
         val clickBuilder = GestureDescription.Builder()
 
-        if (click.clickOnCondition) {
-            conditionPosition?.let { conditionCenter ->
-                clickPath.moveTo(conditionCenter.x.toFloat(), conditionCenter.y.toFloat())
-            } ?: run {
-                Log.w(TAG, "Can't click on position, there is no condition position")
-                return
+        when (click.clickType) {
+            Click.CLICK_TYPE_EXACT -> {
+                clickPath.moveTo(click.x!!.toFloat(), click.y!!.toFloat())
             }
-        } else {
-            clickPath.moveTo(click.x!!.toFloat(), click.y!!.toFloat())
+
+            Click.CLICK_TYPE_CONDITION -> {
+                conditionPosition?.let { conditionCenter ->
+                    clickPath.moveTo(conditionCenter.x.toFloat(), conditionCenter.y.toFloat())
+                } ?: run {
+                    Log.w(TAG, "Can't click on position, there is no condition position")
+                    return
+                }
+            }
+
+            Click.CLICK_TYPE_RANDOM -> {
+                val randomArea = click.randomArea!!
+                val randomX = Random.nextInt(randomArea.left, randomArea.right)
+                val randomY = Random.nextInt(randomArea.top, randomArea.bottom)
+                clickPath.moveTo(randomX.toFloat(), randomY.toFloat())
+            }
+
+            else -> {
+                if (click.clickOnCondition) {
+                    conditionPosition?.let { conditionCenter ->
+                        clickPath.moveTo(conditionCenter.x.toFloat(), conditionCenter.y.toFloat())
+                    } ?: run {
+                        Log.w(TAG, "Can't click on position, there is no condition position")
+                        return
+                    }
+                } else {
+                    clickPath.moveTo(click.x!!.toFloat(), click.y!!.toFloat())
+                }
+            }
         }
         clickBuilder.addStroke(GestureDescription.StrokeDescription(clickPath, 0, click.pressDuration!!))
 
@@ -153,7 +178,9 @@ interface AndroidExecutor {
 
 /** Tag for logs. */
 private const val TAG = "ActionExecutor"
+
 /** Waiting delay after a start activity to avoid overflowing the system. */
 private const val INTENT_START_ACTIVITY_DELAY = 1000L
+
 /** Waiting delay after a broadcast to avoid overflowing the system. */
 private const val INTENT_BROADCAST_DELAY = 100L

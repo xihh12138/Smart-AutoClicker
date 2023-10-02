@@ -50,7 +50,7 @@ class DebugModel(context: Context) : OverlayViewModel(context) {
     /** The last result of detection. Only available if in debug detection. */
     private val debugLastResult = detectorEngine.debugEngine
         .flatMapLatest { it.lastResult }.onEach {
-            println("DebugEngine:debugLastResult info(${it.detectionResult.isDetected})=$it")
+            println("DebugEngine:debugLastResult info(${it.detectionResult.isDetected})=condition(${it.event.name})=${it.condition} detectionResult=${it.detectionResult}")
         }
 
     /** Tells if the current detection is running in debug mode. */

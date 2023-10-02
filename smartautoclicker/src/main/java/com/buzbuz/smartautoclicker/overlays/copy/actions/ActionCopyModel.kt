@@ -18,15 +18,12 @@ package com.buzbuz.smartautoclicker.overlays.copy.actions
 
 import android.content.Context
 import android.util.Log
-
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-
 import com.buzbuz.smartautoclicker.R
 import com.buzbuz.smartautoclicker.baseui.OverlayViewModel
-import com.buzbuz.smartautoclicker.domain.Repository
 import com.buzbuz.smartautoclicker.domain.Action
-
+import com.buzbuz.smartautoclicker.domain.Repository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -45,6 +42,7 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
 
     /** The list of actions for the configured event. They are not all available yet in the database. */
     private val eventActions = MutableStateFlow<List<Action>?>(null)
+
     /** The currently searched action name. Null if no is. */
     private val searchQuery = MutableStateFlow<String?>(null)
 
@@ -136,12 +134,33 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
             is Action.Click -> ActionCopyItem.ActionItem(
                 icon = R.drawable.ic_click,
                 name = name!!,
-                details =
-                if (clickOnCondition) context.getString(R.string.dialog_action_config_click_position_on_condition)
-                else context.getString(
-                    R.string.dialog_action_copy_click_details,
-                    formatDuration(pressDuration!!), x, y
-                ),
+                details = when (clickType) {
+                    Action.Click.CLICK_TYPE_EXACT -> {
+                        context.getString(
+                            R.string.dialog_action_copy_click_details,
+                            formatDuration(pressDuration!!), x, y
+                        )
+                    }
+
+                    Action.Click.CLICK_TYPE_CONDITION -> {
+                        context.getString(R.string.dialog_action_config_click_position_on_condition)
+                    }
+
+                    Action.Click.CLICK_TYPE_RANDOM -> {
+                        context.getString(
+                            R.string.dialog_action_copy_click_random, formatDuration(pressDuration!!),
+                            randomArea?.left, randomArea?.top, randomArea?.right, randomArea?.bottom
+                        )
+                    }
+
+                    else -> {
+                        if (clickOnCondition) context.getString(R.string.dialog_action_config_click_position_on_condition)
+                        else context.getString(
+                            R.string.dialog_action_copy_click_details,
+                            formatDuration(pressDuration!!), x, y
+                        )
+                    }
+                },
             )
 
             is Action.Swipe -> ActionCopyItem.ActionItem(
@@ -214,7 +233,8 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
             action = action.substring(dotIndex + 1)
 
             if (intent.isBroadcast == false && intent.componentName != null
-                && action.length < INTENT_COMPONENT_DISPLAYED_ACTION_LENGTH_LIMIT) {
+                && action.length < INTENT_COMPONENT_DISPLAYED_ACTION_LENGTH_LIMIT
+            ) {
 
                 var componentName = intent.componentName!!.flattenToString()
                 val dotIndex2 = componentName.lastIndexOf('.')
@@ -252,7 +272,7 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
          * @param name the name of the action.
          * @param details the details for the action.
          */
-        data class ActionItem (
+        data class ActionItem(
             @DrawableRes val icon: Int,
             val name: String,
             val details: String,
@@ -266,7 +286,9 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
 
 /** */
 private const val INTENT_COMPONENT_DISPLAYED_ACTION_LENGTH_LIMIT = 15
+
 /** */
 private const val INTENT_COMPONENT_DISPLAYED_COMPONENT_LENGTH_LIMIT = 20
+
 /** Tag for logs. */
 private const val TAG = "ActionCopyModel"

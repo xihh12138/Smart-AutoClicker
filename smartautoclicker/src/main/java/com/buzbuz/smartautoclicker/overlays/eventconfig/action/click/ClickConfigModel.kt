@@ -18,10 +18,10 @@ package com.buzbuz.smartautoclicker.overlays.eventconfig.action.click
 
 import android.content.SharedPreferences
 import android.graphics.Point
+import android.graphics.Rect
 
 import com.buzbuz.smartautoclicker.domain.Action
 import com.buzbuz.smartautoclicker.overlays.eventconfig.action.ActionModel
-import com.buzbuz.smartautoclicker.overlays.eventconfig.action.isValidDuration
 import com.buzbuz.smartautoclicker.overlays.utils.putClickPressDurationConfig
 
 import kotlinx.coroutines.CoroutineScope
@@ -45,10 +45,7 @@ class ClickConfigModel(
 
     override val isValidAction: Flow<Boolean> = configuredAction
         .map { action ->
-            action is Action.Click
-                    && !action.name.isNullOrEmpty()
-                    && ((action.x != null && action.y != null) || action.clickOnCondition)
-                    && action.pressDuration.isValidDuration()
+            action is Action.Click && action.isComplete()
         }
 
     override fun saveLastConfig(eventConfigPrefs: SharedPreferences) {
@@ -64,6 +61,7 @@ class ClickConfigModel(
         .filterIsInstance<Action.Click>()
         .map { it.pressDuration }
         .take(1)
+
     /** The position of the click. */
     val position: Flow<Point?> = configuredAction
         .filterIsInstance<Action.Click>()
@@ -74,36 +72,26 @@ class ClickConfigModel(
                 null
             }
         }
+
     /** If the click should be made on the detected condition. */
-    val clickOnCondition: Flow<Boolean> = configuredAction
+    val clickType: Flow<Int> = configuredAction
         .filterIsInstance<Action.Click>()
         .map { click ->
-            click.clickOnCondition
-        }
-
-    /**
-     * Set if this click should be made on the detected condition.
-     * @param enabled true to click on the detected condition, false to let the user pick its own location.
-     */
-    fun setClickOnCondition(enabled: Boolean) {
-        (configuredAction.value as Action.Click).let { click ->
-            viewModelScope.launch {
-                configuredAction.value = click.copy(clickOnCondition = enabled)
+            if (click.clickType != null) {
+                click.clickType!!
+            } else if (click.clickOnCondition) {
+                Action.Click.CLICK_TYPE_CONDITION
+            } else {
+                Action.Click.CLICK_TYPE_EXACT
             }
         }
-    }
 
-    /**
-     * Set the position of the click.
-     * @param position the new position.
-     */
-    fun setPosition(position: Point) {
-        (configuredAction.value as Action.Click).let { click ->
-            viewModelScope.launch {
-                configuredAction.value = click.copy(x = position.x, y = position.y)
-            }
+    /** the area where random click will execute */
+    val clickRandomArea: Flow<Rect?> = configuredAction
+        .filterIsInstance<Action.Click>()
+        .map { click ->
+            click.randomArea
         }
-    }
 
     /**
      * Set the press duration of the click.
@@ -113,6 +101,49 @@ class ClickConfigModel(
         (configuredAction.value as Action.Click).let { click ->
             viewModelScope.launch {
                 configuredAction.value = click.copy(pressDuration = durationMs)
+            }
+        }
+    }
+
+    /**
+     * Set the position of the click.
+     * @param position the new position.
+     */
+    fun setClickAtPoint(position: Point) {
+        (configuredAction.value as Action.Click).let { click ->
+            viewModelScope.launch {
+                configuredAction.value = click.copy(
+                    x = position.x,
+                    y = position.y,
+                    clickType = Action.Click.CLICK_TYPE_EXACT,
+                    clickOnCondition = false
+                )
+            }
+        }
+    }
+
+    /**
+     * Set if this click should be made on the detected condition.
+     * @param enabled true to click on the detected condition, false to let the user pick its own location.
+     */
+    fun setClickOnCondition() {
+        (configuredAction.value as Action.Click).let { click ->
+            viewModelScope.launch {
+                configuredAction.value =
+                    click.copy(clickOnCondition = true, clickType = Action.Click.CLICK_TYPE_CONDITION)
+            }
+        }
+    }
+
+    /**
+     * Set if this click should be made on the detected condition.
+     * @param enabled true to click on the detected condition, false to let the user pick its own location.
+     */
+    fun setClickInArea(area: Rect) {
+        (configuredAction.value as Action.Click).let { click ->
+            viewModelScope.launch {
+                configuredAction.value =
+                    click.copy(clickOnCondition = false, clickType = Action.Click.CLICK_TYPE_RANDOM, randomArea = area)
             }
         }
     }

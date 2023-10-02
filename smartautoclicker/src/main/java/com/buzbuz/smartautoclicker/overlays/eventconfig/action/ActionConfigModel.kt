@@ -142,6 +142,8 @@ sealed class ClickTargetChoice(title: Int): DialogChoice(title, null) {
     object OnCondition : ClickTargetChoice(R.string.dialog_action_config_click_position_on_condition)
     /** Click at a specific location. */
     object AtPosition : ClickTargetChoice(R.string.dialog_action_config_click_position_select_position)
+    /** Click at a specific location. */
+    object Random : ClickTargetChoice(R.string.dialog_action_config_click_position_random)
 }
 
 /** Check if this duration value is valid for an action. */

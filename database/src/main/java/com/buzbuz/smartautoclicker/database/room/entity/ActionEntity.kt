@@ -16,7 +16,14 @@
  */
 package com.buzbuz.smartautoclicker.database.room.entity
 
-import androidx.room.*
+import androidx.room.ColumnInfo
+import androidx.room.Embedded
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.PrimaryKey
+import androidx.room.Relation
+import androidx.room.TypeConverter
 import kotlinx.serialization.Serializable
 
 /**
@@ -41,6 +48,11 @@ import kotlinx.serialization.Serializable
  *                         the x and y parameters be null and ignored. If false, the x and y coordinates will be used.
  * @param pressDuration [ActionType.CLICK] only: the duration of the click press in milliseconds.
  *                      Null for others [ActionType].
+ * @param clickType [ActionType.CLICK] only: the execute type, Null for others [ActionType].
+ * @param clickRandomAreaLeft [ActionType.CLICK] only: the left coordinate of the rectangle defining the random area，will be used when [clickType] is [ClickType.RANDOM].
+ * @param clickRandomAreaTop [ActionType.CLICK] only: the top coordinate of the rectangle defining the random area，will be used when [clickType] is [ClickType.RANDOM].
+ * @param clickRandomAreaRight [ActionType.CLICK] only: the right coordinate of the rectangle defining the random area，will be used when [clickType] is [ClickType.RANDOM].
+ * @param clickRandomAreaBottom [ActionType.CLICK] only: the bottom coordinate of the rectangle defining the random area，will be used when [clickType] is [ClickType.RANDOM].
  *
  * @param fromX [ActionType.SWIPE] only: the swipe start x coordinates. Null for others [ActionType].
  * @param fromY [ActionType.SWIPE] only: the swipe start y coordinates. Null for others [ActionType].
@@ -80,6 +92,11 @@ data class ActionEntity(
     @ColumnInfo(name = "y") val y: Int? = null,
     @ColumnInfo(name = "clickOnCondition") val clickOnCondition: Boolean? = null,
     @ColumnInfo(name = "pressDuration") val pressDuration: Long? = null,
+    @ColumnInfo(name = "click_type") val clickType: ClickType? = null,
+    @ColumnInfo(name = "click_random_area_left") val clickRandomAreaLeft: Int? = null,
+    @ColumnInfo(name = "click_random_area_top") val clickRandomAreaTop: Int? = null,
+    @ColumnInfo(name = "click_random_area_right") val clickRandomAreaRight: Int? = null,
+    @ColumnInfo(name = "click_random_area_bottom") val clickRandomAreaBottom: Int? = null,
 
     // ActionType.SWIPE
     @ColumnInfo(name = "fromX") val fromX: Int? = null,
@@ -118,6 +135,20 @@ enum class ActionType {
 
     /** An Android Intent, allowing to interact with other applications. */
     INTENT,
+}
+
+/**
+ * Type of the [ActionType.CLICK]
+ **/
+enum class ClickType {
+    /** Click in a exactly point(x,y),the effect is equivalent to clickOnCondition being false */
+    EXACT,
+
+    /** Click on the detected condition,the effect is equivalent to clickOnCondition being true */
+    CONDITION,
+
+    /** Click will be executed in a exactly area randomly, random_area_X will be used */
+    RANDOM
 }
 
 /** Type converter to read/write the [ActionType] into the database. */

@@ -17,9 +17,10 @@
 package com.buzbuz.smartautoclicker.domain
 
 import android.content.ComponentName
-
+import android.graphics.Rect
 import com.buzbuz.smartautoclicker.database.room.entity.ActionEntity
 import com.buzbuz.smartautoclicker.database.room.entity.ActionType
+import com.buzbuz.smartautoclicker.database.room.entity.ClickType
 import com.buzbuz.smartautoclicker.database.room.entity.CompleteActionEntity
 
 /** Base for for all possible actions for en Event. */
@@ -27,17 +28,22 @@ sealed class Action {
 
     /** The unique identifier for the action. Use 0 for creating a new action. Default value is 0. */
     abstract var id: Long
+
     /** The identifier of the event for this action. */
     abstract var eventId: Long
+
     /** The name of the action. */
     abstract var name: String?
 
     /** @return true if this action is complete and can be transformed into its entity. */
-    internal open fun isComplete(): Boolean = name != null
+    open fun isComplete(): Boolean = name != null
+
     /** @return the entity equivalent of this action. */
     internal abstract fun toEntity(): CompleteActionEntity
+
     /** Cleanup all ids contained in this action. Ideal for copying. */
     internal abstract fun cleanUpIds()
+
     /** @return creates a deep copy of this action. */
     abstract fun deepCopy(): Action
 
@@ -59,10 +65,12 @@ sealed class Action {
         var x: Int? = null,
         var y: Int? = null,
         var clickOnCondition: Boolean,
+        var clickType: Int? = null,
+        var randomArea: Rect? = null
     ) : Action() {
 
         override fun isComplete(): Boolean =
-            super.isComplete() && pressDuration != null && ((x != null && y != null) || clickOnCondition)
+            super.isComplete() && pressDuration != null && ((x != null && y != null) || clickOnCondition || clickType == CLICK_TYPE_CONDITION || (clickType == CLICK_TYPE_RANDOM && randomArea != null))
 
         override fun toEntity(): CompleteActionEntity {
             if (!isComplete()) throw IllegalStateException("Can't transform to entity, Click is incomplete.")
@@ -77,6 +85,11 @@ sealed class Action {
                     x = x,
                     y = y,
                     clickOnCondition = clickOnCondition,
+                    clickType = getClickType(),
+                    clickRandomAreaLeft = randomArea?.left,
+                    clickRandomAreaTop = randomArea?.top,
+                    clickRandomAreaRight = randomArea?.right,
+                    clickRandomAreaBottom = randomArea?.bottom,
                 ),
                 intentExtras = emptyList(),
             )
@@ -87,7 +100,21 @@ sealed class Action {
             eventId = 0
         }
 
-        override fun deepCopy(): Click = copy(name = "" + name)
+        override fun deepCopy(): Click =
+            copy(name = "" + name, randomArea = if (randomArea == null) null else Rect(randomArea))
+
+        private fun getClickType(): ClickType? = when (clickType) {
+            CLICK_TYPE_EXACT -> ClickType.EXACT
+            CLICK_TYPE_CONDITION -> ClickType.CONDITION
+            CLICK_TYPE_RANDOM -> ClickType.RANDOM
+            else -> null
+        }
+
+        companion object {
+            const val CLICK_TYPE_EXACT = 0
+            const val CLICK_TYPE_CONDITION = 1
+            const val CLICK_TYPE_RANDOM = 2
+        }
     }
 
     /**
@@ -245,8 +272,19 @@ sealed class Action {
 internal fun CompleteActionEntity.toAction(): Action {
     return when (action.type) {
         ActionType.CLICK -> Action.Click(
-            action.id, action.eventId, action.name, action.pressDuration!!,
-            action.x, action.y, action.clickOnCondition!!
+            action.id, action.eventId, action.name, action.pressDuration!!, action.x, action.y,
+            action.clickOnCondition!!, action.clickType?.ordinal, run {
+                if (action.clickRandomAreaLeft != null && action.clickRandomAreaTop != null &&
+                    action.clickRandomAreaRight != null && action.clickRandomAreaBottom != null
+                ) {
+                    Rect(
+                        action.clickRandomAreaLeft!!, action.clickRandomAreaTop!!,
+                        action.clickRandomAreaRight!!, action.clickRandomAreaBottom!!
+                    )
+                } else {
+                    null
+                }
+            }
         )
 
         ActionType.SWIPE -> Action.Swipe(
@@ -263,7 +301,8 @@ internal fun CompleteActionEntity.toAction(): Action {
 
         ActionType.INTENT -> {
             val componentName = action.componentName?.let { ComponentName.unflattenFromString(it) }
-            Action.Intent(action.id,
+            Action.Intent(
+                action.id,
                 action.eventId,
                 action.name,
                 action.isAdvanced,

@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 9,
-    "identityHash": "07bf35cd6e730655304a37b25e29bbc8",
+    "identityHash": "40c9c95848452850625cdfe6160d46eb",
     "entities": [
       {
         "tableName": "action_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `eventId` INTEGER NOT NULL, `priority` INTEGER NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `x` INTEGER, `y` INTEGER, `clickOnCondition` INTEGER, `pressDuration` INTEGER, `fromX` INTEGER, `fromY` INTEGER, `toX` INTEGER, `toY` INTEGER, `swipeDuration` INTEGER, `pauseDuration` INTEGER, `isAdvanced` INTEGER, `isBroadcast` INTEGER, `intent_action` TEXT, `component_name` TEXT, `flags` INTEGER, FOREIGN KEY(`eventId`) REFERENCES `event_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `eventId` INTEGER NOT NULL, `priority` INTEGER NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `x` INTEGER, `y` INTEGER, `clickOnCondition` INTEGER, `pressDuration` INTEGER, `click_type` TEXT, `click_random_area_left` INTEGER, `click_random_area_top` INTEGER, `click_random_area_right` INTEGER, `click_random_area_bottom` INTEGER, `fromX` INTEGER, `fromY` INTEGER, `toX` INTEGER, `toY` INTEGER, `swipeDuration` INTEGER, `pauseDuration` INTEGER, `isAdvanced` INTEGER, `isBroadcast` INTEGER, `intent_action` TEXT, `component_name` TEXT, `flags` INTEGER, FOREIGN KEY(`eventId`) REFERENCES `event_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -59,6 +59,36 @@
           {
             "fieldPath": "pressDuration",
             "columnName": "pressDuration",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "clickType",
+            "columnName": "click_type",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "clickRandomAreaLeft",
+            "columnName": "click_random_area_left",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "clickRandomAreaTop",
+            "columnName": "click_random_area_top",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "clickRandomAreaRight",
+            "columnName": "click_random_area_right",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "clickRandomAreaBottom",
+            "columnName": "click_random_area_bottom",
             "affinity": "INTEGER",
             "notNull": false
           },
@@ -558,7 +588,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '07bf35cd6e730655304a37b25e29bbc8')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '40c9c95848452850625cdfe6160d46eb')"
     ]
   }
 }

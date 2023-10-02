@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
  * Copyright (C) 2021 Nain57
  *
  * This program is free software; you can redistribute it and/or
@@ -15,8 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; If not, see <http://www.gnu.org/licenses/>.
 -->
-<androidx.core.widget.NestedScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -29,9 +27,9 @@
         android:orientation="vertical">
 
         <androidx.cardview.widget.CardView
+            style="@style/HeaderCardView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            style="@style/HeaderCardView">
+            android:layout_height="wrap_content">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -39,13 +37,13 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/HeaderTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/dialog_event_config_name_title"
                     android:labelFor="@+id/edit_name"
-                    style="@style/HeaderTitle"/>
+                    android:text="@string/dialog_event_config_name_title" />
 
-                <include layout="@layout/include_view_separator"/>
+                <include layout="@layout/include_view_separator" />
 
                 <EditText
                     android:id="@id/edit_name"
@@ -64,9 +62,9 @@
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
+            style="@style/HeaderCardView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            style="@style/HeaderCardView">
+            android:layout_height="wrap_content">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -74,12 +72,12 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/HeaderTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/dialog_event_config_condition_title"
-                    style="@style/HeaderTitle"/>
+                    android:text="@string/dialog_event_config_condition_title" />
 
-                <include layout="@layout/include_view_separator"/>
+                <include layout="@layout/include_view_separator" />
 
                 <LinearLayout
                     android:id="@+id/layout_condition_operator"
@@ -90,41 +88,41 @@
                     <TextView
                         android:id="@+id/text_condition_operator_desc"
                         style="@style/ItemView.Small"
+                        android:drawablePadding="@dimen/margin_horizontal_small"
                         android:gravity="center_vertical"
                         android:text="@string/condition_operator_or_desc"
                         android:textSize="@dimen/text_size_list_item_text"
-                        android:drawablePadding="@dimen/margin_horizontal_small"
                         app:drawableEndCompat="@drawable/ic_chevron"
-                        tools:drawableStart="@drawable/ic_all_conditions"/>
+                        tools:drawableStart="@drawable/ic_all_conditions" />
 
                 </LinearLayout>
 
-                <include layout="@layout/include_view_separator"/>
+                <include layout="@layout/include_view_separator" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/list_conditions"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_horizontal_small"
-                    android:layout_marginEnd="@dimen/margin_horizontal_small"
-                    android:layout_marginTop="@dimen/margin_vertical_default"
-                    android:layout_marginBottom="@dimen/margin_vertical_default"
                     android:layout_gravity="center_vertical"
+                    android:layout_marginStart="@dimen/margin_horizontal_small"
+                    android:layout_marginTop="@dimen/margin_vertical_default"
+                    android:layout_marginEnd="@dimen/margin_horizontal_small"
+                    android:layout_marginBottom="@dimen/margin_vertical_default"
+                    android:background="@color/listBackground"
                     android:orientation="horizontal"
                     android:scrollbars="horizontal"
-                    android:background="@color/listBackground"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    tools:listitem="@layout/item_condition_card"
-                    tools:itemCount="1"/>
+                    tools:itemCount="1"
+                    tools:listitem="@layout/item_condition_card" />
 
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
+            style="@style/HeaderCardView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            style="@style/HeaderCardView">
+            android:layout_height="wrap_content">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -132,34 +130,34 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/HeaderTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/dialog_event_config_actions_title"
-                    style="@style/HeaderTitle"/>
+                    android:text="@string/dialog_event_config_actions_title" />
 
-                <include layout="@layout/include_view_separator"/>
+                <include layout="@layout/include_view_separator" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/list_actions"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_horizontal_small"
-                    android:layout_marginEnd="@dimen/margin_horizontal_small"
-                    android:layout_marginTop="@dimen/margin_vertical_default"
-                    android:layout_marginBottom="@dimen/margin_vertical_default"
                     android:layout_gravity="center_vertical"
+                    android:layout_marginStart="@dimen/margin_horizontal_small"
+                    android:layout_marginTop="@dimen/margin_vertical_default"
+                    android:layout_marginEnd="@dimen/margin_horizontal_small"
+                    android:layout_marginBottom="@dimen/margin_vertical_default"
+                    android:background="@color/listBackground"
                     android:orientation="horizontal"
                     android:scrollbars="horizontal"
-                    android:background="@color/listBackground"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    tools:listitem="@layout/item_action_card"
-                    tools:itemCount="1"/>
+                    tools:itemCount="1"
+                    tools:listitem="@layout/item_action_card" />
 
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
 
-        <include layout="@layout/include_view_separator"/>
+        <include layout="@layout/include_view_separator" />
 
     </LinearLayout>
 

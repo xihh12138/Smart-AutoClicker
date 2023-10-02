@@ -304,6 +304,10 @@ internal class BackupEngineImpl(
                                 copy(
                                     x = x?.times(adjustWidthRate)?.toInt(),
                                     y = y?.times(adjustHeightRate)?.toInt(),
+                                    clickRandomAreaLeft = clickRandomAreaLeft?.times(adjustWidthRate)?.toInt(),
+                                    clickRandomAreaTop = clickRandomAreaTop?.times(adjustHeightRate)?.toInt(),
+                                    clickRandomAreaRight = clickRandomAreaRight?.times(adjustWidthRate)?.toInt(),
+                                    clickRandomAreaBottom = clickRandomAreaBottom?.times(adjustHeightRate)?.toInt(),
                                     fromX = fromX?.times(adjustWidthRate)?.toInt(),
                                     fromY = fromY?.times(adjustHeightRate)?.toInt(),
                                     toX = toX?.times(adjustWidthRate)?.toInt(),

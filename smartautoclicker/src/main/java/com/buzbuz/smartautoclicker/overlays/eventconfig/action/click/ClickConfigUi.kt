@@ -27,10 +27,12 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.buzbuz.smartautoclicker.R
 import com.buzbuz.smartautoclicker.baseui.OverlayController
 import com.buzbuz.smartautoclicker.databinding.IncludeClickConfigBinding
+import com.buzbuz.smartautoclicker.domain.Action
 import com.buzbuz.smartautoclicker.extensions.setLeftRightCompoundDrawables
 import com.buzbuz.smartautoclicker.overlays.eventconfig.action.ClickSwipeSelectorMenu
 import com.buzbuz.smartautoclicker.overlays.eventconfig.action.ClickTargetChoice
 import com.buzbuz.smartautoclicker.overlays.eventconfig.action.CoordinatesSelector
+import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.ConditionSelectorMenu
 import com.buzbuz.smartautoclicker.overlays.utils.DurationInputFilter
 import com.buzbuz.smartautoclicker.overlays.utils.MultiChoiceDialog
 import com.buzbuz.smartautoclicker.overlays.utils.OnAfterTextChangedListener
@@ -55,19 +57,30 @@ fun IncludeClickConfigBinding.setupClickUi(
             MultiChoiceDialog(
                 context = context,
                 dialogTitle = R.string.dialog_condition_type_title,
-                choices = listOf(ClickTargetChoice.OnCondition, ClickTargetChoice.AtPosition),
+                choices = listOf(ClickTargetChoice.OnCondition, ClickTargetChoice.AtPosition, ClickTargetChoice.Random),
                 onChoiceSelected = { choiceClicked ->
                     when (choiceClicked) {
-                        ClickTargetChoice.OnCondition -> clickModel.setClickOnCondition(true)
+                        ClickTargetChoice.OnCondition -> clickModel.setClickOnCondition()
 
                         ClickTargetChoice.AtPosition -> {
-                            clickModel.setClickOnCondition(false)
                             showSubOverlay(
                                 ClickSwipeSelectorMenu(
                                     context = context,
                                     selector = CoordinatesSelector.One(),
                                     onCoordinatesSelected = { selector ->
-                                        clickModel.setPosition((selector as CoordinatesSelector.One).coordinates!!)
+                                        clickModel.setClickAtPoint((selector as CoordinatesSelector.One).coordinates!!)
+                                    },
+                                ),
+                                true
+                            )
+                        }
+
+                        ClickTargetChoice.Random -> {
+                            showSubOverlay(
+                                ConditionSelectorMenu(
+                                    context = context,
+                                    onConditionSelected = { rect, bitmap ->
+                                        clickModel.setClickInArea(rect)
                                     },
                                 ),
                                 true
@@ -103,22 +116,36 @@ fun IncludeClickConfigBinding.setupClickUi(
             }
 
             launch {
-                clickModel.position
-                    .combine(clickModel.clickOnCondition) { position, clickOnCondition ->
-                        textClickPosition.apply {
-                            when {
-                                clickOnCondition -> setText(R.string.dialog_action_config_click_position_on_condition)
-                                position == null -> setText(R.string.dialog_action_config_click_position_none)
-                                else -> {
-                                    text = context.getString(
-                                        R.string.dialog_action_config_click_position,
-                                        position.x,
-                                        position.y
-                                    )
-                                }
+                clickModel.position.combine(clickModel.clickRandomArea) { pos, area ->
+                    pos to area
+                }.combine(clickModel.clickType) { coords, clickType ->
+                    textClickPosition.apply {
+                        when {
+                            clickType == Action.Click.CLICK_TYPE_EXACT && coords.first != null -> {
+                                text = context.getString(
+                                    R.string.dialog_action_config_click_position,
+                                    coords.first!!.x, coords.first!!.y
+                                )
                             }
+
+                            clickType == Action.Click.CLICK_TYPE_RANDOM && coords.second != null -> {
+                                text = context.getString(
+                                    R.string.dialog_action_config_click_random,
+                                    coords.second!!.left,
+                                    coords.second!!.top,
+                                    coords.second!!.right,
+                                    coords.second!!.bottom
+                                )
+                            }
+
+                            clickType == Action.Click.CLICK_TYPE_CONDITION -> {
+                                setText(R.string.dialog_action_config_click_position_on_condition)
+                            }
+
+                            else -> setText(R.string.dialog_action_config_click_position_none)
                         }
-                    }.collect()
+                    }
+                }.collect()
             }
         }
     }
