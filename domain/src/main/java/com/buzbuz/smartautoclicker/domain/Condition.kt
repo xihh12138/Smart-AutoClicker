@@ -21,53 +21,24 @@ import android.graphics.Rect
 import androidx.annotation.IntDef
 
 import com.buzbuz.smartautoclicker.database.room.entity.ConditionEntity
+import com.buzbuz.smartautoclicker.database.room.entity.ConditionType
 
 /**
  * Condition for a Event.
- *
- * @param id the unique identifier for the condition. Use 0 for creating a new condition. Default value is 0.
- * @param eventId the identifier of the event for this condition.
- * @param name the name of the condition.
- * @param path the path to the bitmap that should be matched for detection.
- * @param area  The initial area when the detection condition is created.
- * @param detectArea the area of the screen really to detect.
- * @param threshold the accepted difference between the conditions and the screen content, in percent (0-100%).
- * @param detectionType the type of detection for this condition. Must be one of [DetectionType].
- * @param bitmap the bitmap for the condition. Not set when fetched from the repository.
  */
-data class Condition(
-    var id: Long = 0,
-    var eventId: Long,
-    var priority: Int,
-    var name: String,
-    var path: String? = null,
-    val area: Rect,
-    var detectArea: Rect,
-    var threshold: Int,
-    @DetectionType val detectionType: Int,
-    val shouldBeDetected: Boolean,
-    val bitmap: Bitmap? = null,
-) {
+sealed class Condition {
 
-    /** @return the entity equivalent of this condition. */
-    internal fun toEntity() = ConditionEntity(
-        id,
-        eventId,
-        priority,
-        name,
-        path!!,
-        area.left,
-        area.top,
-        area.right,
-        area.bottom,
-        detectArea.left,
-        detectArea.top,
-        detectArea.right,
-        detectArea.bottom,
-        threshold,
-        detectionType,
-        shouldBeDetected,
-    )
+    /** the unique identifier for the condition. Use 0 for creating a new condition. Default value is 0. */
+    abstract var id: Long
+
+    /** the identifier of the event for this condition. */
+    abstract var eventId: Long
+
+    /** the name of the condition. */
+    abstract val name: String
+
+    /** true if this condition should be detected to be true, false if it should not be found. */
+    abstract val shouldBeDetected: Boolean
 
     /** Cleanup all ids contained in this condition. Ideal for copying. */
     internal fun cleanUpIds() {
@@ -75,28 +46,108 @@ data class Condition(
         eventId = 0
     }
 
+    /** @return the entity equivalent of this condition. */
+    internal abstract fun toEntity(): ConditionEntity
+
     /** @return creates a deep copy of this condition. */
-    fun deepCopy(): Condition = copy(
-        path = path,
-        area = Rect(area),
-        detectArea = Rect(detectArea),
-    )
+    abstract fun deepCopy(): Condition
+
+    /**
+     * @param path the path to the bitmap that should be matched for detection.
+     * @param area  The initial area when the detection condition is created.
+     * @param detectArea the area of the screen really to detect.
+     * @param threshold the accepted difference between the conditions and the screen content, in percent (0-100%).
+     * @param detectionType the type of detection for this condition. Must be one of [DetectionType].
+     * @param bitmap the bitmap for the condition. Not set when fetched from the repository.
+     * */
+    data class Capture(
+        override var id: Long,
+        override var eventId: Long,
+        override val name: String,
+        override val shouldBeDetected: Boolean,
+        var path: String? = null,
+        val area: Rect,
+        var detectArea: Rect,
+        val threshold: Int,
+        @DetectionType val detectionType: Int,
+        val bitmap: Bitmap? = null,
+    ) : Condition() {
+
+        override fun toEntity(): ConditionEntity = ConditionEntity(
+            id = id,
+            eventId = eventId,
+            name = name,
+            type = ConditionType.CAPTURE,
+            shouldBeDetected = shouldBeDetected,
+            path = path!!,
+            areaLeft = area.left,
+            areaTop = area.top,
+            areaRight = area.right,
+            areaBottom = area.bottom,
+            detectAreaLeft = detectArea.left,
+            detectAreaTop = detectArea.top,
+            detectAreaRight = detectArea.right,
+            detectAreaBottom = detectArea.bottom,
+            threshold = threshold,
+            detectionType = detectionType,
+        )
+
+        override fun deepCopy(): Capture = copy(
+            path = path,
+            area = Rect(area),
+            detectArea = Rect(detectArea),
+        )
+    }
+
+    /**
+     * @param processName the package name of the process which should be detect as a foreground process
+     * */
+    data class Process(
+        override var id: Long,
+        override var eventId: Long,
+        override val name: String,
+        override val shouldBeDetected: Boolean,
+        val processName: String
+    ) : Condition() {
+        override fun toEntity(): ConditionEntity = ConditionEntity(
+            id = id,
+            eventId = eventId,
+            name = name,
+            type = ConditionType.PROCESS,
+            shouldBeDetected = shouldBeDetected,
+            processName = processName
+        )
+
+        override fun deepCopy(): Process = copy(
+            processName = processName
+        )
+
+    }
 }
 
 /** @return the condition for this entity. */
-internal fun ConditionEntity.toCondition(): Condition =
-    Condition(
+internal fun ConditionEntity.toCondition(): Condition = when (type) {
+    ConditionType.CAPTURE -> Condition.Capture(
         id,
         eventId,
-        priority,
         name,
+        shouldBeDetected,
         path,
-        Rect(areaLeft, areaTop, areaRight, areaBottom),
-        Rect(detectAreaLeft, detectAreaTop, detectAreaRight, detectAreaBottom),
-        threshold,
-        detectionType,
-        shouldBeDetected
+        Rect(areaLeft!!, areaTop!!, areaRight!!, areaBottom!!),
+        Rect(detectAreaLeft!!, detectAreaTop!!, detectAreaRight!!, detectAreaBottom!!),
+        threshold!!,
+        detectionType!!,
     )
+
+    ConditionType.PROCESS -> Condition.Process(
+        id,
+        eventId,
+        name,
+        shouldBeDetected,
+        processName!!
+    )
+}
+
 
 /** Defines the detection type to apply to a condition. */
 @IntDef(EXACT, WHOLE_SCREEN, DETECT_AREA)

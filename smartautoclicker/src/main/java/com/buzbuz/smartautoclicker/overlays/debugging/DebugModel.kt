@@ -19,23 +19,20 @@ package com.buzbuz.smartautoclicker.overlays.debugging
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Rect
-
 import com.buzbuz.smartautoclicker.baseui.OverlayViewModel
+import com.buzbuz.smartautoclicker.detection.DetectionResult
 import com.buzbuz.smartautoclicker.engine.DetectorEngine
 import com.buzbuz.smartautoclicker.overlays.utils.getDebugConfigPreferences
 import com.buzbuz.smartautoclicker.overlays.utils.getIsDebugViewEnabled
-
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.sample
-import kotlinx.coroutines.launch
 
 /** */
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -62,7 +59,7 @@ class DebugModel(context: Context) : OverlayViewModel(context) {
     val debugLastConfidenceRate: Flow<String?> = debugLastResult
         .sample(CONFIDENCE_RATE_SAMPLING_TIME_MS)
         .map { lastDebugInfo ->
-            lastDebugInfo.detectionResult.confidenceRate.formatConfidenceRate()
+            (lastDebugInfo.detectionResult as? DetectionResult.Image)?.confidenceRate?.formatConfidenceRate()
         }
 
     /** The coordinates of the last positive detection. */
@@ -81,7 +78,8 @@ class DebugModel(context: Context) : OverlayViewModel(context) {
                     LastPositiveDebugInfo(
                         debugInfo.event.name,
                         debugInfo.condition.name,
-                        debugInfo.detectionResult.confidenceRate.formatConfidenceRate(),
+                        ((debugInfo.detectionResult as? DetectionResult.Image)?.confidenceRate
+                            ?: 1.0).formatConfidenceRate(),
                     )
                 )
 

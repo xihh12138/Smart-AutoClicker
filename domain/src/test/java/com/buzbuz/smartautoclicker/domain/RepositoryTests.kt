@@ -222,7 +222,7 @@ class RepositoryTests {
                     scenarioId = TestsData.SCENARIO_ID,
                     priority = 0,
                     actions = mutableListOf(TestsData.getNewPause(eventId = TestsData.EVENT_ID)),
-                    conditions = mutableListOf(TestsData.getNewCondition(eventId = TestsData.EVENT_ID))
+                    conditions = mutableListOf(TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID))
                 ),
             ),
             repository.getCompleteEventList(TestsData.SCENARIO_ID).first(),
@@ -245,7 +245,7 @@ class RepositoryTests {
                 scenarioId = TestsData.SCENARIO_ID,
                 priority = 0,
                 actions = mutableListOf(TestsData.getNewPause(eventId = TestsData.EVENT_ID)),
-                conditions = mutableListOf(TestsData.getNewCondition(eventId = TestsData.EVENT_ID))
+                conditions = mutableListOf(TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID))
             ),
             repository.getCompleteEvent(TestsData.EVENT_ID),
         )
@@ -268,9 +268,9 @@ class RepositoryTests {
             priority = 0,
             actions = mutableListOf(TestsData.getNewPause(eventId = TestsData.EVENT_ID)),
             conditions = mutableListOf(
-                TestsData.getNewCondition(eventId = TestsData.EVENT_ID, path = "titi", bitmap = null),
-                TestsData.getNewCondition(eventId = TestsData.EVENT_ID, path = null, bitmap = bitmapWithoutPath),
-                TestsData.getNewCondition(eventId = TestsData.EVENT_ID, path = "tutu", bitmap = bitmapWithPath),
+                TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID, path = "titi", bitmap = null),
+                TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID, path = null, bitmap = bitmapWithoutPath),
+                TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID, path = "tutu", bitmap = bitmapWithPath),
             )
         )
         mockWhen(mockBitmapManager.saveBitmap(bitmapWithoutPath)).thenReturn("toto")
@@ -302,7 +302,7 @@ class RepositoryTests {
             scenarioId = TestsData.SCENARIO_ID,
             priority = 0,
             actions = mutableListOf(TestsData.getNewPause(eventId = TestsData.EVENT_ID)),
-            conditions = mutableListOf(TestsData.getNewCondition(eventId = TestsData.EVENT_ID)),
+            conditions = mutableListOf(TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID)),
         )
         val expectedEntity = CompleteEventEntity(
             event = TestsData.getNewEventEntity(id = TestsData.EVENT_ID, scenarioId = TestsData.SCENARIO_ID, priority = 0),
@@ -369,9 +369,9 @@ class RepositoryTests {
             priority = 0,
             actions = mutableListOf(TestsData.getNewPause(eventId = TestsData.EVENT_ID)),
             conditions = mutableListOf(
-                TestsData.getNewCondition(eventId = TestsData.EVENT_ID, path = "titi", bitmap = null),
-                TestsData.getNewCondition(eventId = TestsData.EVENT_ID, path = null, bitmap = bitmapWithoutPath),
-                TestsData.getNewCondition(eventId = TestsData.EVENT_ID, path = "tutu", bitmap = bitmapWithPath),
+                TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID, path = "titi", bitmap = null),
+                TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID, path = null, bitmap = bitmapWithoutPath),
+                TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID, path = "tutu", bitmap = bitmapWithPath),
             )
         )
         mockWhen(mockBitmapManager.saveBitmap(bitmapWithoutPath)).thenReturn("toto")

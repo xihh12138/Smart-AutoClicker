@@ -19,17 +19,16 @@ package com.buzbuz.smartautoclicker.overlays.eventconfig
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
-
+import androidx.core.graphics.drawable.toBitmap
 import com.buzbuz.smartautoclicker.R
 import com.buzbuz.smartautoclicker.baseui.OverlayViewModel
-import com.buzbuz.smartautoclicker.domain.Repository
-import com.buzbuz.smartautoclicker.domain.Action
 import com.buzbuz.smartautoclicker.domain.AND
+import com.buzbuz.smartautoclicker.domain.Action
 import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.domain.Event
 import com.buzbuz.smartautoclicker.domain.OR
+import com.buzbuz.smartautoclicker.domain.Repository
 import com.buzbuz.smartautoclicker.overlays.utils.*
-
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -48,6 +47,7 @@ class EventConfigModel(context: Context) : OverlayViewModel(context) {
 
     /** Repository providing access to the click database. */
     private val repository = Repository.getRepository(context)
+
     /** The event being configured by the user. Defined using [setConfigEvent]. */
     private val configuredEvent = MutableStateFlow<Event?>(null)
 
@@ -59,8 +59,10 @@ class EventConfigModel(context: Context) : OverlayViewModel(context) {
             SharingStarted.WhileSubscribed(),
             emptyList()
         )
+
     /** The event actions currently edited by the user. */
     val actions: StateFlow<List<Action>?> = _action
+
     /** The item to be displayed in the action list. Last item is always the add actions . */
     val actionListItems: Flow<List<ActionListItem>> = _action
         .combine(repository.getActionsCount()) { actions, actionsCount ->
@@ -71,6 +73,7 @@ class EventConfigModel(context: Context) : OverlayViewModel(context) {
                 add(ActionListItem.AddActionItem(actionsCount > 0))
             }
         }
+
     /** Backing property for [conditions]. */
     private val _conditions = configuredEvent
         .map { it?.conditions }
@@ -79,8 +82,10 @@ class EventConfigModel(context: Context) : OverlayViewModel(context) {
             SharingStarted.WhileSubscribed(),
             emptyList()
         )
+
     /** The event conditions currently edited by the user. */
     val conditions: StateFlow<List<Condition>?> = _conditions
+
     /** The item to be displayed in the condition list. Last item is always the add conditions. */
     val conditionListItems: Flow<List<ConditionListItem>> = _conditions
         .combine(repository.getConditionsCount()) { conditions, conditionsCount ->
@@ -94,8 +99,10 @@ class EventConfigModel(context: Context) : OverlayViewModel(context) {
 
     /** The event name value currently edited by the user. */
     val eventName: Flow<String?> = configuredEvent.map { it?.name }.take(1)
+
     /** The event condition operator currently edited by the user. */
     val conditionOperator: Flow<Int?> = configuredEvent.map { it?.conditionOperator }
+
     /** Tells if the configured event is valid and can be saved. */
     val isValidEvent: Flow<Boolean> = configuredEvent.map { event ->
         event != null && event.name.isNotEmpty() && !event.actions.isNullOrEmpty() && !event.conditions.isNullOrEmpty()
@@ -229,9 +236,22 @@ class EventConfigModel(context: Context) : OverlayViewModel(context) {
      * @param area the area of the condition to create.
      * @param bitmap the image for the condition to create.
      */
-    fun createCondition(context: Context, area: Rect, bitmap: Bitmap): Condition {
+    fun createProcessCondition(context: Context): Condition {
         configuredEvent.value?.let { event ->
-            return newDefaultCondition(
+            return newDefaultConditionProcess(context, event.id)
+        } ?: throw IllegalStateException("Can't create a condition, event is null!")
+    }
+
+    /**
+     * Create a new condition with the default values from configuration.
+     *
+     * @param context the Android Context.
+     * @param area the area of the condition to create.
+     * @param bitmap the image for the condition to create.
+     */
+    fun createCaptureCondition(context: Context, area: Rect, bitmap: Bitmap): Condition {
+        configuredEvent.value?.let { event ->
+            return newDefaultConditionCapture(
                 context = context,
                 eventId = event.id,
                 bitmap = bitmap,
@@ -312,24 +332,39 @@ class EventConfigModel(context: Context) : OverlayViewModel(context) {
      * @param onBitmapLoaded the callback notified upon completion.
      */
     fun getConditionBitmap(condition: Condition, onBitmapLoaded: (Bitmap?) -> Unit): Job? {
-        if (condition.bitmap != null) {
-            onBitmapLoaded.invoke(condition.bitmap)
-            return null
-        }
+        when (condition) {
+            is Condition.Capture -> {
+                if (condition.bitmap != null) {
+                    onBitmapLoaded(condition.bitmap)
+                    return null
+                }
 
-        if (condition.path != null) {
-            return viewModelScope.launch(Dispatchers.IO) {
-                val bitmap = repository.getBitmap(condition.path!!, condition.area.width(), condition.area.height())
+                if (condition.path != null) {
+                    return viewModelScope.launch(Dispatchers.IO) {
+                        val bitmap =
+                            repository.getBitmap(condition.path!!, condition.area.width(), condition.area.height())
 
-                if (isActive) {
-                    withContext(Dispatchers.Main) {
-                        onBitmapLoaded.invoke(bitmap)
+                        if (isActive) {
+                            withContext(Dispatchers.Main) {
+                                onBitmapLoaded(bitmap)
+                            }
+                        }
                     }
+                }
+            }
+
+            is Condition.Process -> return viewModelScope.launch {
+                try {
+                    onBitmapLoaded(context.packageManager.getApplicationIcon(condition.processName).toBitmap())
+                } catch (e: Exception) {
+                    onBitmapLoaded(null)
+                    e.printStackTrace()
                 }
             }
         }
 
-        onBitmapLoaded.invoke(null)
+        onBitmapLoaded(null)
+
         return null
     }
 }
@@ -338,6 +373,7 @@ class EventConfigModel(context: Context) : OverlayViewModel(context) {
 sealed class ActionListItem {
     /** The add action item. */
     data class AddActionItem(val shouldDisplayCopy: Boolean) : ActionListItem()
+
     /** Item representing a created action. */
     data class ActionItem(val action: Action) : ActionListItem()
 }
@@ -346,18 +382,32 @@ sealed class ActionListItem {
 sealed class ConditionListItem {
     /** The add condition item. */
     data class AddConditionItem(val shouldDisplayCopy: Boolean) : ConditionListItem()
+
     /** Item representing a created condition. */
     data class ConditionItem(val condition: Condition) : ConditionListItem()
 }
 
 /** Choices for the action type selection dialog.*/
-sealed class ActionTypeChoice(title: Int, iconId: Int?): DialogChoice(title, iconId) {
+sealed class ActionTypeChoice(title: Int, iconId: Int?) : DialogChoice(title, iconId) {
     /** Click Action choice. */
     object Click : ActionTypeChoice(R.string.dialog_action_type_click, R.drawable.ic_click)
+
     /** Swipe Action choice. */
     object Swipe : ActionTypeChoice(R.string.dialog_action_type_swipe, R.drawable.ic_swipe)
+
     /** Pause Action choice. */
     object Pause : ActionTypeChoice(R.string.dialog_action_type_pause, R.drawable.ic_wait)
+
     /** Intent Action choice. */
     object Intent : ActionTypeChoice(R.string.dialog_action_type_intent, R.drawable.ic_intent)
+}
+
+
+/** Choices for the action type selection dialog.*/
+sealed class ConditionTypeChoice(title: Int, iconId: Int?) : DialogChoice(title, iconId) {
+    /** Capture Condition choice. */
+    object Capture : ConditionTypeChoice(R.string.dialog_condition_type_capture, R.drawable.ic_all_conditions)
+
+    /** Process Condition choice. */
+    object Process : ConditionTypeChoice(R.string.dialog_condition_type_process, R.drawable.ic_intent)
 }

@@ -53,7 +53,7 @@ class EventTests {
                 TestsData.getNewSwipe(eventId = TestsData.EVENT_ID),
                 TestsData.getNewPause(eventId = TestsData.EVENT_ID)
             ),
-            conditions = mutableListOf(TestsData.getNewCondition(eventId = TestsData.EVENT_ID)),
+            conditions = mutableListOf(TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID)),
             priority = 0,
             scenarioId = TestsData.SCENARIO_ID,
         ).toCompleteEntity()
@@ -107,7 +107,7 @@ class EventTests {
                 TestsData.getNewSwipe(eventId = TestsData.EVENT_ID),
                 TestsData.getNewPause(eventId = TestsData.EVENT_ID)
             ),
-            conditions = mutableListOf(TestsData.getNewCondition(eventId = TestsData.EVENT_ID)),
+            conditions = mutableListOf(TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID)),
             priority = 0,
             scenarioId = TestsData.SCENARIO_ID,
         )
@@ -133,7 +133,7 @@ class EventTests {
                 TestsData.getNewSwipe(eventId = TestsData.EVENT_ID),
                 TestsData.getNewPause(eventId = TestsData.EVENT_ID)
             ),
-            conditions = mutableListOf(TestsData.getNewCondition(eventId = TestsData.EVENT_ID)),
+            conditions = mutableListOf(TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID)),
             priority = 0,
             scenarioId = TestsData.SCENARIO_ID,
         )
@@ -158,7 +158,7 @@ class EventTests {
                 TestsData.getNewSwipe(eventId = TestsData.EVENT_ID),
                 TestsData.getNewPause(eventId = TestsData.EVENT_ID),
             ),
-            conditions = mutableListOf(TestsData.getNewCondition(eventId = TestsData.EVENT_ID)),
+            conditions = mutableListOf(TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID)),
             priority = 0,
             scenarioId = TestsData.SCENARIO_ID,
         )

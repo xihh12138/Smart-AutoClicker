@@ -18,9 +18,18 @@ package com.buzbuz.smartautoclicker.engine
 
 import android.graphics.Bitmap
 import android.media.Image
+import com.buzbuz.smartautoclicker.detection.AccessibilityEventDetector
 import com.buzbuz.smartautoclicker.detection.DetectionResult
 import com.buzbuz.smartautoclicker.detection.ImageDetector
-import com.buzbuz.smartautoclicker.domain.*
+import com.buzbuz.smartautoclicker.domain.AND
+import com.buzbuz.smartautoclicker.domain.Condition
+import com.buzbuz.smartautoclicker.domain.ConditionOperator
+import com.buzbuz.smartautoclicker.domain.DETECT_AREA
+import com.buzbuz.smartautoclicker.domain.EXACT
+import com.buzbuz.smartautoclicker.domain.EndCondition
+import com.buzbuz.smartautoclicker.domain.Event
+import com.buzbuz.smartautoclicker.domain.OR
+import com.buzbuz.smartautoclicker.domain.WHOLE_SCREEN
 import com.buzbuz.smartautoclicker.engine.debugging.DebugEngine
 import kotlinx.coroutines.yield
 
@@ -39,6 +48,7 @@ import kotlinx.coroutines.yield
  */
 internal class ScenarioProcessor(
     private val imageDetector: ImageDetector,
+    private val accessibilityEventDetector: AccessibilityEventDetector,
     private val detectionQuality: Int,
     private val events: List<Event>,
     private val bitmapSupplier: (String, bitmapWidth: Int, bitmapHeight: Int) -> Bitmap?,
@@ -102,7 +112,7 @@ internal class ScenarioProcessor(
             // If conditions are fulfilled, execute this event's actions !
             if (result.eventMatched) {
                 event.actions?.let { actions ->
-                    actionExecutor.executeActions(actions, result.detectionResult?.position)
+                    actionExecutor.executeActions(actions, result.detectionResult?.asImage()?.position)
                 }
 
                 // Check if an event has reached its max execution count.
@@ -130,7 +140,7 @@ internal class ScenarioProcessor(
         event.conditions?.forEachIndexed { index, condition ->
             // Verify if the condition is fulfilled.
             debugEngine?.onConditionProcessingStarted(condition)
-            val result = checkCondition(condition) ?: return ProcessorResult(false)
+            val result = checkCondition(condition)
             debugEngine?.onConditionProcessingCompleted(result)
 
             if (result.isDetected xor condition.shouldBeDetected) {
@@ -187,14 +197,18 @@ internal class ScenarioProcessor(
      *
      * @return the result of the detection, or null of the detection is not possible.
      */
-    private fun checkCondition(condition: Condition): DetectionResult? {
-        condition.path?.let { path ->
-            bitmapSupplier(path, condition.area.width(), condition.area.height())?.let { conditionBitmap ->
-                return detect(condition, conditionBitmap)
-            }
+    private fun checkCondition(condition: Condition): DetectionResult = when (condition) {
+        is Condition.Capture -> {
+            condition.path?.let { path ->
+                bitmapSupplier(path, condition.area.width(), condition.area.height())?.let { conditionBitmap ->
+                    detect(condition, conditionBitmap)
+                }
+            } ?: DetectionResult.Image(confidenceRate = -100.0)
         }
 
-        return null
+        is Condition.Process -> {
+            detect(condition)
+        }
     }
 
     /**
@@ -205,7 +219,7 @@ internal class ScenarioProcessor(
      *
      * @return the result of the detection.
      */
-    private fun detect(condition: Condition, conditionBitmap: Bitmap): DetectionResult =
+    private fun detect(condition: Condition.Capture, conditionBitmap: Bitmap): DetectionResult.Image =
         when (condition.detectionType) {
             EXACT, DETECT_AREA -> imageDetector.detectCondition(
                 conditionBitmap, condition.detectArea, condition.threshold
@@ -215,6 +229,16 @@ internal class ScenarioProcessor(
             else -> throw IllegalArgumentException("Unexpected detection type")
         }
 
+    /**
+     * Detect the condition of current process.
+     *
+     * @param condition the condition to be detected.
+     *
+     * @return the result of the detection.
+     */
+    private fun detect(condition: Condition.Process): DetectionResult.Event =
+        accessibilityEventDetector.detectCondition(condition.processName)
+
     fun newProcessor(
         detectionQuality: Int,
         events: List<Event>,
@@ -223,19 +247,18 @@ internal class ScenarioProcessor(
         onEndConditionReached: () -> Unit,
         androidExecutor: AndroidExecutor,
         debugEngine: DebugEngine? = null,
-    ): ScenarioProcessor {
-        return ScenarioProcessor(
-            imageDetector,
-            detectionQuality,
-            events,
-            bitmapSupplier,
-            androidExecutor,
-            endConditionOperator,
-            endConditions,
-            onEndConditionReached,
-            debugEngine
-        )
-    }
+    ): ScenarioProcessor = ScenarioProcessor(
+        imageDetector,
+        accessibilityEventDetector,
+        detectionQuality,
+        events,
+        bitmapSupplier,
+        androidExecutor,
+        endConditionOperator,
+        endConditions,
+        onEndConditionReached,
+        debugEngine
+    )
 }
 
 /**

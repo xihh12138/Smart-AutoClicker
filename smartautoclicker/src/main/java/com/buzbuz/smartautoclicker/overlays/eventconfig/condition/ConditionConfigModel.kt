@@ -19,22 +19,28 @@ package com.buzbuz.smartautoclicker.overlays.eventconfig.condition
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
+import androidx.core.graphics.drawable.toBitmap
 import com.buzbuz.smartautoclicker.baseui.OverlayViewModel
 import com.buzbuz.smartautoclicker.domain.Condition
-import com.buzbuz.smartautoclicker.domain.DETECT_AREA
-import com.buzbuz.smartautoclicker.domain.EXACT
 import com.buzbuz.smartautoclicker.domain.Repository
+import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.capture.CaptureConfigModel
+import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.process.ProcessConfigModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 
 /**
  * View model for the [ConditionConfigDialog].
@@ -54,17 +60,28 @@ class ConditionConfigModel(context: Context) : OverlayViewModel(context) {
     /** Tells if the condition should be present or not on the screen. */
     val shouldBeDetected: Flow<Boolean> = configuredCondition.mapNotNull { it?.shouldBeDetected }
 
-    /** The type of detection currently selected by the user. */
-    val detectionTypeAndValue: Flow<DetectionTypeAndValue> =
-        configuredCondition.filterNotNull().map { DetectionTypeAndValue(it.detectionType, it.detectArea) }
+    /** The model for the [configuredCondition]. Type will change according to the action type. */
+    val conditionModel: StateFlow<ConditionModel?> = configuredCondition
+        .map { condition ->
+            @Suppress("UNCHECKED_CAST") // Nullity is handled first
+            when (condition) {
+                null -> null
+                is Condition.Capture ->
+                    CaptureConfigModel(viewModelScope, configuredCondition as MutableStateFlow<Condition.Capture?>)
 
-    /** The condition threshold value currently edited by the user. */
-    val threshold: Flow<Int> = configuredCondition.mapNotNull { it?.threshold }
+                is Condition.Process ->
+                    ProcessConfigModel(viewModelScope, configuredCondition as MutableStateFlow<Condition.Process?>)
+            }
+        }
+        .take(1)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(),
+            null
+        )
 
     /** Tells if the configured condition is valid and can be saved. */
-    val isValidCondition: Flow<Boolean> = configuredCondition.map { condition ->
-        condition != null && condition.name.isNotEmpty()
-    }
+    val isValidCondition: Flow<Boolean> = conditionModel.flatMapConcat { it?.isValidCondition ?: flow { emit(false) } }
 
     /**
      * Set the configured condition.
@@ -89,41 +106,21 @@ class ConditionConfigModel(context: Context) : OverlayViewModel(context) {
      */
     fun setName(name: String) {
         configuredCondition.value?.let { condition ->
-            configuredCondition.value = condition.copy(name = name)
+            configuredCondition.value = when (condition) {
+                is Condition.Capture -> condition.copy(name = name)
+                is Condition.Process -> condition.copy(name = name)
+            }
         } ?: throw IllegalStateException("Can't set condition name, condition is null!")
     }
 
     /** Toggle between true and false for the shouldBeDetected value of the condition. */
     fun toggleShouldBeDetected() {
         configuredCondition.value?.let { condition ->
-            configuredCondition.value = condition.copy(shouldBeDetected = !condition.shouldBeDetected)
+            configuredCondition.value = when (condition) {
+                is Condition.Capture -> condition.copy(shouldBeDetected = !condition.shouldBeDetected)
+                is Condition.Process -> condition.copy(shouldBeDetected = !condition.shouldBeDetected)
+            }
         } ?: throw IllegalStateException("Can't toggle condition should be detected, condition is null!")
-    }
-
-    /** Toggle between exact and whole screen for the detection type. */
-    fun toggleDetectionType() {
-        configuredCondition.value?.let { condition ->
-            configuredCondition.value = condition.copy(
-                detectionType = if (condition.detectionType == DETECT_AREA) EXACT else condition.detectionType + 1,
-            )
-        } ?: throw IllegalStateException("Can't toggle condition should be detected, condition is null!")
-    }
-
-    /** Toggle between exact and whole screen for the detection type. */
-    fun setDetectionArea(detectionArea: Rect) {
-        configuredCondition.value?.let { condition ->
-            configuredCondition.value = condition.copy(detectArea = detectionArea)
-        } ?: throw IllegalStateException("Can't toggle condition should be detected, condition is null!")
-    }
-
-    /**
-     * Set the threshold of the configured condition.
-     * @param value the new threshold value.
-     */
-    fun setThreshold(value: Int) {
-        configuredCondition.value?.let { condition ->
-            configuredCondition.value = condition.copy(threshold = value)
-        }
     }
 
     /**
@@ -134,26 +131,49 @@ class ConditionConfigModel(context: Context) : OverlayViewModel(context) {
      * @param onBitmapLoaded the callback notified upon completion.
      */
     fun getConditionBitmap(condition: Condition, onBitmapLoaded: (Bitmap?) -> Unit): Job? {
-        if (condition.bitmap != null) {
-            onBitmapLoaded.invoke(condition.bitmap)
-            return null
-        }
+        when (condition) {
+            is Condition.Capture -> {
+                if (condition.bitmap != null) {
+                    onBitmapLoaded(condition.bitmap)
+                    return null
+                }
 
-        if (condition.path != null) {
-            return viewModelScope.launch(Dispatchers.IO) {
-                val bitmap = repository.getBitmap(condition.path!!, condition.area.width(), condition.area.height())
+                if (condition.path != null) {
+                    return viewModelScope.launch(Dispatchers.IO) {
+                        val bitmap =
+                            repository.getBitmap(condition.path!!, condition.area.width(), condition.area.height())
 
-                if (isActive) {
-                    withContext(Dispatchers.Main) {
-                        onBitmapLoaded.invoke(bitmap)
+                        if (isActive) {
+                            withContext(Dispatchers.Main) {
+                                onBitmapLoaded(bitmap)
+                            }
+                        }
                     }
+                }
+            }
+
+            is Condition.Process -> return viewModelScope.launch {
+                try {
+                    onBitmapLoaded(context.packageManager.getApplicationIcon(condition.processName).toBitmap())
+                } catch (e: Exception) {
+                    onBitmapLoaded(null)
+                    e.printStackTrace()
                 }
             }
         }
 
-        onBitmapLoaded.invoke(null)
+        onBitmapLoaded(null)
+
         return null
     }
+}
+
+/** Base class for observing/editing the values for an action. */
+abstract class ConditionModel {
+
+    /** True if the action values are correct, false if not. */
+    abstract val isValidCondition: Flow<Boolean>
+
 }
 
 /** The maximum threshold value selectable by the user. */

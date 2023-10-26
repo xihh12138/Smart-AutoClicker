@@ -29,9 +29,9 @@ import androidx.core.content.ContextCompat
  * @param id the drawable to be set.
  * @param tint the tint color to apply to the drawable.
  */
-fun TextView.setLeftCompoundDrawable(@DrawableRes id: Int, @ColorInt tint: Int = -1) {
+fun TextView.setLeftCompoundDrawable(@DrawableRes id: Int, @ColorInt tint: Int? = null) {
     setCompoundDrawablesRelativeWithIntrinsicBounds(ContextCompat.getDrawable(context, id), null, null, null)
-    if (tint != -1) {
+    if (tint != null) {
         compoundDrawablesRelative[0].setTint(tint)
     }
 }
@@ -43,9 +43,9 @@ fun TextView.setLeftCompoundDrawable(@DrawableRes id: Int, @ColorInt tint: Int =
  * @param id the drawable to be set.
  * @param tint the tint color to apply to the drawable.
  */
-fun TextView.setRightCompoundDrawable(@DrawableRes id: Int?, @ColorInt tint: Int = -1) {
+fun TextView.setRightCompoundDrawable(@DrawableRes id: Int?, @ColorInt tint: Int? = null) {
     setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, id?.let { ContextCompat.getDrawable(context, it) }, null)
-    if (tint != -1) {
+    if (tint != null) {
         compoundDrawablesRelative[0].setTint(tint)
     }
 }

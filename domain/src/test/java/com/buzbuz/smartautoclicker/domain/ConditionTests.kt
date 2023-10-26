@@ -37,21 +37,21 @@ class ConditionTests {
     fun toEntity() {
         assertEquals(
             TestsData.getNewConditionEntity(eventId = TestsData.EVENT_ID),
-            TestsData.getNewCondition(eventId = TestsData.EVENT_ID).toEntity()
+            TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID).toEntity()
         )
     }
 
     @Test
     fun toDomain() {
         assertEquals(
-            TestsData.getNewCondition(eventId = TestsData.EVENT_ID),
+            TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID),
             TestsData.getNewConditionEntity(eventId = TestsData.EVENT_ID).toCondition()
         )
     }
 
     @Test
     fun cleanupIds() {
-        val condition = TestsData.getNewCondition(eventId = TestsData.EVENT_ID)
+        val condition = TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID)
         condition.cleanUpIds()
 
         assertEquals("Condition id isn't cleaned", 0L, condition.id)
@@ -60,7 +60,7 @@ class ConditionTests {
 
     @Test
     fun deepCopy() {
-        val condition = TestsData.getNewCondition(eventId = TestsData.EVENT_ID)
+        val condition = TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID)
         assertEquals(condition, condition.deepCopy())
     }
 }

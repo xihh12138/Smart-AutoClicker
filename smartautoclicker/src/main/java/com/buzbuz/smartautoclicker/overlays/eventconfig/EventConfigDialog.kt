@@ -18,6 +18,7 @@ package com.buzbuz.smartautoclicker.overlays.eventconfig
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Rect
 import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
@@ -31,6 +32,8 @@ import com.buzbuz.smartautoclicker.baseui.dialog.OverlayDialogController
 import com.buzbuz.smartautoclicker.baseui.dialog.setCustomTitle
 import com.buzbuz.smartautoclicker.databinding.DialogEventConfigBinding
 import com.buzbuz.smartautoclicker.domain.AND
+import com.buzbuz.smartautoclicker.domain.Condition
+import com.buzbuz.smartautoclicker.domain.EXACT
 import com.buzbuz.smartautoclicker.domain.Event
 import com.buzbuz.smartautoclicker.domain.OR
 import com.buzbuz.smartautoclicker.extensions.setLeftRightCompoundDrawables
@@ -101,7 +104,7 @@ class EventConfigDialog(
     /** Adapter displaying all conditions for the event displayed by this dialog. */
     private val conditionsAdapter = ConditionAdapter(
         addConditionClickedListener = {
-            subOverlayViewModel?.requestSubOverlay(SubOverlay.ConditionCapture)
+            subOverlayViewModel?.requestSubOverlay(SubOverlay.ConditionTypeSelection)
         },
         copyConditionClickedListener = {
             subOverlayViewModel?.requestSubOverlay(SubOverlay.ConditionCopy)
@@ -288,6 +291,29 @@ class EventConfigDialog(
                 )
             }
 
+            is SubOverlay.ConditionTypeSelection -> {
+                showSubOverlay(MultiChoiceDialog(
+                    context = context,
+                    dialogTitle = R.string.dialog_condition_type_title,
+                    choices = listOf(ConditionTypeChoice.Capture, ConditionTypeChoice.Process),
+                    onChoiceSelected = { choiceClicked ->
+                        viewModel?.let { model ->
+                            when (choiceClicked) {
+                                is ConditionTypeChoice.Capture -> {
+                                    subOverlayViewModel?.requestSubOverlay(SubOverlay.ConditionCapture)
+                                }
+
+                                is ConditionTypeChoice.Process -> {
+                                    subOverlayViewModel?.requestSubOverlay(
+                                        SubOverlay.ConditionConfig(model.createProcessCondition(context))
+                                    )
+                                }
+                            }
+                        }
+                    }
+                ))
+            }
+
             is SubOverlay.ConditionCopy -> {
                 viewModel?.let {
                     showSubOverlay(ConditionCopyDialog(
@@ -307,7 +333,7 @@ class EventConfigDialog(
                         onConditionSelected = { area, bitmap ->
                             viewModel?.let { model ->
                                 subOverlayViewModel?.requestSubOverlay(
-                                    SubOverlay.ConditionConfig(model.createCondition(context, area, bitmap))
+                                    SubOverlay.ConditionConfig(model.createCaptureCondition(context, area, bitmap))
                                 )
                             }
                         }
@@ -320,11 +346,15 @@ class EventConfigDialog(
                 showSubOverlay(ConditionConfigDialog(
                     context = context,
                     condition = overlayType.condition,
-                    onConfirmClicked = {
+                    onConfirmClicked = { condition ->
+                        if (condition is Condition.Capture && condition.detectionType == EXACT) {
+                            condition.detectArea = Rect(condition.area)
+                        }
+
                         if (overlayType.index != -1) {
-                            viewModel?.updateCondition(it, overlayType.index)
+                            viewModel?.updateCondition(condition, overlayType.index)
                         } else {
-                            viewModel?.addCondition(it)
+                            viewModel?.addCondition(condition)
                         }
                     },
                     onDeleteClicked = { viewModel?.removeCondition(overlayType.condition) }

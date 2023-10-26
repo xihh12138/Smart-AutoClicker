@@ -23,6 +23,7 @@ import android.media.Image
 import android.os.Build
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.buzbuz.smartautoclicker.detection.AccessibilityEventDetector
 import com.buzbuz.smartautoclicker.domain.*
 
 import com.buzbuz.smartautoclicker.detection.DetectionResult
@@ -82,8 +83,8 @@ class ScenarioProcessorTests {
         private val TEST_CONDITION_AREA_3 = Rect(8 , 9, 10, 11)
         private const val TEST_CONDITION_THRESHOLD_3 = 3
 
-        private val TEST_DETECTION_OK = DetectionResult(true)
-        private val TEST_DETECTION_KO = DetectionResult(false)
+        private val TEST_DETECTION_OK = DetectionResult.Image(true)
+        private val TEST_DETECTION_KO = DetectionResult.Image(false)
     }
 
     /** Interface to be mocked in order to verify the calls to the bitmap supplier. */
@@ -98,6 +99,7 @@ class ScenarioProcessorTests {
     @Mock private lateinit var mockBitmapCreator: ShadowBitmapCreator.BitmapCreator
 
     @Mock private lateinit var mockImageDetector: ImageDetector
+    @Mock private lateinit var mockAccessibilityEventDetector: AccessibilityEventDetector
     @Mock private lateinit var mockBitmapSupplier: BitmapSupplier
     @Mock private lateinit var mockAndroidExecutor: AndroidExecutor
     @Mock private lateinit var mockEndListener: EndConditionListener
@@ -150,6 +152,7 @@ class ScenarioProcessorTests {
         endConditionOperator: Int
     ) = ScenarioProcessor(
         mockImageDetector,
+        mockAccessibilityEventDetector,
         TEST_DATA_DETECTION_QUALITY.toInt(),
         events,
         mockBitmapSupplier::getBitmap,

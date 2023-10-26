@@ -18,11 +18,10 @@ package com.buzbuz.smartautoclicker.overlays.copy.conditions
 
 import android.content.Context
 import android.graphics.Bitmap
-
+import androidx.core.graphics.drawable.toBitmap
 import com.buzbuz.smartautoclicker.baseui.OverlayViewModel
 import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.domain.Repository
-
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -43,6 +42,7 @@ class ConditionCopyModel(context: Context) : OverlayViewModel(context) {
 
     /** The list of condition for the configured event. They are not all available yet in the database. */
     private val eventConditions = MutableStateFlow<List<Condition>?>(null)
+
     /** List of all conditions. */
     val conditionList: Flow<List<Condition>?> = repository.getAllConditions()
         .combine(eventConditions) { dbConditions, eventConditions ->
@@ -72,8 +72,15 @@ class ConditionCopyModel(context: Context) : OverlayViewModel(context) {
      * Get a new condition based on the provided one.
      * @param condition the condition to copy.
      */
-    fun getNewConditionForCopy(condition: Condition): Condition =
-        condition.copy(id = 0, path = if (condition.path != null) "" + condition.path else null)
+    fun getNewConditionForCopy(condition: Condition): Condition = when (condition) {
+        is Condition.Capture -> condition.copy(
+            id = 0,
+            name = "" + condition.name,
+            path = if (condition.path != null) "" + condition.path else null
+        )
+
+        is Condition.Process -> condition.copy(id = 0, name = "" + condition.name)
+    }
 
     /**
      * Get the bitmap corresponding to a condition.
@@ -83,24 +90,39 @@ class ConditionCopyModel(context: Context) : OverlayViewModel(context) {
      * @param onBitmapLoaded the callback notified upon completion.
      */
     fun getConditionBitmap(condition: Condition, onBitmapLoaded: (Bitmap?) -> Unit): Job? {
-        if (condition.bitmap != null) {
-            onBitmapLoaded.invoke(condition.bitmap)
-            return null
-        }
+        when (condition) {
+            is Condition.Capture -> {
+                if (condition.bitmap != null) {
+                    onBitmapLoaded(condition.bitmap)
+                    return null
+                }
 
-        if (condition.path != null) {
-            return viewModelScope.launch(Dispatchers.IO) {
-                val bitmap = repository.getBitmap(condition.path!!, condition.area.width(), condition.area.height())
+                if (condition.path != null) {
+                    return viewModelScope.launch(Dispatchers.IO) {
+                        val bitmap =
+                            repository.getBitmap(condition.path!!, condition.area.width(), condition.area.height())
 
-                if (isActive) {
-                    withContext(Dispatchers.Main) {
-                        onBitmapLoaded.invoke(bitmap)
+                        if (isActive) {
+                            withContext(Dispatchers.Main) {
+                                onBitmapLoaded(bitmap)
+                            }
+                        }
                     }
+                }
+            }
+
+            is Condition.Process -> return viewModelScope.launch {
+                try {
+                    onBitmapLoaded(context.packageManager.getApplicationIcon(condition.processName).toBitmap())
+                } catch (e: Exception) {
+                    onBitmapLoaded(null)
+                    e.printStackTrace()
                 }
             }
         }
 
-        onBitmapLoaded.invoke(null)
+        onBitmapLoaded(null)
+
         return null
     }
 }

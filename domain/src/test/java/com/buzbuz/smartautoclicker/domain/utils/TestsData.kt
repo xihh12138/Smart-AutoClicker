@@ -299,9 +299,22 @@ internal object TestsData {
         threshold: Int = CONDITION_THRESHOLD,
         detectionType: Int = CONDITION_DETECTION_TYPE,
         eventId: Long
-    ) = ConditionEntity(id, eventId, priority, name, path, left, top, right, bottom, threshold, detectionType, true)
+    ) = ConditionEntity(
+        id,
+        eventId,
+        name,
+        ConditionType.CAPTURE,
+        true,
+        path,
+        left,
+        top,
+        right,
+        bottom,
+        threshold,
+        detectionType,
+    )
 
-    fun getNewCondition(
+    fun getNewConditionCapture(
         id: Long = CONDITION_ID,
         priority: Int = 0,
         name: String = CONDITION_NAME,
@@ -314,16 +327,16 @@ internal object TestsData {
         detectionType: Int = CONDITION_DETECTION_TYPE,
         bitmap: Bitmap? = null,
         eventId: Long
-    ) = Condition(
+    ) = Condition.Capture(
         id,
         eventId,
-        priority,
         name,
+        true,
         path,
+        Rect(left, top, right, bottom),
         Rect(left, top, right, bottom),
         threshold,
         detectionType,
-        true,
         bitmap
     )
 }

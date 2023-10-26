@@ -74,6 +74,9 @@ sealed class SubOverlay {
      */
     class ActionConfig(val action: Action, val index: Int = -1) : SubOverlay()
 
+    /** Condition type selection dialog. */
+    object ConditionTypeSelection : SubOverlay()
+
     /** Condition copy dialog. */
     object ConditionCopy : SubOverlay()
 

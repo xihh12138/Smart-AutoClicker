@@ -80,6 +80,9 @@
     <string name="dialog_action_type_pause">等待</string>
     <string name="dialog_action_type_intent">意图</string>
 
+    <string name="dialog_condition_type_capture">截图</string>
+    <string name="dialog_condition_type_process">进程</string>
+
     <string name="dialog_action_config_click_press_duration_title">点击持续时间(ms)</string>
     <string name="dialog_action_config_click_position_title">点击位置</string>
     <string name="dialog_action_config_click_position_on_condition">识别并点击已保存的图片</string>

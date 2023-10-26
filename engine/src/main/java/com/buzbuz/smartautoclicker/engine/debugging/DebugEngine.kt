@@ -107,7 +107,7 @@ class DebugEngine(
 
         conditionsRecorderMap[currProcCondId]?.onProcessingEnd(
             detectionResult.isDetected,
-            detectionResult.confidenceRate
+            (detectionResult as? DetectionResult.Image)?.confidenceRate ?: 1.0
         )
         currProcCondId = null
     }
@@ -122,18 +122,23 @@ class DebugEngine(
 
         // Notify current detection progress
         if (instantData && result.event != null && result.condition != null && result.detectionResult != null) {
-            val halfWidth = result.condition.area.width() / 2
-            val halfHeight = result.condition.area.height() / 2
+            if (result.condition is Condition.Capture && result.detectionResult is DetectionResult.Image) {
+                val halfWidth = result.condition.area.width() / 2
+                val halfHeight = result.condition.area.height() / 2
 
-            val coordinates = if (result.detectionResult.position.x == 0 && result.detectionResult.position.y == 0) Rect()
-            else Rect(
-                result.detectionResult.position.x - halfWidth,
-                result.detectionResult.position.y - halfHeight,
-                result.detectionResult.position.x + halfWidth,
-                result.detectionResult.position.y + halfHeight
-            )
+                val coordinates =
+                    if (result.detectionResult.position.x == 0 && result.detectionResult.position.y == 0) Rect()
+                    else Rect(
+                        result.detectionResult.position.x - halfWidth,
+                        result.detectionResult.position.y - halfHeight,
+                        result.detectionResult.position.x + halfWidth,
+                        result.detectionResult.position.y + halfHeight
+                    )
 
-            currentInfo.emit(DebugInfo(result.event, result.condition, result.detectionResult, coordinates))
+                currentInfo.emit(DebugInfo(result.event, result.condition, result.detectionResult, coordinates))
+            } else {
+                currentInfo.emit(DebugInfo(result.event, result.condition, result.detectionResult, Rect()))
+            }
         }
     }
 

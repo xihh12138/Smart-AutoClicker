@@ -26,15 +26,14 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.view.accessibility.AccessibilityEvent
 import androidx.core.app.NotificationCompat
 
 import com.buzbuz.smartautoclicker.SmartAutoClickerService.Companion.LOCAL_SERVICE_INSTANCE
 import com.buzbuz.smartautoclicker.SmartAutoClickerService.Companion.getLocalService
 import com.buzbuz.smartautoclicker.SmartAutoClickerService.LocalService
 import com.buzbuz.smartautoclicker.activity.ScenarioActivity
-import com.buzbuz.smartautoclicker.baseui.OverlayController
 import com.buzbuz.smartautoclicker.domain.Scenario
+import com.buzbuz.smartautoclicker.detection.AccessibilityEventDetector
 import com.buzbuz.smartautoclicker.engine.AndroidExecutor
 import com.buzbuz.smartautoclicker.engine.DetectorEngine
 import com.buzbuz.smartautoclicker.overlays.mainmenu.MainMenu
@@ -59,7 +58,7 @@ import kotlin.coroutines.suspendCoroutine
  * displayed activity. This injection is made by the [dispatchGesture] method, which is called everytime an event has
  * been detected.
  */
-class SmartAutoClickerService : AccessibilityService(), AndroidExecutor {
+class SmartAutoClickerService : AccessibilityEventDetector(), AndroidExecutor {
 
     companion object {
         /** The identifier for the foreground notification of this service. */
@@ -265,9 +264,6 @@ class SmartAutoClickerService : AccessibilityService(), AndroidExecutor {
     }
 
     override fun onInterrupt() { /* Unused */
-    }
-
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) { /* Unused */
     }
 }
 

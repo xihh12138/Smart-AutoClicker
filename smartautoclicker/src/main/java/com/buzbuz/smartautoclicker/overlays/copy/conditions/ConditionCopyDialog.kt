@@ -80,8 +80,8 @@ class ConditionCopyDialog(
                     dismiss()
                 }
             },
-            bitmapProvider = { bitmap, onLoaded ->
-                viewModel?.getConditionBitmap(bitmap, onLoaded)
+            bitmapProvider = { condition, onLoaded ->
+                viewModel?.getConditionBitmap(condition, onLoaded)
             },
         )
 

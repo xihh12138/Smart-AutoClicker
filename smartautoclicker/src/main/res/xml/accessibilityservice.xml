@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
  * Copyright (C) 2020 Nain57
  *
  * This program is free software; you can redistribute it and/or
@@ -15,7 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; If not, see <http://www.gnu.org/licenses/>.
 -->
-<accessibility-service
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeAllMask"
+    android:accessibilityFeedbackType="feedbackAllMask"
+    android:accessibilityFlags="flagDefault"
+    android:canPerformGestures="true"
+    android:canRetrieveWindowContent="true"
     android:description="@string/accessibility_service_description"
-    android:canPerformGestures="true" />
+    android:notificationTimeout="100" />

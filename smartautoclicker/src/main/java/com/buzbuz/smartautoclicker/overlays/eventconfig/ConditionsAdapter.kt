@@ -23,6 +23,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
@@ -32,9 +33,10 @@ import com.buzbuz.smartautoclicker.databinding.ItemConditionCardBinding
 import com.buzbuz.smartautoclicker.databinding.ItemNewCopyCardBinding
 import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.domain.EXACT
+import com.buzbuz.smartautoclicker.extensions.setLeftCompoundDrawable
 import com.buzbuz.smartautoclicker.overlays.utils.setIconTint
 import kotlinx.coroutines.Job
-import java.util.*
+import java.util.Collections
 
 /**
  * Adapter displaying the conditions for the event displayed by the dialog.
@@ -89,6 +91,7 @@ class ConditionAdapter(
                 ((getItem(position) as ConditionListItem.ConditionItem).condition),
                 conditionClickedListener,
             )
+
             is AddConditionViewHolder -> holder.onBind((getItem(position) as ConditionListItem.AddConditionItem))
         }
     }
@@ -125,6 +128,7 @@ object ConditionDiffUtilCallback : DiffUtil.ItemCallback<ConditionListItem>() {
         oldItem is ConditionListItem.AddConditionItem && newItem is ConditionListItem.AddConditionItem -> true
         oldItem is ConditionListItem.ConditionItem && newItem is ConditionListItem.ConditionItem ->
             oldItem.condition.id == oldItem.condition.id
+
         else -> false
     }
 
@@ -177,22 +181,48 @@ class ConditionViewHolder(
         viewBinding.imageCondition.scaleType = ImageView.ScaleType.FIT_CENTER
         itemView.setOnClickListener { conditionClickedListener.invoke(bindingAdapterPosition, condition) }
 
-        if (condition.shouldBeDetected) {
-            viewBinding.conditionShouldBeDetected.apply {
-                setImageResource(R.drawable.ic_confirm)
-                setIconTint(R.color.overlayMenuButtons)
+        when (condition) {
+            is Condition.Capture -> {
+                viewBinding.conditionGroupCapture.isVisible = true
+                viewBinding.conditionProcessName.isVisible = false
+
+                if (condition.shouldBeDetected) {
+                    viewBinding.conditionShouldBeDetected.apply {
+                        setImageResource(R.drawable.ic_confirm)
+                        setIconTint(R.color.overlayMenuButtons)
+                    }
+                } else {
+                    viewBinding.conditionShouldBeDetected.apply {
+                        setImageResource(R.drawable.ic_cancel)
+                        setIconTint(R.color.overlayMenuButtons)
+                    }
+                }
+
+                viewBinding.conditionDetectionType.setImageResource(
+                    if (condition.detectionType == EXACT) R.drawable.ic_detect_exact else R.drawable.ic_detect_whole_screen
+                )
+                viewBinding.conditionDetectionType.setIconTint(R.color.overlayMenuButtons)
             }
-        } else {
-            viewBinding.conditionShouldBeDetected.apply {
-                setImageResource(R.drawable.ic_cancel)
-                setIconTint(R.color.overlayMenuButtons)
+
+            is Condition.Process -> {
+                viewBinding.conditionGroupCapture.isVisible = false
+                viewBinding.conditionProcessName.isVisible = true
+
+                viewBinding.conditionProcessName.text = condition.processName
+
+                if (condition.shouldBeDetected) {
+                    viewBinding.conditionProcessName.setLeftCompoundDrawable(
+                        R.drawable.ic_confirm,
+                        ContextCompat.getColor(viewBinding.conditionProcessName.context, R.color.overlayMenuButtons)
+                    )
+                } else {
+                    viewBinding.conditionProcessName.setLeftCompoundDrawable(
+                        R.drawable.ic_cancel,
+                        ContextCompat.getColor(viewBinding.conditionProcessName.context, R.color.overlayMenuButtons)
+                    )
+                }
             }
         }
-
-        viewBinding.conditionDetectionType.setImageResource(
-            if (condition.detectionType == EXACT) R.drawable.ic_detect_exact else R.drawable.ic_detect_whole_screen
-        )
-        viewBinding.conditionDetectionType.setIconTint(R.color.overlayMenuButtons)
 
         bitmapLoadingJob?.cancel()
         bitmapLoadingJob = bitmapProvider.invoke(condition) { bitmap ->

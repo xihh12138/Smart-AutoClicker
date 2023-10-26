@@ -78,7 +78,12 @@ internal class BackupEngineImpl(
                         val jsonFile = createJsonBackupFile(completeScenario, screenSize)
 
                         // Add the json and all scenario conditions file to the archive
-                        addScenarioToZip(zipStream, completeScenario.scenario.id, jsonFile, completeScenario.getConditionsPath())
+                        addScenarioToZip(
+                            zipStream,
+                            completeScenario.scenario.id,
+                            jsonFile,
+                            completeScenario.getConditionsPath()
+                        )
 
                         // Delete the json file from the app data folder
                         jsonFile.delete()
@@ -272,7 +277,7 @@ internal class BackupEngineImpl(
             }
 
             completeEvent.conditions.forEach { condition ->
-                if (!File(appDataDir, condition.path).exists()) {
+                if (condition.path != null && !File(appDataDir, condition.path!!).exists()) {
                     Log.w(TAG, "Invalid condition, ${condition.path} file does not exist.")
                     return false
                 }
@@ -283,10 +288,12 @@ internal class BackupEngineImpl(
     }
 
     /** @return the set of path in the app data directory for all conditions in this scenario. */
-    private fun CompleteScenario.getConditionsPath() = buildSet {
+    private fun CompleteScenario.getConditionsPath(): Set<String> = buildSet {
         events.forEach { completeEvent ->
             completeEvent.conditions.forEach { condition ->
-                add(condition.path)
+                condition.path?.let { path ->
+                    add(path)
+                }
             }
         }
     }
@@ -324,10 +331,10 @@ internal class BackupEngineImpl(
 //                                areaTop = areaTop.times(adjustHeightRate).toInt(),
 //                                areaRight = areaRight.times(adjustWidthRate).toInt(),
 //                                areaBottom = areaBottom.times(adjustHeightRate).toInt(),
-                                detectAreaLeft = detectAreaLeft.times(adjustWidthRate).toInt(),
-                                detectAreaTop = detectAreaTop.times(adjustHeightRate).toInt(),
-                                detectAreaRight = detectAreaRight.times(adjustWidthRate).toInt(),
-                                detectAreaBottom = detectAreaBottom.times(adjustHeightRate).toInt(),
+                                detectAreaLeft = detectAreaLeft?.times(adjustWidthRate)?.toInt(),
+                                detectAreaTop = detectAreaTop?.times(adjustHeightRate)?.toInt(),
+                                detectAreaRight = detectAreaRight?.times(adjustWidthRate)?.toInt(),
+                                detectAreaBottom = detectAreaBottom?.times(adjustHeightRate)?.toInt(),
                             )
                         }
                     }

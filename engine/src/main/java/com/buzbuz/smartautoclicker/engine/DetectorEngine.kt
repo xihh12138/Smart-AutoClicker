@@ -24,6 +24,7 @@ import android.media.Image
 import android.media.projection.MediaProjectionManager
 import android.util.Log
 import com.buzbuz.smartautoclicker.baseui.ScreenMetrics
+import com.buzbuz.smartautoclicker.detection.AccessibilityEventDetector
 import com.buzbuz.smartautoclicker.detection.ImageDetector
 import com.buzbuz.smartautoclicker.detection.NativeDetector
 import com.buzbuz.smartautoclicker.domain.EndCondition
@@ -282,6 +283,7 @@ class DetectorEngine(context: Context) {
 
             scenarioProcessor = ScenarioProcessor(
                 imageDetector = imageDetector!!,
+                accessibilityEventDetector = AccessibilityEventDetector.INSTANCE!!,
                 detectionQuality = scenarioEndConditions.value!!.first.detectionQuality,
                 events = scenarioEvents.value,
                 bitmapSupplier = { path, width, height ->

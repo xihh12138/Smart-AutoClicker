@@ -36,6 +36,12 @@ object Migration8to9 : Migration(8, 9) {
             execSQL(addConditionDetectAreaTopColumn)
             execSQL(addConditionDetectAreaRightColumn)
             execSQL(addConditionDetectAreaBottomColumn)
+
+            execSQL(renameConditionTableToOld)
+            execSQL(createConditionTableNew)
+            execSQL(eventToConditionsIndex)
+            execSQL(insertConditions)
+            execSQL(deleteOldConditionTable)
         }
     }
 
@@ -48,24 +54,74 @@ object Migration8to9 : Migration(8, 9) {
     /** Create the table for the end conditions. */
     private val addConditionDetectAreaLeftColumn = """
         ALTER TABLE `condition_table`
-        ADD COLUMN `detect_area_left` INTEGER DEFAULT 0 NOT NULL
+        ADD COLUMN `detect_area_left` INTEGER
     """.trimIndent()
 
     /** Create the table for the end conditions. */
     private val addConditionDetectAreaTopColumn = """
         ALTER TABLE `condition_table`
-        ADD COLUMN `detect_area_top` INTEGER DEFAULT 0 NOT NULL
+        ADD COLUMN `detect_area_top` INTEGER
     """.trimIndent()
 
     /** Create the table for the end conditions. */
     private val addConditionDetectAreaRightColumn = """
         ALTER TABLE `condition_table`
-        ADD COLUMN `detect_area_right` INTEGER DEFAULT 0 NOT NULL
+        ADD COLUMN `detect_area_right` INTEGER
     """.trimIndent()
 
     /** Create the table for the end conditions. */
     private val addConditionDetectAreaBottomColumn = """
         ALTER TABLE `condition_table`
-        ADD COLUMN `detect_area_bottom` INTEGER DEFAULT 0 NOT NULL
+        ADD COLUMN `detect_area_bottom` INTEGER
+    """.trimIndent()
+
+    /** Create the table for the end conditions. */
+    private val renameConditionTableToOld = """
+        ALTER TABLE `condition_table`
+        RENAME TO `condition_table_old`
+    """.trimIndent()
+
+    /** Create the table for the end conditions. */
+    private val createConditionTableNew = """
+        CREATE TABLE IF NOT EXISTS `condition_table` (
+        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        `eventId` INTEGER NOT NULL,
+        `priority` INTEGER NOT NULL DEFAULT 0,
+        `name` TEXT NOT NULL,
+        `type` TEXT NOT NULL,
+        `shouldBeDetected` INTEGER NOT NULL,
+        
+        `path` TEXT,
+        `area_left` INTEGER,
+        `area_top` INTEGER,
+        `area_right` INTEGER,
+        `area_bottom` INTEGER,
+        `detect_area_left` INTEGER,
+        `detect_area_top` INTEGER,
+        `detect_area_right` INTEGER,
+        `detect_area_bottom` INTEGER,
+        `threshold` INTEGER,
+        `detection_type` INTEGER,
+        
+        `process_name` TEXT,
+        FOREIGN KEY(`eventId`) REFERENCES `event_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+    )
+    """.trimIndent()
+
+    /** Creates the index between an event and its conditions. */
+    private val eventToConditionsIndex = """
+        CREATE INDEX IF NOT EXISTS `index_condition_table_eventId` ON `condition_table` (`eventId`)
+    """.trimIndent()
+
+    /** Copy the existing conditions into the new table. */
+    private val insertConditions = """
+        INSERT INTO `condition_table` (eventId, priority, name, type, shouldBeDetected, path, area_left, area_top, area_right, area_bottom, detect_area_left, detect_area_top, detect_area_right, detect_area_bottom, detection_type, threshold)
+        SELECT eventId, priority, name, "CAPTURE", shouldBeDetected, path, area_left, area_top, area_right, area_bottom, detect_area_left, detect_area_top, detect_area_right, detect_area_bottom, detection_type, threshold 
+        FROM condition_table_old
+    """.trimIndent()
+
+    /** Delete the old condition table. */
+    private val deleteOldConditionTable = """
+        DROP TABLE condition_table_old
     """.trimIndent()
 }

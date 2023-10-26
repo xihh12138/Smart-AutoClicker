@@ -20,17 +20,15 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
-
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-
 import com.buzbuz.smartautoclicker.R
+import com.buzbuz.smartautoclicker.databinding.ItemConditionBinding
 import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.domain.EXACT
-import com.buzbuz.smartautoclicker.databinding.ItemConditionBinding
-
 import kotlinx.coroutines.Job
 
 /**
@@ -41,7 +39,7 @@ import kotlinx.coroutines.Job
 class ConditionCopyAdapter(
     private val conditionClickedListener: (Condition) -> Unit,
     private val bitmapProvider: (Condition, onBitmapLoaded: (Bitmap?) -> Unit) -> Job?,
-): ListAdapter<Condition, ConditionViewHolder>(ConditionDiffUtilCallback) {
+) : ListAdapter<Condition, ConditionViewHolder>(ConditionDiffUtilCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConditionViewHolder =
         ConditionViewHolder(
@@ -55,7 +53,7 @@ class ConditionCopyAdapter(
 }
 
 /** DiffUtil Callback comparing two Conditions when updating the [ConditionCopyAdapter] list. */
-object ConditionDiffUtilCallback: DiffUtil.ItemCallback<Condition>(){
+object ConditionDiffUtilCallback : DiffUtil.ItemCallback<Condition>() {
     override fun areItemsTheSame(oldItem: Condition, newItem: Condition): Boolean = oldItem.id == newItem.id
     override fun areContentsTheSame(oldItem: Condition, newItem: Condition): Boolean = oldItem == newItem
 }
@@ -82,10 +80,6 @@ class ConditionViewHolder(
     fun onBindCondition(condition: Condition, conditionClickedListener: (Condition) -> Unit) {
         viewBinding.apply {
             conditionName.text = condition.name
-            conditionThreshold.text = itemView.context.getString(
-                R.string.dialog_condition_copy_threshold,
-                condition.threshold
-            )
 
             conditionShouldBeDetected.apply {
                 if (condition.shouldBeDetected) {
@@ -95,9 +89,27 @@ class ConditionViewHolder(
                 }
             }
 
-            conditionDetectionType.setImageResource(
-                if (condition.detectionType == EXACT) R.drawable.ic_detect_exact else R.drawable.ic_detect_whole_screen
-            )
+            when (condition) {
+                is Condition.Capture -> {
+                    conditionGroupCapture.isVisible = true
+                    conditionProcessName.isVisible = false
+
+                    conditionThreshold.text = itemView.context.getString(
+                        R.string.dialog_condition_copy_threshold,
+                        condition.threshold
+                    )
+                    conditionDetectionType.setImageResource(
+                        if (condition.detectionType == EXACT) R.drawable.ic_detect_exact else R.drawable.ic_detect_whole_screen
+                    )
+                }
+
+                is Condition.Process -> {
+                    conditionGroupCapture.isVisible = false
+                    conditionProcessName.isVisible = true
+
+                    conditionProcessName.text = condition.processName
+                }
+            }
 
             bitmapLoadingJob?.cancel()
             bitmapLoadingJob = bitmapProvider.invoke(condition) { bitmap ->

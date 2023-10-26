@@ -37,7 +37,7 @@ class NativeDetector : ImageDetector {
     }
 
     /** The results of the detection. Modified by native code. */
-    private val detectionResult = DetectionResult()
+    private val detectionResult = DetectionResult.Image()
 
     /** Native pointer of the detector object. */
     @Keep
@@ -67,14 +67,14 @@ class NativeDetector : ImageDetector {
         setScreenImage(screenBitmap)
     }
 
-    override fun detectCondition(conditionBitmap: Bitmap, threshold: Int): DetectionResult {
+    override fun detectCondition(conditionBitmap: Bitmap, threshold: Int): DetectionResult.Image {
         if (isClosed) return detectionResult.copy()
 
         detect(conditionBitmap, threshold, detectionResult)
         return detectionResult.copy()
     }
 
-    override fun detectCondition(conditionBitmap: Bitmap, position: Rect, threshold: Int): DetectionResult {
+    override fun detectCondition(conditionBitmap: Bitmap, position: Rect, threshold: Int): DetectionResult.Image {
         if (isClosed) return detectionResult.copy()
 
         detectAt(conditionBitmap, position.left, position.top, position.width(), position.height(), threshold, detectionResult)

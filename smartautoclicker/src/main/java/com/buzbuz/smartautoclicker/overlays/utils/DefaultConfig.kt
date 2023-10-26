@@ -19,9 +19,14 @@ package com.buzbuz.smartautoclicker.overlays.utils
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
-
 import com.buzbuz.smartautoclicker.R
-import com.buzbuz.smartautoclicker.domain.*
+import com.buzbuz.smartautoclicker.domain.AND
+import com.buzbuz.smartautoclicker.domain.Action
+import com.buzbuz.smartautoclicker.domain.Condition
+import com.buzbuz.smartautoclicker.domain.EXACT
+import com.buzbuz.smartautoclicker.domain.Event
+import com.buzbuz.smartautoclicker.domain.OR
+import com.buzbuz.smartautoclicker.domain.Scenario
 
 /**
  * Creates a new event.
@@ -52,24 +57,41 @@ fun newDefaultEvent(context: Context, scenarioId: Long, scenarioEventsSize: Int)
     )
 
 /**
- * Creates a new default condition.
+ * Creates a new default capture condition.
  * @param context the Android context.
  * @param eventId the event for this new action.
  * @param area the area of the condition to create.
  * @param bitmap the image for the condition to create.
  * @return the new condition.
  */
-fun newDefaultCondition(context: Context, eventId: Long, area: Rect, bitmap: Bitmap) =
-    Condition(
+fun newDefaultConditionCapture(context: Context, eventId: Long, area: Rect, bitmap: Bitmap) =
+    Condition.Capture(
+        id = 0,
         eventId = eventId,
-        priority = 0,
         name = context.resources.getString(R.string.default_condition_name),
+        shouldBeDetected = true,
         bitmap = bitmap,
         area = area,
         detectArea = Rect(area),
         threshold = context.resources.getInteger(R.integer.default_condition_threshold),
         detectionType = EXACT,
+    )
+
+/**
+ * Creates a new default capture condition.
+ * @param context the Android context.
+ * @param eventId the event for this new action.
+ * @param area the area of the condition to create.
+ * @param bitmap the image for the condition to create.
+ * @return the new condition.
+ */
+fun newDefaultConditionProcess(context: Context, eventId: Long, processName: String = "") =
+    Condition.Process(
+        id = 0,
+        eventId = eventId,
+        name = context.resources.getString(R.string.default_condition_name),
         shouldBeDetected = true,
+        processName = processName,
     )
 
 /**
@@ -120,3 +142,6 @@ fun newDefaultIntent(context: Context, eventId: Long) = Action.Intent(
     name = context.getString(R.string.default_intent_name),
     isAdvanced = context.getEventConfigPreferences().getIntentIsAdvancedConfig(context),
 )
+
+
+const val TAG = "xihh"

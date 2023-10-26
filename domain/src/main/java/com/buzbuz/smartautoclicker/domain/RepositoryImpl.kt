@@ -165,12 +165,14 @@ internal class RepositoryImpl internal constructor(
      */
     private suspend fun saveNewConditionsBitmap(conditions: List<Condition>) {
         conditions.forEach { condition ->
-            if (condition.path == null) {
-                if (condition.bitmap == null) {
-                    throw IllegalArgumentException("Can't save invalid condition")
-                }
+            if (condition is Condition.Capture) {
+                if (condition.path == null) {
+                    if (condition.bitmap == null) {
+                        throw IllegalArgumentException("Can't save invalid condition")
+                    }
 
-                condition.path = bitmapManager.saveBitmap(condition.bitmap)
+                    condition.path = bitmapManager.saveBitmap(condition.bitmap)
+                }
             }
         }
     }
@@ -180,8 +182,8 @@ internal class RepositoryImpl internal constructor(
      *
      * @param removedPath the list of path for the bitmaps to be removed.
      */
-    private suspend fun clearRemovedConditionsBitmaps(removedPath: List<String>) {
-        val deletedPaths = removedPath.filter { path ->
+    private suspend fun clearRemovedConditionsBitmaps(removedPath: List<String?>) {
+        val deletedPaths = removedPath.filterNotNull().filter { path ->
             conditionsDao.getValidPathCount(path) == 0
         }
 

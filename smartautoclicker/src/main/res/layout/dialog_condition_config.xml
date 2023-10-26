@@ -40,13 +40,13 @@
                     style="@style/HeaderTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:labelFor="@+id/edit_name"
+                    android:labelFor="@id/edit_name"
                     android:text="@string/dialog_condition_name_title" />
 
                 <include layout="@layout/include_view_separator" />
 
                 <EditText
-                    android:id="@id/edit_name"
+                    android:id="@+id/edit_name"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/item_height"
                     android:layout_marginStart="@dimen/margin_horizontal_small"
@@ -107,33 +107,80 @@
 
                 <include layout="@layout/include_view_separator" />
 
-                <TextView
-                    android:id="@+id/condition_detection_type"
-                    style="@style/ItemView.Small"
-                    android:drawablePadding="@dimen/margin_horizontal_small"
-                    android:gravity="center_vertical"
-                    android:textSize="@dimen/text_size_list_item_text"
-                    tools:drawableEnd="@drawable/ic_chevron"
-                    tools:text="@string/dialog_condition_type_whole_screen" />
-
-                <TextView
-                    android:id="@+id/condition_detection_type_value"
-                    style="@style/ItemView.Small"
-                    android:drawablePadding="@dimen/margin_horizontal_small"
-                    android:gravity="center_vertical"
-                    android:textSize="@dimen/text_size_list_item_text"
+                <LinearLayout
+                    android:id="@+id/layout_condition_capture"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
                     android:visibility="gone"
-                    tools:drawableEnd="@drawable/ic_chevron"
-                    tools:text="@string/dialog_condition_type_whole_screen" />
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:id="@+id/condition_detection_type"
+                        style="@style/ItemView.Small"
+                        android:drawablePadding="@dimen/margin_horizontal_small"
+                        android:gravity="center_vertical"
+                        android:textSize="@dimen/text_size_list_item_text"
+                        tools:drawableEnd="@drawable/ic_chevron"
+                        tools:text="@string/dialog_condition_type_whole_screen" />
+
+                    <TextView
+                        android:id="@+id/condition_detection_type_value"
+                        style="@style/ItemView.Small"
+                        android:drawablePadding="@dimen/margin_horizontal_small"
+                        android:gravity="center_vertical"
+                        android:textSize="@dimen/text_size_list_item_text"
+                        android:visibility="gone"
+                        tools:drawableEnd="@drawable/ic_chevron"
+                        tools:text="@string/dialog_condition_in"
+                        tools:visibility="visible" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layout_condition_process"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <EditText
+                        android:id="@+id/edit_process_name"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/item_height"
+                        android:layout_marginStart="@dimen/margin_horizontal_small"
+                        android:layout_marginEnd="@dimen/margin_horizontal_small"
+                        android:layout_weight="1"
+                        android:imeOptions="actionDone"
+                        android:importantForAutofill="no"
+                        android:inputType="text"
+                        android:maxLength="@integer/name_max_length"
+                        tools:text="@string/default_intent_name" />
+
+                    <ImageView
+                        android:id="@+id/iv_select_process_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:paddingHorizontal="@dimen/margin_horizontal_small"
+                        android:src="@drawable/ic_chevron" />
+
+
+                </LinearLayout>
 
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/card_condition_threshold"
             style="@style/HeaderCardView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            tools:visibility="visible">
 
             <LinearLayout
                 android:layout_width="match_parent"

@@ -17,13 +17,30 @@
 package com.buzbuz.smartautoclicker.database.room
 
 import android.content.Context
-import androidx.room.*
+import androidx.room.AutoMigration
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.buzbuz.smartautoclicker.database.room.dao.ConditionDao
 import com.buzbuz.smartautoclicker.database.room.dao.EndConditionDao
 import com.buzbuz.smartautoclicker.database.room.dao.EventDao
 import com.buzbuz.smartautoclicker.database.room.dao.ScenarioDao
-import com.buzbuz.smartautoclicker.database.room.entity.*
-import com.buzbuz.smartautoclicker.database.room.migrations.*
+import com.buzbuz.smartautoclicker.database.room.entity.ActionEntity
+import com.buzbuz.smartautoclicker.database.room.entity.ActionTypeStringConverter
+import com.buzbuz.smartautoclicker.database.room.entity.ConditionEntity
+import com.buzbuz.smartautoclicker.database.room.entity.EndConditionEntity
+import com.buzbuz.smartautoclicker.database.room.entity.EventEntity
+import com.buzbuz.smartautoclicker.database.room.entity.IntentExtraEntity
+import com.buzbuz.smartautoclicker.database.room.entity.IntentExtraTypeStringConverter
+import com.buzbuz.smartautoclicker.database.room.entity.ScenarioEntity
+import com.buzbuz.smartautoclicker.database.room.migrations.Migration1to2
+import com.buzbuz.smartautoclicker.database.room.migrations.Migration2to3
+import com.buzbuz.smartautoclicker.database.room.migrations.Migration3to4
+import com.buzbuz.smartautoclicker.database.room.migrations.Migration4to5
+import com.buzbuz.smartautoclicker.database.room.migrations.Migration5to6
+import com.buzbuz.smartautoclicker.database.room.migrations.Migration6to7
+import com.buzbuz.smartautoclicker.database.room.migrations.Migration8to9
 
 /**
  * Database for the scenario and their events.
@@ -46,7 +63,7 @@ import com.buzbuz.smartautoclicker.database.room.migrations.*
     version = CLICK_DATABASE_VERSION,
     exportSchema = true,
     autoMigrations = [
-        AutoMigration(from = 8, to = 9)
+        AutoMigration(from = 7, to = 8)
     ]
 )
 @TypeConverters(ActionTypeStringConverter::class, IntentExtraTypeStringConverter::class)
@@ -83,17 +100,15 @@ abstract class ClickDatabase : RoomDatabase() {
                     context.applicationContext,
                     ClickDatabase::class.java,
                     "click_database"
-                )
-                    .addMigrations(
-                        Migration1to2,
-                        Migration2to3,
-                        Migration3to4,
-                        Migration4to5,
-                        Migration5to6,
-                        Migration6to7,
-                        Migration8to9,
-                    )
-                    .build()
+                ).addMigrations(
+                    Migration1to2,
+                    Migration2to3,
+                    Migration3to4,
+                    Migration4to5,
+                    Migration5to6,
+                    Migration6to7,
+                    Migration8to9,
+                ).build()
 
                 INSTANCE = instance
                 instance

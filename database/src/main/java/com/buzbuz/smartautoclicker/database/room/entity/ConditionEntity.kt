@@ -16,7 +16,11 @@
  */
 package com.buzbuz.smartautoclicker.database.room.entity
 
-import androidx.room.*
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
 /**
@@ -31,6 +35,9 @@ import kotlinx.serialization.Serializable
  * @param id unique identifier for a condition. Also the primary key in the table.
  * @param eventId identifier of this condition's event. Reference the key [EventEntity.id] in event_table.
  * @param name the name of the condition.
+ * @param type type of this condition. Must be the this representation of the ConditionType enum.
+ * @param shouldBeDetected true if this condition should be detected to be true, false if it should not be found.
+ *
  * @param path the path on the application appData directory for the bitmap representing the condition. Also the
  *             primary key for this entity.
  * @param areaLeft the left coordinate of the rectangle defining the matching area.
@@ -40,7 +47,6 @@ import kotlinx.serialization.Serializable
  * @param threshold the accepted difference between the conditions and the screen content, in percent (0-100%).
  * @param detectionType the type of detection. Can be any of the values defined in
  *                      [com.buzbuz.smartautoclicker.domain.DetectionType].
- * @param shouldBeDetected true if this condition should be detected to be true, false if it should not be found.
  */
 @Entity(
     tableName = "condition_table",
@@ -58,20 +64,40 @@ data class ConditionEntity(
     @ColumnInfo(name = "eventId") var eventId: Long,
     @ColumnInfo(name = "priority", defaultValue = "0") var priority: Int = 0,
     @ColumnInfo(name = "name") val name: String,
-    @ColumnInfo(name = "path") val path: String,
-    @ColumnInfo(name = "area_left") val areaLeft: Int,
-    @ColumnInfo(name = "area_top") val areaTop: Int,
-    @ColumnInfo(name = "area_right") val areaRight: Int,
-    @ColumnInfo(name = "area_bottom") val areaBottom: Int,
-    @ColumnInfo(name = "detect_area_left", defaultValue = "0") val detectAreaLeft: Int = areaLeft,
-    @ColumnInfo(name = "detect_area_top", defaultValue = "0") val detectAreaTop: Int = areaTop,
-    @ColumnInfo(name = "detect_area_right", defaultValue = "0") val detectAreaRight: Int = areaRight,
-    @ColumnInfo(name = "detect_area_bottom", defaultValue = "0") val detectAreaBottom: Int = areaBottom,
-    @ColumnInfo(name = "threshold", defaultValue = "1") val threshold: Int,
-    @ColumnInfo(name = "detection_type") val detectionType: Int,
+    @ColumnInfo(name = "type", defaultValue = "CAPTURE") val type: ConditionType,
     @ColumnInfo(name = "shouldBeDetected") val shouldBeDetected: Boolean,
+
+    /** [ConditionType.CAPTURE] */
+    @ColumnInfo(name = "path") val path: String? = null,
+    @ColumnInfo(name = "area_left") val areaLeft: Int? = null,
+    @ColumnInfo(name = "area_top") val areaTop: Int? = null,
+    @ColumnInfo(name = "area_right") val areaRight: Int? = null,
+    @ColumnInfo(name = "area_bottom") val areaBottom: Int? = null,
+    @ColumnInfo(name = "detect_area_left", defaultValue = "0") val detectAreaLeft: Int? = areaLeft,
+    @ColumnInfo(name = "detect_area_top", defaultValue = "0") val detectAreaTop: Int? = areaTop,
+    @ColumnInfo(name = "detect_area_right", defaultValue = "0") val detectAreaRight: Int? = areaRight,
+    @ColumnInfo(name = "detect_area_bottom", defaultValue = "0") val detectAreaBottom: Int? = areaBottom,
+    @ColumnInfo(name = "threshold", defaultValue = "1") val threshold: Int? = null,
+    @ColumnInfo(name = "detection_type") val detectionType: Int? = null,
+
+    /** [ConditionType.PROCESS] */
+    @ColumnInfo(name = "process_name") val processName: String? = null
 )
 
+/**
+ * Type of [ConditionEntity].
+ * For each type there is a set of values that will be available in the database, all others will always be null. Refers
+ * to the [ConditionEntity] documentation for values/type association.
+ *
+ * /!\ DO NOT RENAME: ActionType enum name is used in the database.
+ */
+enum class ConditionType {
+    /** Detect conditions through current screen capture image */
+    CAPTURE,
+
+    /**  Detect conditions through current process package name*/
+    PROCESS,
+}
 
 fun Iterable<ConditionEntity>.sortByPriority() = sortedWith { o1, o2 ->
     val comp = o1.priority.compareTo(o2.priority)

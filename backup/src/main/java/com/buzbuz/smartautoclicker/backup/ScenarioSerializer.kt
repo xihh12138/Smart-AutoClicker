@@ -34,6 +34,7 @@ import com.buzbuz.smartautoclicker.database.room.entity.CompleteActionEntity
 import com.buzbuz.smartautoclicker.database.room.entity.CompleteEventEntity
 import com.buzbuz.smartautoclicker.database.room.entity.CompleteScenario
 import com.buzbuz.smartautoclicker.database.room.entity.ConditionEntity
+import com.buzbuz.smartautoclicker.database.room.entity.ConditionType
 import com.buzbuz.smartautoclicker.database.room.entity.EndConditionEntity
 import com.buzbuz.smartautoclicker.database.room.entity.EventEntity
 import com.buzbuz.smartautoclicker.database.room.entity.IntentExtraEntity
@@ -219,43 +220,77 @@ internal class ScenarioSerializer {
     @VisibleForTesting
     internal fun JsonArray.deserializeConditionsCompat(): List<ConditionEntity> = mapNotNull { condition ->
         with(condition.jsonObject) {
-            val id = getLong("id", true) ?: return@mapNotNull null
-            val eventId = getLong("eventId", true) ?: return@mapNotNull null
-            val priority = getInt("priority")?.coerceAtLeast(0) ?: 0
-            val path = getString("path", true) ?: return@mapNotNull null
-            val areaLeft = getInt("areaLeft", true) ?: return@mapNotNull null
-            val areaTop = getInt("areaTop", true) ?: return@mapNotNull null
-            val areaRight = getInt("areaRight", true) ?: return@mapNotNull null
-            val areaBottom = getInt("areaBottom", true) ?: return@mapNotNull null
-            val detectAreaLeft = getInt("detectAreaLeft", true) ?: areaLeft
-            val detectAreaTop = getInt("detectAreaTop", true) ?: areaTop
-            val detectAreaRight = getInt("detectAreaRight", true) ?: areaRight
-            val detectAreaBottom = getInt("detectAreaBottom", true) ?: areaBottom
-
-            ConditionEntity(
-                id = id,
-                eventId = eventId,
-                priority = priority,
-                path = path,
-                areaLeft = areaLeft,
-                areaTop = areaTop,
-                areaRight = areaRight,
-                areaBottom = areaBottom,
-                detectAreaLeft = detectAreaLeft,
-                detectAreaTop = detectAreaTop,
-                detectAreaRight = detectAreaRight,
-                detectAreaBottom = detectAreaBottom,
-                name = getString("name") ?: "",
-                shouldBeDetected = getBoolean("shouldBeDetected") ?: true,
-                detectionType = getInt("detectionType")
-                    ?.coerceIn(DETECTION_TYPE_LOWER_BOUND, DETECTION_TYPE_UPPER_BOUND)
-                    ?: DETECTION_TYPE_DEFAULT_VALUE,
-                threshold = getInt("threshold")
-                    ?.coerceIn(CONDITION_THRESHOLD_LOWER_BOUND, CONDITION_THRESHOLD_UPPER_BOUND)
-                    ?: CONDITION_THRESHOLD_DEFAULT_VALUE,
-            )
+            when (getEnum<ConditionType>("type", true)) {
+                ConditionType.CAPTURE -> deserializeCaptureConditionCompat()
+                ConditionType.PROCESS -> deserializeProcessConditionCompat()
+                null -> deserializeCaptureConditionCompat()
+            }
         }
     }
+
+
+    internal fun JsonObject.deserializeCaptureConditionCompat(): ConditionEntity? {
+        val id = getLong("id", true) ?: return null
+        val eventId = getLong("eventId", true) ?: return null
+        val priority = getInt("priority")?.coerceAtLeast(0) ?: 0
+        val name = getString("name") ?: ""
+        val shouldBeDetected = getBoolean("shouldBeDetected") ?: true
+
+        val path = getString("path", true) ?: return null
+        val areaLeft = getInt("areaLeft", true) ?: return null
+        val areaTop = getInt("areaTop", true) ?: return null
+        val areaRight = getInt("areaRight", true) ?: return null
+        val areaBottom = getInt("areaBottom", true) ?: return null
+        val detectAreaLeft = getInt("detectAreaLeft", true) ?: areaLeft
+        val detectAreaTop = getInt("detectAreaTop", true) ?: areaTop
+        val detectAreaRight = getInt("detectAreaRight", true) ?: areaRight
+        val detectAreaBottom = getInt("detectAreaBottom", true) ?: areaBottom
+
+        return ConditionEntity(
+            id = id,
+            eventId = eventId,
+            priority = priority,
+            name = name,
+            type = ConditionType.CAPTURE,
+            shouldBeDetected = shouldBeDetected,
+            path = path,
+            areaLeft = areaLeft,
+            areaTop = areaTop,
+            areaRight = areaRight,
+            areaBottom = areaBottom,
+            detectAreaLeft = detectAreaLeft,
+            detectAreaTop = detectAreaTop,
+            detectAreaRight = detectAreaRight,
+            detectAreaBottom = detectAreaBottom,
+            threshold = getInt("threshold")
+                ?.coerceIn(CONDITION_THRESHOLD_LOWER_BOUND, CONDITION_THRESHOLD_UPPER_BOUND)
+                ?: CONDITION_THRESHOLD_DEFAULT_VALUE,
+            detectionType = getInt("detectionType")
+                ?.coerceIn(DETECTION_TYPE_LOWER_BOUND, DETECTION_TYPE_UPPER_BOUND)
+                ?: DETECTION_TYPE_DEFAULT_VALUE,
+        )
+    }
+
+    internal fun JsonObject.deserializeProcessConditionCompat(): ConditionEntity? {
+        val id = getLong("id", true) ?: return null
+        val eventId = getLong("eventId", true) ?: return null
+        val priority = getInt("priority")?.coerceAtLeast(0) ?: 0
+        val name = getString("name") ?: ""
+        val shouldBeDetected = getBoolean("shouldBeDetected") ?: true
+
+        val processName = getString("processName", true) ?: return null
+
+        return ConditionEntity(
+            id = id,
+            eventId = eventId,
+            priority = priority,
+            name = name,
+            type = ConditionType.PROCESS,
+            shouldBeDetected = shouldBeDetected,
+            processName = processName
+        )
+    }
+
 
     /** @return the deserialized complete action list. */
     @VisibleForTesting
