@@ -26,7 +26,7 @@ class CaptureConfigModel(
     val threshold: Flow<Int> = configuredCondition.mapNotNull { it?.threshold }
 
     override val isValidCondition: Flow<Boolean> = configuredCondition.map { condition ->
-        condition != null && condition.name.isNotEmpty()
+        condition != null && condition.name.isNotEmpty() && condition.detectArea.width() >= condition.area.width() && condition.detectArea.height() >= condition.area.height()
     }
 
     /** Toggle between exact and whole screen for the detection type. */
