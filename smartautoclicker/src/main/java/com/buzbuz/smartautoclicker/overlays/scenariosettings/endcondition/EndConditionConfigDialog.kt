@@ -22,22 +22,23 @@ import android.text.InputFilter
 import android.text.Spanned
 import android.view.LayoutInflater
 import android.view.View
-
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-
 import com.buzbuz.smartautoclicker.R
 import com.buzbuz.smartautoclicker.baseui.dialog.OverlayDialogController
 import com.buzbuz.smartautoclicker.baseui.dialog.setCustomTitle
-import com.buzbuz.smartautoclicker.domain.EndCondition
 import com.buzbuz.smartautoclicker.databinding.DialogEndConditionConfigBinding
+import com.buzbuz.smartautoclicker.domain.EndCondition
 import com.buzbuz.smartautoclicker.extensions.setRightCompoundDrawable
+import com.buzbuz.smartautoclicker.overlays.eventconfig.ActionsAdapter
+import com.buzbuz.smartautoclicker.overlays.eventlist.EDITION
+import com.buzbuz.smartautoclicker.overlays.eventlist.Mode
 import com.buzbuz.smartautoclicker.overlays.utils.OnAfterTextChangedListener
 import com.buzbuz.smartautoclicker.overlays.utils.bindEvent
-
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
@@ -63,8 +64,17 @@ class EndConditionConfigDialog(
         attachToLifecycle(this@EndConditionConfigDialog)
         setEndCondition(endCondition, endConditions)
     }
+
     /** ViewBinding containing the views for this dialog. */
     private lateinit var viewBinding: DialogEndConditionConfigBinding
+
+    /** Adapter displaying all actions for the event displayed by this dialog. */
+    private val finishActionsAdapter = ActionsAdapter(
+        addActionClickedListener = {},
+        copyActionClickedListener = {},
+        actionClickedListener = { index, action -> },
+        actionReorderListener = {}
+    )
 
     override fun onCreateDialog(): AlertDialog.Builder {
         viewBinding = DialogEndConditionConfigBinding.inflate(LayoutInflater.from(context))
@@ -96,6 +106,8 @@ class EndConditionConfigDialog(
                     }
                 })
             }
+
+            listFinishActions.adapter = finishActionsAdapter
         }
 
         lifecycleScope.launch {
@@ -104,7 +116,7 @@ class EndConditionConfigDialog(
                     viewModel?.eventsAvailable?.let { eventsAvailable ->
                         viewModel?.selectedEvent?.combine(eventsAvailable) { event, events ->
                             when {
-                                events.isNullOrEmpty() -> {
+                                events.isEmpty() -> {
                                     viewBinding.textNoEvent.apply {
                                         visibility = View.VISIBLE
                                         setText(R.string.dialog_end_condition_config_event_none_in_scenario)
@@ -113,6 +125,7 @@ class EndConditionConfigDialog(
                                     }
                                     viewBinding.includeSelectedEvent.root.visibility = View.GONE
                                 }
+
                                 event == null -> {
                                     viewBinding.textNoEvent.apply {
                                         visibility = View.VISIBLE
@@ -122,6 +135,7 @@ class EndConditionConfigDialog(
                                     }
                                     viewBinding.includeSelectedEvent.root.visibility = View.GONE
                                 }
+
                                 else -> {
                                     viewBinding.textNoEvent.visibility = View.GONE
                                     viewBinding.includeSelectedEvent.apply {
@@ -152,6 +166,60 @@ class EndConditionConfigDialog(
                         )
                     }
                 }
+
+                launch {
+                    viewModel?.eventsAvailable?.let { eventsAvailable ->
+                        viewModel?.finishEvent?.combine(eventsAvailable) { finishEvent, events ->
+                            when {
+                                events.isEmpty() -> {
+                                    viewBinding.textNoFinishEvent.apply {
+                                        visibility = View.VISIBLE
+                                        setText(R.string.dialog_end_condition_config_event_none_in_scenario)
+                                        setOnClickListener(null)
+                                        setRightCompoundDrawable(null)
+                                    }
+                                    viewBinding.includeSelectedFinishEvent.root.visibility = View.GONE
+                                }
+
+                                finishEvent == null -> {
+                                    viewBinding.textNoFinishEvent.apply {
+                                        visibility = View.VISIBLE
+                                        setText(R.string.dialog_end_condition_config_event_no_selection)
+                                        setOnClickListener { showFinishEventSelectionDialog() }
+                                        setRightCompoundDrawable(R.drawable.ic_chevron)
+                                    }
+                                    viewBinding.includeSelectedFinishEvent.root.visibility = View.GONE
+                                }
+
+                                else -> {
+                                    viewBinding.textNoFinishEvent.visibility = View.GONE
+                                    viewBinding.includeSelectedFinishEvent.apply {
+                                        root.visibility = View.VISIBLE
+                                        bindEvent(
+                                            event = finishEvent,
+                                            mode = EDITION,
+                                            itemClickedListener = { showFinishEventSelectionDialog() },
+                                            deleteClickedListener = {
+                                                viewModel?.setFinishEvent(null)
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }?.collect()
+                    }
+                }
+
+                launch {
+                    viewModel?.finishActions?.collectLatest { actions ->
+                        if (actions.isEmpty()) {
+                            viewBinding.listFinishActions.visibility = View.GONE
+                        } else {
+                            viewBinding.listFinishActions.visibility = View.VISIBLE
+                            finishActionsAdapter.submitList(actions.toMutableList())
+                        }
+                    }
+                }
             }
         }
     }
@@ -168,6 +236,17 @@ class EndConditionConfigDialog(
                 context = context,
                 eventList = viewModel?.eventsAvailable?.value ?: emptyList(),
                 onEventClicked = { event -> viewModel?.setEvent(event) }
+            )
+        )
+    }
+
+    /** Show the event selection dialog. */
+    private fun showFinishEventSelectionDialog() {
+        showSubOverlay(
+            EndConditionEventSelectionDialog(
+                context = context,
+                eventList = viewModel?.eventsAvailable?.value ?: emptyList(),
+                onEventClicked = { event -> viewModel?.setFinishEvent(event) }
             )
         )
     }

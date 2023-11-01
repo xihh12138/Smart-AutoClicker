@@ -16,6 +16,7 @@
  */
 package com.buzbuz.smartautoclicker.domain
 
+import android.content.Context
 import android.graphics.Point
 import android.net.Uri
 
@@ -82,16 +83,16 @@ internal class RepositoryImpl internal constructor(
             scenarioEntity.toScenario()
         }
 
-    override fun getScenarioWithEndConditionsFlow(scenarioId: Long) =
+    override fun getScenarioWithEndConditionsFlow(context: Context, scenarioId: Long) =
         scenarioDao.getScenarioWithEndConditionsFlow(scenarioId)
             .map { scenarioWithEndConditions ->
-                scenarioWithEndConditions.scenario.toScenario() to scenarioWithEndConditions.endConditions.map { it.toEndCondition() }
+                scenarioWithEndConditions.scenario.toScenario() to scenarioWithEndConditions.endConditions.map { it.toEndCondition(context) }
             }
 
-    override suspend fun getScenarioWithEndConditions(scenarioId: Long): Pair<Scenario, List<EndCondition>> {
+    override suspend fun getScenarioWithEndConditions(context: Context, scenarioId: Long): Pair<Scenario, List<EndCondition>> {
         val scenarioWithEndConditions = scenarioDao.getScenarioWithEndConditions(scenarioId)
         return scenarioWithEndConditions.scenario.toScenario() to scenarioWithEndConditions.endConditions
-            .map { it.toEndCondition() }
+            .map { it.toEndCondition(context) }
     }
 
     override suspend fun updateEndConditions(scenarioId: Long, endConditions: List<EndCondition>) {

@@ -34,11 +34,12 @@ import kotlinx.serialization.Serializable
  * @param id the unique identifier for a end condition.
  * @param scenarioId the unique identifier for the scenario associated with this end condition.
  * @param eventId the unique identifier for the event associated with this end condition.
+ * @param finishEventId the unique identifier for the event witch will be trigger when this end condition reached.
  * @param executions the number of times the associated event must be executed before fulfilling this end condition.
  */
 @Entity(
     tableName = "end_condition_table",
-    indices = [Index("scenario_id"), Index("event_id")],
+    indices = [Index("scenario_id"), Index("event_id"), Index("finish_event_id")],
     foreignKeys = [
         ForeignKey(
             entity = ScenarioEntity::class,
@@ -52,6 +53,12 @@ import kotlinx.serialization.Serializable
             childColumns = ["event_id"],
             onDelete = ForeignKey.CASCADE
         ),
+        ForeignKey(
+            entity = EventEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["finish_event_id"],
+            onDelete = ForeignKey.CASCADE
+        ),
     ]
 )
 @Serializable
@@ -59,6 +66,7 @@ data class EndConditionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long,
     @ColumnInfo(name = "scenario_id") val scenarioId: Long,
     @ColumnInfo(name = "event_id") val eventId: Long,
+    @ColumnInfo(name = "finish_event_id") val finishEventId: Long? = null,
     @ColumnInfo(name = "executions") val executions: Int,
 )
 
@@ -70,6 +78,7 @@ data class EndConditionEntity(
  *
  * @param endCondition the end condition entity.
  * @param event the event entity.
+ * @param finishEvent the finish event entity.
  */
 data class EndConditionWithEvent(
     @Embedded val endCondition: EndConditionEntity,
@@ -77,5 +86,10 @@ data class EndConditionWithEvent(
         parentColumn = "event_id",
         entityColumn = "id"
     )
-    val event: EventEntity
+    val event: EventEntity,
+    @Relation(
+        parentColumn = "finish_event_id",
+        entityColumn = "id"
+    )
+    val finishEvent: EventEntity?
 )

@@ -147,8 +147,8 @@
     <string name="dialog_condition_type_detect_area">在检测区域内</string>
     <string name="dialog_condition_threshold_title">容差</string>
     <string name="dialog_condition_threshold_value">容差: %1$d %%</string>
-    <string name="dialog_condition_should_be_detected">当图像可见时点击</string>
-    <string name="dialog_condition_should_not_be_detected">当图像不可见时点击</string>
+    <string name="dialog_condition_should_be_detected">当条件可见时触发</string>
+    <string name="dialog_condition_should_not_be_detected">当条件不可见时触发</string>
     <string name="dialog_condition_error">条件图像未能找到</string>
     <string name="dialog_condition_new_title">新条件</string>
     <string name="dialog_condition_new_create">创建</string>
@@ -237,4 +237,5 @@
     <string name="dialog_debug_config_generate_report">生成调试报告</string>
 
     <string name="toast_start_scenario_x">开启脚本 %1$s</string>
+    <string name="dialog_end_condition_config_finish_event_title">结束时执行事件</string>
 </resources>

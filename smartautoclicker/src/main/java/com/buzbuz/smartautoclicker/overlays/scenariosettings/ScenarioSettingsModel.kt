@@ -17,22 +17,20 @@
 package com.buzbuz.smartautoclicker.overlays.scenariosettings
 
 import android.content.Context
-
 import com.buzbuz.smartautoclicker.baseui.OverlayViewModel
-import com.buzbuz.smartautoclicker.domain.Repository
+import com.buzbuz.smartautoclicker.detection.DETECTION_QUALITY_MAX
+import com.buzbuz.smartautoclicker.detection.DETECTION_QUALITY_MIN
 import com.buzbuz.smartautoclicker.domain.AND
 import com.buzbuz.smartautoclicker.domain.EndCondition
 import com.buzbuz.smartautoclicker.domain.OR
+import com.buzbuz.smartautoclicker.domain.Repository
 import com.buzbuz.smartautoclicker.domain.Scenario
-import com.buzbuz.smartautoclicker.detection.DETECTION_QUALITY_MAX
-import com.buzbuz.smartautoclicker.detection.DETECTION_QUALITY_MIN
-
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.math.max
@@ -51,11 +49,13 @@ class ScenarioSettingsModel(context: Context) : OverlayViewModel(context) {
 
     /** The scenario configured. */
     private val configuredScenario = MutableStateFlow<Scenario?>(null)
+
     /** The list of end condition configured. */
     val configuredEndConditions = MutableStateFlow<List<EndCondition>>(emptyList())
 
     /** The quality of the detection. */
     val detectionQuality = configuredScenario.map { it?.detectionQuality }
+
     /** The operator applied to the end conditions. */
     val endConditionOperator = configuredScenario.map { it?.endConditionOperator }
 
@@ -63,12 +63,14 @@ class ScenarioSettingsModel(context: Context) : OverlayViewModel(context) {
     private val eventList = configuredScenario
         .filterNotNull()
         .flatMapLatest { repository.getEventList(it.id) }
+
     /** Events available for a new end condition. */
     private val eventsAvailable = configuredEndConditions
         .combine(eventList) { endConditions, events ->
             if (endConditions.isEmpty()) events.isNotEmpty()
             else events.any { event -> endConditions.find { it.eventId == event.id } == null }
         }
+
     /** The end conditions for the configured scenario. */
     val endConditions = configuredEndConditions.combine(eventsAvailable) { endConditions, eventsAvailable ->
         buildList {
@@ -83,7 +85,7 @@ class ScenarioSettingsModel(context: Context) : OverlayViewModel(context) {
      */
     fun setScenario(id: Long) {
         viewModelScope.launch {
-            val scenarioWithEndConditions = repository.getScenarioWithEndConditions(id)
+            val scenarioWithEndConditions = repository.getScenarioWithEndConditions(context, id)
             configuredScenario.value = scenarioWithEndConditions.first
             configuredEndConditions.value = scenarioWithEndConditions.second
         }
@@ -180,6 +182,7 @@ class ScenarioSettingsModel(context: Context) : OverlayViewModel(context) {
 sealed class EndConditionListItem {
     /** The add end condition item. */
     object AddEndConditionItem : EndConditionListItem()
+
     /** Item representing a end condition. */
     data class EndConditionItem(val endCondition: EndCondition) : EndConditionListItem()
 }

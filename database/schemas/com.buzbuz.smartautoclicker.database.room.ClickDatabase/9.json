@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 9,
-    "identityHash": "40c9c95848452850625cdfe6160d46eb",
+    "identityHash": "3a7c766e2027f297effc64da32673d98",
     "entities": [
       {
         "tableName": "action_table",
@@ -453,7 +453,7 @@
       },
       {
         "tableName": "end_condition_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `scenario_id` INTEGER NOT NULL, `event_id` INTEGER NOT NULL, `executions` INTEGER NOT NULL, FOREIGN KEY(`scenario_id`) REFERENCES `scenario_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`event_id`) REFERENCES `event_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `scenario_id` INTEGER NOT NULL, `event_id` INTEGER NOT NULL, `finish_event_id` INTEGER, `executions` INTEGER NOT NULL, FOREIGN KEY(`scenario_id`) REFERENCES `scenario_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`event_id`) REFERENCES `event_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`finish_event_id`) REFERENCES `event_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -472,6 +472,12 @@
             "columnName": "event_id",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "finishEventId",
+            "columnName": "finish_event_id",
+            "affinity": "INTEGER",
+            "notNull": false
           },
           {
             "fieldPath": "executions",
@@ -504,6 +510,15 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_end_condition_table_event_id` ON `${TABLE_NAME}` (`event_id`)"
+          },
+          {
+            "name": "index_end_condition_table_finish_event_id",
+            "unique": false,
+            "columnNames": [
+              "finish_event_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_end_condition_table_finish_event_id` ON `${TABLE_NAME}` (`finish_event_id`)"
           }
         ],
         "foreignKeys": [
@@ -524,6 +539,17 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "event_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "event_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "finish_event_id"
             ],
             "referencedColumns": [
               "id"
@@ -601,7 +627,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '40c9c95848452850625cdfe6160d46eb')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3a7c766e2027f297effc64da32673d98')"
     ]
   }
 }

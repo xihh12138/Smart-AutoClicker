@@ -165,11 +165,13 @@ internal class ScenarioSerializer {
             val id = getLong("id", true) ?: return@mapNotNull null
             val scenarioId = getLong("scenarioId", true) ?: return@mapNotNull null
             val eventId = getLong("eventId", true) ?: return@mapNotNull null
+            val finishEventId = getLong("finishEventId")
 
             EndConditionEntity(
                 id = id,
                 scenarioId = scenarioId,
                 eventId = eventId,
+                finishEventId = finishEventId,
                 executions = getInt("executions") ?: END_CONDITION_EXECUTION_DEFAULT_VALUE
             )
         }

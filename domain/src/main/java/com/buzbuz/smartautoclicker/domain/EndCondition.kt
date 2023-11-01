@@ -16,6 +16,7 @@
  */
 package com.buzbuz.smartautoclicker.domain
 
+import android.content.Context
 import androidx.annotation.IntRange
 
 import com.buzbuz.smartautoclicker.database.room.entity.EndConditionEntity
@@ -35,6 +36,7 @@ data class EndCondition(
     val scenarioId: Long,
     val eventId: Long = 0,
     val eventName: String? = null,
+    val finishEvent: Event? = null,
     @IntRange(from = 1) var executions: Int = 1,
 ) {
 
@@ -43,11 +45,17 @@ data class EndCondition(
         if (scenarioId == 0L || eventId == 0L)
             throw IllegalStateException("Can't create entity, scenario or event is invalid")
 
-        return EndConditionEntity(id, scenarioId, eventId, executions)
+        return EndConditionEntity(id, scenarioId, eventId, finishEvent?.id, executions)
     }
 }
 
 
 /** @return the end condition for this entity. */
-internal fun EndConditionWithEvent.toEndCondition() =
-    EndCondition(endCondition.id, endCondition.scenarioId, event.id, event.name, endCondition.executions)
+internal suspend fun EndConditionWithEvent.toEndCondition(context: Context) = EndCondition(
+    endCondition.id,
+    endCondition.scenarioId,
+    event.id,
+    event.name,
+    finishEvent?.toCompleteEvent(context),
+    endCondition.executions
+)

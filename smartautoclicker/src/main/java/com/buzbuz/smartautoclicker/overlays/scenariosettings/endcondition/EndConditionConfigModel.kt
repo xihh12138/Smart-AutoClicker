@@ -17,20 +17,19 @@
 package com.buzbuz.smartautoclicker.overlays.scenariosettings.endcondition
 
 import android.content.Context
-
 import com.buzbuz.smartautoclicker.baseui.OverlayViewModel
-import com.buzbuz.smartautoclicker.domain.Repository
 import com.buzbuz.smartautoclicker.domain.EndCondition
 import com.buzbuz.smartautoclicker.domain.Event
+import com.buzbuz.smartautoclicker.domain.Repository
+import com.buzbuz.smartautoclicker.overlays.eventconfig.ActionListItem
 import com.buzbuz.smartautoclicker.overlays.scenariosettings.ScenarioSettingsDialog
-
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.take
 
@@ -47,8 +46,10 @@ class EndConditionConfigModel(context: Context) : OverlayViewModel(context) {
 
     /** The configured end condition. */
     private val configuredEndCondition = MutableStateFlow<EndCondition?>(null)
+
     /** The list of current end conditions for this scenario. */
     private val currentEndConditions = MutableStateFlow<List<EndCondition>>(emptyList())
+
     /** The complete list of events for this scenario. */
     private val events = configuredEndCondition
         .filterNotNull()
@@ -61,6 +62,17 @@ class EndConditionConfigModel(context: Context) : OverlayViewModel(context) {
         .filterNotNull()
         .map { it.executions }
         .take(1)
+
+    val finishEvent = configuredEndCondition.map { it?.finishEvent }
+
+    val finishActions = configuredEndCondition.map {
+        buildList {
+            it?.finishEvent?.actions?.let { actions ->
+                addAll(actions.map { ActionListItem.ActionItem(it) })
+            }
+        }
+    }
+
     /** True if this end condition is valid and can be saved, false if not. */
     val isValidEndCondition = configuredEndCondition.map { endCondition ->
         endCondition != null && endCondition.eventId != 0L && endCondition.executions > 0
@@ -72,15 +84,16 @@ class EndConditionConfigModel(context: Context) : OverlayViewModel(context) {
         configuredEndCondition,
         events
     ) { endConditions, endCondition, events ->
-            events.filter { event ->
-                endCondition?.eventId == event.id || endConditions.find { it.eventId == event.id } == null
-            }
+        events.filter { event ->
+            endCondition?.eventId == event.id || endConditions.find { it.eventId == event.id } == null
         }
+    }
         .stateIn(
             viewModelScope,
             SharingStarted.Eagerly,
             emptyList()
         )
+
     /** The event selected for the end condition. Null if none is. */
     val selectedEvent = configuredEndCondition
         .combine(events) { endCondition, events ->
@@ -103,6 +116,14 @@ class EndConditionConfigModel(context: Context) : OverlayViewModel(context) {
      */
     fun setEvent(event: Event) {
         configuredEndCondition.value = configuredEndCondition.value?.copy(eventId = event.id, eventName = event.name)
+    }
+
+    /**
+     * Set the event for the configured end condition
+     * @param event the new event.
+     */
+    fun setFinishEvent(event: Event?) {
+        configuredEndCondition.value = configuredEndCondition.value?.copy(finishEvent = event?.copy())
     }
 
     /**

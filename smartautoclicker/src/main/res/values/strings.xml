@@ -200,6 +200,7 @@
     <string name="dialog_end_condition_config_event_no_selection">No Event selected</string>
     <string name="dialog_end_condition_config_event_none_in_scenario">No Event created in the scenario</string>
     <string name="dialog_end_condition_config_executions_title">Executions</string>
+    <string name="dialog_end_condition_config_finish_event_title">Execute event at end</string>
     <string name="dialog_end_condition_event_select_title">Select an event</string>
 
     <string name="dialog_backup_create_title">Create backup</string>

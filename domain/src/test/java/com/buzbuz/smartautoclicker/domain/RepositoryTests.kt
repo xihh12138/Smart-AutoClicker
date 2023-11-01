@@ -20,7 +20,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Build
 import com.buzbuz.smartautoclicker.backup.BackupEngine
-
 import com.buzbuz.smartautoclicker.database.bitmap.BitmapManager
 import com.buzbuz.smartautoclicker.database.room.ClickDatabase
 import com.buzbuz.smartautoclicker.database.room.dao.ConditionDao
@@ -32,12 +31,10 @@ import com.buzbuz.smartautoclicker.database.room.entity.ScenarioWithEndCondition
 import com.buzbuz.smartautoclicker.database.room.entity.ScenarioWithEvents
 import com.buzbuz.smartautoclicker.domain.utils.TestsData
 import com.buzbuz.smartautoclicker.domain.utils.anyNotNull
-
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
-
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -45,13 +42,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.*
-
 import org.mockito.MockitoAnnotations
-import org.mockito.Mockito.`when` as mockWhen
-
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.io.File
+import org.mockito.Mockito.`when` as mockWhen
 
 /** Tests for the [RepositoryImpl]. */
 @ExperimentalCoroutinesApi
@@ -60,17 +55,29 @@ import java.io.File
 class RepositoryTests {
 
     /** A mocked version of the bitmap manager. */
-    @Mock private lateinit var mockBitmapManager: BitmapManager
+    @Mock
+    private lateinit var mockBitmapManager: BitmapManager
+
     /** A mocked version of the backup engine. */
-    @Mock private lateinit var mockBackupEngine: BackupEngine
+    @Mock
+    private lateinit var mockBackupEngine: BackupEngine
+
     /** A mocked version of the Scenario Dao. */
-    @Mock private lateinit var mockScenarioDao: ScenarioDao
+    @Mock
+    private lateinit var mockScenarioDao: ScenarioDao
+
     /** A mocked version of the Event Dao. */
-    @Mock private lateinit var mockEventDao: EventDao
+    @Mock
+    private lateinit var mockEventDao: EventDao
+
     /** A mocked version of the Condition Dao. */
-    @Mock private lateinit var mockConditionDao: ConditionDao
+    @Mock
+    private lateinit var mockConditionDao: ConditionDao
+
     /** A mocked version of the End condition Dao. */
-    @Mock private lateinit var mockEndConditionDao: EndConditionDao
+    @Mock
+    private lateinit var mockEndConditionDao: EndConditionDao
+
     /** Object under tests. */
     private lateinit var repository: RepositoryImpl
 
@@ -147,7 +154,8 @@ class RepositoryTests {
             }
         )
 
-        val result = repository.getScenarioWithEndConditionsFlow(TestsData.SCENARIO_ID).first()
+        val result =
+            repository.getScenarioWithEndConditionsFlow(mock(Context::class.java), TestsData.SCENARIO_ID).first()
         assertEquals(scenario, result.first)
         assertTrue(result.second.isEmpty())
     }
@@ -165,7 +173,8 @@ class RepositoryTests {
             }
         )
 
-        val result = repository.getScenarioWithEndConditionsFlow(TestsData.SCENARIO_ID).first()
+        val result =
+            repository.getScenarioWithEndConditionsFlow(mock(Context::class.java), TestsData.SCENARIO_ID).first()
         assertEquals(scenario, result.first)
         assertEquals(
             TestsData.getNewEndCondition(),
@@ -185,10 +194,12 @@ class RepositoryTests {
     fun getEventList() = runTest {
         mockWhen(mockEventDao.getEvents(TestsData.SCENARIO_ID)).thenReturn(
             flow {
-                emit(listOf(
-                    TestsData.getNewEventEntity(id = 1L, scenarioId = TestsData.SCENARIO_ID, priority = 0),
-                    TestsData.getNewEventEntity(id = 2L, scenarioId = TestsData.SCENARIO_ID, priority = 1),
-                ))
+                emit(
+                    listOf(
+                        TestsData.getNewEventEntity(id = 1L, scenarioId = TestsData.SCENARIO_ID, priority = 0),
+                        TestsData.getNewEventEntity(id = 2L, scenarioId = TestsData.SCENARIO_ID, priority = 1),
+                    )
+                )
             }
         )
 
@@ -205,13 +216,19 @@ class RepositoryTests {
     fun getCompleteEventList() = runTest {
         mockWhen(mockEventDao.getCompleteEvents(TestsData.SCENARIO_ID)).thenReturn(
             flow {
-                emit(listOf(
-                    CompleteEventEntity(
-                        event = TestsData.getNewEventEntity(id = TestsData.EVENT_ID, scenarioId = TestsData.SCENARIO_ID, priority = 0),
-                        actions = listOf(TestsData.getNewPauseEntity(eventId = TestsData.EVENT_ID, priority = 0)),
-                        conditions = listOf(TestsData.getNewConditionEntity(eventId = TestsData.EVENT_ID))
+                emit(
+                    listOf(
+                        CompleteEventEntity(
+                            event = TestsData.getNewEventEntity(
+                                id = TestsData.EVENT_ID,
+                                scenarioId = TestsData.SCENARIO_ID,
+                                priority = 0
+                            ),
+                            actions = listOf(TestsData.getNewPauseEntity(eventId = TestsData.EVENT_ID, priority = 0)),
+                            conditions = listOf(TestsData.getNewConditionEntity(eventId = TestsData.EVENT_ID))
+                        )
                     )
-                ))
+                )
             }
         )
 
@@ -233,7 +250,11 @@ class RepositoryTests {
     fun getCompleteEvent() = runTest {
         mockWhen(mockEventDao.getEvent(TestsData.EVENT_ID)).thenReturn(
             CompleteEventEntity(
-                event = TestsData.getNewEventEntity(id = TestsData.EVENT_ID, scenarioId = TestsData.SCENARIO_ID, priority = 0),
+                event = TestsData.getNewEventEntity(
+                    id = TestsData.EVENT_ID,
+                    scenarioId = TestsData.SCENARIO_ID,
+                    priority = 0
+                ),
                 actions = listOf(TestsData.getNewPauseEntity(eventId = TestsData.EVENT_ID, priority = 0)),
                 conditions = listOf(TestsData.getNewConditionEntity(eventId = TestsData.EVENT_ID))
             )
@@ -305,7 +326,11 @@ class RepositoryTests {
             conditions = mutableListOf(TestsData.getNewConditionCapture(eventId = TestsData.EVENT_ID)),
         )
         val expectedEntity = CompleteEventEntity(
-            event = TestsData.getNewEventEntity(id = TestsData.EVENT_ID, scenarioId = TestsData.SCENARIO_ID, priority = 0),
+            event = TestsData.getNewEventEntity(
+                id = TestsData.EVENT_ID,
+                scenarioId = TestsData.SCENARIO_ID,
+                priority = 0
+            ),
             actions = listOf(TestsData.getNewPauseEntity(eventId = TestsData.EVENT_ID, priority = 0)),
             conditions = listOf(TestsData.getNewConditionEntity(eventId = TestsData.EVENT_ID))
         )
@@ -321,7 +346,7 @@ class RepositoryTests {
             TestsData.getNewEvent(id = 1, scenarioId = TestsData.SCENARIO_ID, priority = 1),
             TestsData.getNewEvent(id = 2, scenarioId = TestsData.SCENARIO_ID, priority = 0),
 
-        )
+            )
         events.forEach { repository.addEvent(it) }
 
         val expectedEventsEntity = listOf(
@@ -337,7 +362,8 @@ class RepositoryTests {
     @Test
     fun removeEvent() = runTest {
         val event = TestsData.getNewEvent(id = TestsData.EVENT_ID, scenarioId = TestsData.SCENARIO_ID, priority = 1)
-        val expectedEvent = TestsData.getNewEventEntity(id = TestsData.EVENT_ID, scenarioId = TestsData.SCENARIO_ID, priority = 1)
+        val expectedEvent =
+            TestsData.getNewEventEntity(id = TestsData.EVENT_ID, scenarioId = TestsData.SCENARIO_ID, priority = 1)
         mockWhen(mockConditionDao.getConditionsPath(TestsData.EVENT_ID)).thenReturn(emptyList())
 
         repository.removeEvent(event)

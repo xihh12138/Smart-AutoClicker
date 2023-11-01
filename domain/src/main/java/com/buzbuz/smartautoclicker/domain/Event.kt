@@ -16,6 +16,7 @@
  */
 package com.buzbuz.smartautoclicker.domain
 
+import android.content.Context
 import androidx.annotation.IntDef
 
 import com.buzbuz.smartautoclicker.database.room.entity.CompleteEventEntity
@@ -90,6 +91,12 @@ data class Event(
 
 /** @return the event for this entity. */
 internal fun EventEntity.toEvent() = Event(id, scenarioId, name, conditionOperator, priority, stopAfter = stopAfter)
+
+/** @return the event for this entity. */
+internal suspend fun EventEntity.toCompleteEvent(context: Context): Event {
+    val repository = Repository.getRepository(context)
+    return repository.getCompleteEvent(id)
+}
 
 /** @return the complete event for this entity. */
 internal suspend fun CompleteEventEntity.toEvent() = withContext(Dispatchers.IO) {

@@ -90,7 +90,7 @@ internal object TestsData {
         scenarioId: Long = END_SCENARIO_ID,
         eventId: Long = END_EVENT_ID,
         executions: Int = END_EXECUTIONS,
-    ) = EndConditionEntity(id, scenarioId, eventId, executions)
+    ) = EndConditionEntity(id, scenarioId, eventId, null, executions)
 
     fun getNewEndCondition(
         id: Long = SCENARIO_ID,
@@ -98,7 +98,7 @@ internal object TestsData {
         eventId: Long = END_EVENT_ID,
         eventName: String = END_EVENT_NAME,
         executions: Int = END_EXECUTIONS,
-    ) = EndCondition(id, scenarioId, eventId, eventName, executions)
+    ) = EndCondition(id, scenarioId, eventId, eventName, null, executions)
 
     fun getNewEndConditionWithEvent(
         id: Long = END_ID,
@@ -106,7 +106,7 @@ internal object TestsData {
         eventId: Long = END_EVENT_ID,
         executions: Int = END_EXECUTIONS,
         event: EventEntity,
-    ) = EndConditionWithEvent(EndConditionEntity(id, scenarioId, eventId, executions), event)
+    ) = EndConditionWithEvent(EndConditionEntity(id, scenarioId, eventId, null, executions), event, null)
 
     /* ------- Click Action Data ------- */
 

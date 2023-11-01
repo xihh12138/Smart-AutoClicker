@@ -55,7 +55,7 @@ internal class ScenarioProcessor(
     androidExecutor: AndroidExecutor,
     @ConditionOperator endConditionOperator: Int,
     endConditions: List<EndCondition>,
-    onEndConditionReached: () -> Unit,
+    onEndConditionReached: (EndCondition) -> Unit,
     private val debugEngine: DebugEngine? = null,
 ) {
 
@@ -116,7 +116,14 @@ internal class ScenarioProcessor(
                 }
 
                 // Check if an event has reached its max execution count.
-                if (endConditionVerifier.onEventTriggered(event)) return
+                if (endConditionVerifier.onEventTriggered(event) { endCondition ->
+                        // If endCondition are fulfilled, execute the finishEvent's actions for this endCondition !
+                        endCondition.finishEvent?.actions?.let { actions ->
+                            actionExecutor.executeActions(actions, result.detectionResult?.asImage()?.position)
+                        }
+                    }) {
+                    return
+                }
 
                 break
             }
@@ -244,7 +251,7 @@ internal class ScenarioProcessor(
         events: List<Event>,
         @ConditionOperator endConditionOperator: Int,
         endConditions: List<EndCondition>,
-        onEndConditionReached: () -> Unit,
+        onEndConditionReached: (EndCondition) -> Unit,
         androidExecutor: AndroidExecutor,
         debugEngine: DebugEngine? = null,
     ): ScenarioProcessor = ScenarioProcessor(

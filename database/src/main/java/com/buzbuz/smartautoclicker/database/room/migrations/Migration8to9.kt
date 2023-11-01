@@ -42,6 +42,14 @@ object Migration8to9 : Migration(8, 9) {
             execSQL(eventToConditionsIndex)
             execSQL(insertConditions)
             execSQL(deleteOldConditionTable)
+
+            execSQL(renameEndConditionTableToOld)
+            execSQL(createEndConditionTableNew)
+            execSQL(scenarioToEndConditionsIndex)
+            execSQL(eventToEndConditionsIndex)
+            execSQL(finishEventToEndConditionsIndex)
+            execSQL(insertEndConditions)
+            execSQL(deleteOldEndConditionTable)
         }
     }
 
@@ -123,5 +131,45 @@ object Migration8to9 : Migration(8, 9) {
     /** Delete the old condition table. */
     private val deleteOldConditionTable = """
         DROP TABLE condition_table_old
+    """.trimIndent()
+
+    /** Create the table for the end conditions. */
+    private val renameEndConditionTableToOld = """
+        ALTER TABLE `end_condition_table`
+        RENAME TO `end_condition_table_old`
+    """.trimIndent()
+
+    private val createEndConditionTableNew = """
+        CREATE TABLE IF NOT EXISTS `end_condition_table` (
+        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        `scenario_id` INTEGER NOT NULL,
+        `event_id` INTEGER NOT NULL,
+        `finish_event_id` INTEGER,
+        `executions` INTEGER NOT NULL,
+        FOREIGN KEY(`scenario_id`) REFERENCES `scenario_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE ,
+        FOREIGN KEY(`event_id`) REFERENCES `event_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , 
+        FOREIGN KEY(`finish_event_id`) REFERENCES `event_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )
+    """.trimIndent()
+
+    private val scenarioToEndConditionsIndex = """
+        CREATE INDEX IF NOT EXISTS `index_end_condition_table_scenario_id` ON `end_condition_table` (`scenario_id`)
+    """.trimIndent()
+
+    private val eventToEndConditionsIndex = """
+        CREATE INDEX IF NOT EXISTS `index_end_condition_table_event_id` ON `end_condition_table` (`event_id`)
+    """.trimIndent()
+
+    private val finishEventToEndConditionsIndex = """
+        CREATE INDEX IF NOT EXISTS `index_end_condition_table_finish_event_id` ON `end_condition_table` (`finish_event_id`)
+    """.trimIndent()
+
+    private val insertEndConditions = """
+        INSERT INTO `end_condition_table` (id, scenario_id, event_id, finish_event_id, executions)
+        SELECT `id`, `scenario_id`, `event_id`, NULL, `executions` 
+        FROM end_condition_table_old
+    """.trimIndent()
+
+    private val deleteOldEndConditionTable = """
+        DROP TABLE end_condition_table_old
     """.trimIndent()
 }
