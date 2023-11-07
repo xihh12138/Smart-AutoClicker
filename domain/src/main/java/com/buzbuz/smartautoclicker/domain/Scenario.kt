@@ -16,6 +16,7 @@
  */
 package com.buzbuz.smartautoclicker.domain
 
+import com.buzbuz.smartautoclicker.database.room.entity.CompleteScenario
 import com.buzbuz.smartautoclicker.database.room.entity.EndConditionEntity
 import com.buzbuz.smartautoclicker.database.room.entity.ScenarioEntity
 import com.buzbuz.smartautoclicker.database.room.entity.ScenarioWithEvents
@@ -57,4 +58,17 @@ internal fun ScenarioWithEvents.toScenario() = Scenario(
     detectionQuality = scenario.detectionQuality,
     endConditionOperator = scenario.endConditionOperator,
     eventCount = events.size
+)
+
+/** Scenario with events */
+data class CompleteScenario(
+    val scenario: Scenario,
+    val events: List<Event>
+)
+
+
+/** @return the scenario for this entity. */
+internal suspend fun CompleteScenario.toCompleteScenario() = CompleteScenario(
+    scenario = scenario.toScenario(),
+    events = events.map { it.toCompleteEvent() },
 )

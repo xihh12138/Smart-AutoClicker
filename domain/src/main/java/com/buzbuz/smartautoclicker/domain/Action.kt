@@ -32,6 +32,9 @@ sealed class Action {
     /** The identifier of the event for this action. */
     abstract var eventId: Long
 
+    /** The order of the action. */
+    abstract var priority: Int
+
     /** The name of the action. */
     abstract var name: String?
 
@@ -60,6 +63,7 @@ sealed class Action {
     data class Click(
         override var id: Long = 0,
         override var eventId: Long,
+        override var priority: Int,
         override var name: String? = null,
         var pressDuration: Long? = null,
         var x: Int? = null,
@@ -79,6 +83,7 @@ sealed class Action {
                 action = ActionEntity(
                     id = id,
                     eventId = eventId,
+                    priority = priority,
                     name = name!!,
                     type = ActionType.CLICK,
                     pressDuration = pressDuration,
@@ -132,6 +137,7 @@ sealed class Action {
     data class Swipe(
         override var id: Long = 0,
         override var eventId: Long,
+        override var priority: Int,
         override var name: String? = null,
         var swipeDuration: Long? = null,
         var fromX: Int? = null,
@@ -151,6 +157,7 @@ sealed class Action {
                 action = ActionEntity(
                     id = id,
                     eventId = eventId,
+                    priority = priority,
                     name = name!!,
                     type = ActionType.SWIPE,
                     swipeDuration = swipeDuration,
@@ -182,6 +189,7 @@ sealed class Action {
     data class Pause(
         override var id: Long = 0,
         override var eventId: Long,
+        override var priority: Int,
         override var name: String? = null,
         var pauseDuration: Long? = null,
     ) : Action() {
@@ -195,6 +203,7 @@ sealed class Action {
                 action = ActionEntity(
                     id = id,
                     eventId = eventId,
+                    priority = priority,
                     name = name!!,
                     type = ActionType.PAUSE,
                     pauseDuration = pauseDuration,
@@ -227,6 +236,7 @@ sealed class Action {
     data class Intent(
         override var id: Long = 0,
         override var eventId: Long,
+        override var priority: Int,
         override var name: String? = null,
         var isAdvanced: Boolean? = null,
         var isBroadcast: Boolean? = null,
@@ -246,6 +256,7 @@ sealed class Action {
                 action = ActionEntity(
                     id = id,
                     eventId = eventId,
+                    priority = priority,
                     name = name!!,
                     type = ActionType.INTENT,
                     isAdvanced = isAdvanced,
@@ -272,7 +283,7 @@ sealed class Action {
 internal fun CompleteActionEntity.toAction(): Action {
     return when (action.type) {
         ActionType.CLICK -> Action.Click(
-            action.id, action.eventId, action.name, action.pressDuration!!, action.x, action.y,
+            action.id, action.eventId, action.priority, action.name, action.pressDuration!!, action.x, action.y,
             action.clickOnCondition!!, action.clickType?.ordinal, run {
                 if (action.clickRandomAreaLeft != null && action.clickRandomAreaTop != null &&
                     action.clickRandomAreaRight != null && action.clickRandomAreaBottom != null
@@ -288,13 +299,14 @@ internal fun CompleteActionEntity.toAction(): Action {
         )
 
         ActionType.SWIPE -> Action.Swipe(
-            action.id, action.eventId, action.name, action.swipeDuration!!,
+            action.id, action.eventId, action.priority, action.name, action.swipeDuration!!,
             action.fromX!!, action.fromY!!, action.toX!!, action.toY!!
         )
 
         ActionType.PAUSE -> Action.Pause(
             action.id,
             action.eventId,
+            action.priority,
             action.name,
             action.pauseDuration!!
         )
@@ -304,6 +316,7 @@ internal fun CompleteActionEntity.toAction(): Action {
             Action.Intent(
                 action.id,
                 action.eventId,
+                action.priority,
                 action.name,
                 action.isAdvanced,
                 action.isBroadcast,

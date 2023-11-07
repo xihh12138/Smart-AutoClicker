@@ -55,8 +55,8 @@
     <string name="dialog_event_add_create">创建</string>
     <string name="dialog_event_add_copy">从现有动作中复制</string>
 
-    <string name="dialog_event_copy_header_event">此脚本中的动作</string>
-    <string name="dialog_event_copy_header_all">所有脚本中的动作</string>
+    <string name="dialog_event_copy_header_event">此脚本中的事件</string>
+    <string name="dialog_event_copy_header_all">所有脚本中的事件</string>
     <string name="dialog_event_copy_search">按动作名搜索</string>
     <string name="dialog_event_copy_empty">没找到动作</string>
 
@@ -131,7 +131,8 @@
     <string name="dialog_action_copy_pause_details">持续 %1$s</string>
     <string name="dialog_action_copy_intent_details_action">发送 %1$s</string>
     <string name="dialog_action_copy_intent_details_action_component">发送 %1$s 到 %2$s</string>
-    <string name="dialog_action_copy_header_event">此脚本下的动作</string>
+    <string name="dialog_action_copy_sub_header_event">此事件下的动作</string>
+    <string name="dialog_action_copy_header_scenario">此脚本下的事件</string>
     <string name="dialog_action_copy_header_all">所有脚本下的动作</string>
     <string name="dialog_action_copy_search">通过动作名寻找</string>
 

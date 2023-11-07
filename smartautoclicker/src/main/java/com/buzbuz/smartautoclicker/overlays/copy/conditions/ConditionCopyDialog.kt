@@ -90,7 +90,9 @@ class ConditionCopyDialog(
             layoutManager = GridLayoutManager(
                 context,
                 2,
-            )
+            ).apply {
+                spanSizeLookup = conditionAdapter.spanSizeLookup
+            }
         }
 
         lifecycleScope.launch {

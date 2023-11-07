@@ -134,7 +134,8 @@
     <string name="dialog_action_copy_pause_details">During %1$s</string>
     <string name="dialog_action_copy_intent_details_action">Send %1$s</string>
     <string name="dialog_action_copy_intent_details_action_component">Send %1$s to %2$s</string>
-    <string name="dialog_action_copy_header_event">Actions from this event</string>
+    <string name="dialog_action_copy_header_scenario">Event from this scenario</string>
+    <string name="dialog_action_copy_sub_header_event">Actions from this event</string>
     <string name="dialog_action_copy_header_all">Actions from all events</string>
     <string name="dialog_action_copy_search">Search by action name</string>
 

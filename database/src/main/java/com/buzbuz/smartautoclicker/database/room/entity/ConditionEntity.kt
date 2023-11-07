@@ -64,7 +64,7 @@ data class ConditionEntity(
     @ColumnInfo(name = "eventId") var eventId: Long,
     @ColumnInfo(name = "priority", defaultValue = "0") var priority: Int = 0,
     @ColumnInfo(name = "name") val name: String,
-    @ColumnInfo(name = "type", defaultValue = "CAPTURE") val type: ConditionType,
+    @ColumnInfo(name = "type", defaultValue = "CAPTURE") val type: ConditionType = ConditionType.CAPTURE,
     @ColumnInfo(name = "shouldBeDetected") val shouldBeDetected: Boolean,
 
     /** [ConditionType.CAPTURE] */

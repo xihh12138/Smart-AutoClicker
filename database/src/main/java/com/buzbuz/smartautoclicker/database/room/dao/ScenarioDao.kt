@@ -45,6 +45,15 @@ interface ScenarioDao {
     fun getScenariosWithEvents(): Flow<List<ScenarioWithEvents>>
 
     /**
+     * Get all events scenario and their events.
+     *
+     * @return the live data on the list of scenarios.
+     */
+    @Transaction
+    @Query("SELECT * FROM scenario_table ORDER BY name ASC")
+    fun getCompleteScenarios(): Flow<List<CompleteScenario>>
+
+    /**
      * Get all click scenario and their events.
      *
      * @return the live data on the list of scenarios.

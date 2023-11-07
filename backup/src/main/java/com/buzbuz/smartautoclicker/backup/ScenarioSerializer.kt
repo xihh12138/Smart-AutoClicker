@@ -77,7 +77,8 @@ internal class ScenarioSerializer {
      * @return the scenario backup deserialized from the json.
      */
     fun deserialize(json: InputStream): ScenarioBackup? {
-        val jsonBackup = Json.parseToJsonElement(json.readBytes().toString(Charsets.UTF_8)).jsonObject
+        val jsonBackup =
+            Json { ignoreUnknownKeys = true }.parseToJsonElement(json.readBytes().toString(Charsets.UTF_8)).jsonObject
         val version = jsonBackup.getInt("version", true) ?: -1
         val scenario = when {
             version < 8 -> {

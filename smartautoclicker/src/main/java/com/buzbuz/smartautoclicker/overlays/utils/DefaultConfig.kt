@@ -68,6 +68,7 @@ fun newDefaultConditionCapture(context: Context, eventId: Long, area: Rect, bitm
     Condition.Capture(
         id = 0,
         eventId = eventId,
+        priority = 0,
         name = context.resources.getString(R.string.default_condition_name),
         shouldBeDetected = true,
         bitmap = bitmap,
@@ -89,6 +90,7 @@ fun newDefaultConditionProcess(context: Context, eventId: Long, processName: Str
     Condition.Process(
         id = 0,
         eventId = eventId,
+        priority = 0,
         name = context.resources.getString(R.string.default_condition_name),
         shouldBeDetected = true,
         processName = processName,
@@ -102,6 +104,7 @@ fun newDefaultConditionProcess(context: Context, eventId: Long, processName: Str
  */
 fun newDefaultClick(context: Context, eventId: Long) = Action.Click(
     eventId = eventId,
+    priority = 0,
     name = context.getString(R.string.default_click_name),
     pressDuration = context.getEventConfigPreferences().getClickPressDurationConfig(context),
     clickOnCondition = false,
@@ -115,6 +118,7 @@ fun newDefaultClick(context: Context, eventId: Long) = Action.Click(
  */
 fun newDefaultSwipe(context: Context, eventId: Long) = Action.Swipe(
     eventId = eventId,
+    priority = 0,
     name = context.getString(R.string.default_swipe_name),
     swipeDuration = context.getEventConfigPreferences().getSwipeDurationConfig(context),
 )
@@ -127,6 +131,7 @@ fun newDefaultSwipe(context: Context, eventId: Long) = Action.Swipe(
  */
 fun newDefaultPause(context: Context, eventId: Long) = Action.Pause(
     eventId = eventId,
+    priority = 0,
     name = context.getString(R.string.default_pause_name),
     pauseDuration = context.getEventConfigPreferences().getPauseDurationConfig(context)
 )
@@ -139,6 +144,7 @@ fun newDefaultPause(context: Context, eventId: Long) = Action.Pause(
  */
 fun newDefaultIntent(context: Context, eventId: Long) = Action.Intent(
     eventId = eventId,
+    priority = 0,
     name = context.getString(R.string.default_intent_name),
     isAdvanced = context.getEventConfigPreferences().getIntentIsAdvancedConfig(context),
 )

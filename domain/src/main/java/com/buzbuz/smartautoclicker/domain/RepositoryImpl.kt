@@ -58,6 +58,8 @@ internal class RepositoryImpl internal constructor(
 
     override val scenarios = scenarioDao.getScenariosWithEvents().mapList { it.toScenario() }
 
+    override val completeScenarios = scenarioDao.getCompleteScenarios().mapList { it.toCompleteScenario() }
+
     override suspend fun addScenario(scenario: Scenario): Long {
         return scenarioDao.add(scenario.toEntity())
     }
@@ -104,14 +106,14 @@ internal class RepositoryImpl internal constructor(
     override fun getConditionsCount(): Flow<Int> = conditionsDao.getConditionsCount()
 
     override fun getEventList(scenarioId: Long): Flow<List<Event>> =
-        eventDao.getEvents(scenarioId).mapList { it.toEvent() }
+        eventDao.getEvents(scenarioId).mapList { it.toCompleteEvent() }
 
     override fun getCompleteEventList(scenarioId: Long): Flow<List<Event>> =
-        eventDao.getCompleteEvents(scenarioId).mapList { it.toEvent() }
+        eventDao.getCompleteEvents(scenarioId).mapList { it.toCompleteEvent() }
 
-    override suspend fun getCompleteEvent(eventId: Long) = eventDao.getEvent(eventId).toEvent()
+    override suspend fun getCompleteEvent(eventId: Long) = eventDao.getEvent(eventId).toCompleteEvent()
 
-    override fun getAllEvents(): Flow<List<Event>> = eventDao.getAllEvents().mapList { it.toEvent() }
+    override fun getAllEvents(): Flow<List<Event>> = eventDao.getAllEvents().mapList { it.toCompleteEvent() }
 
     override fun getAllActions(): Flow<List<Action>> = eventDao.getAllActions().mapList { it.toAction() }
 
@@ -233,6 +235,7 @@ internal class RepositoryImpl internal constructor(
         completeScenarios.forEach { completeScenario ->
             val scenarioId = scenarioDao.add(completeScenario.scenario.copy(id = 0))
 
+            /** Mapping table for new and old id of events  */
             val eventIdMap = mutableMapOf<Long, Long>()
             completeScenario.events.forEach { completeEvent ->
                 val eventId = eventDao.addCompleteEvent(
@@ -247,6 +250,7 @@ internal class RepositoryImpl internal constructor(
                         id = 0,
                         scenarioId = scenarioId,
                         eventId = eventIdMap[endCondition.eventId]!!,
+                        finishEventId = eventIdMap[endCondition.finishEventId]!!
                     )
                 }
             )

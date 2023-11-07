@@ -23,13 +23,17 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.buzbuz.smartautoclicker.R
 import com.buzbuz.smartautoclicker.databinding.ItemConditionBinding
+import com.buzbuz.smartautoclicker.databinding.ItemCopyHeaderBinding
+import com.buzbuz.smartautoclicker.databinding.ItemCopySubHeaderBinding
 import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.domain.EXACT
 import kotlinx.coroutines.Job
+import com.buzbuz.smartautoclicker.overlays.copy.conditions.ConditionCopyModel.ConditionCopyItem
 
 /**
  * Adapter displaying all conditions in a list.
@@ -39,23 +43,92 @@ import kotlinx.coroutines.Job
 class ConditionCopyAdapter(
     private val conditionClickedListener: (Condition) -> Unit,
     private val bitmapProvider: (Condition, onBitmapLoaded: (Bitmap?) -> Unit) -> Job?,
-) : ListAdapter<Condition, ConditionViewHolder>(ConditionDiffUtilCallback) {
+) : ListAdapter<ConditionCopyItem, RecyclerView.ViewHolder>(ConditionDiffUtilCallback) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConditionViewHolder =
-        ConditionViewHolder(
+    val spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+        override fun getSpanSize(position: Int): Int = when (getItem(position)) {
+            is ConditionCopyItem.HeaderItem -> 2
+            is ConditionCopyItem.SubHeaderItem -> 2
+            is ConditionCopyItem.ConditionItem -> 1
+        }
+    }
+
+    override fun getItemViewType(position: Int): Int = when (getItem(position)) {
+        is ConditionCopyItem.HeaderItem -> R.layout.item_copy_header
+        is ConditionCopyItem.SubHeaderItem -> R.layout.item_copy_sub_header
+        is ConditionCopyItem.ConditionItem -> R.layout.item_condition
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder = when (viewType) {
+        R.layout.item_copy_header -> HeaderViewHolder(
+            ItemCopyHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        )
+
+        R.layout.item_copy_sub_header -> SubHeaderViewHolder(
+            ItemCopySubHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        )
+
+        R.layout.item_condition -> ConditionViewHolder(
             ItemConditionBinding.inflate(LayoutInflater.from(parent.context), parent, false),
             bitmapProvider
         )
 
-    override fun onBindViewHolder(holder: ConditionViewHolder, position: Int) {
-        holder.onBindCondition(getItem(position), conditionClickedListener)
+        else -> throw IllegalArgumentException("Unsupported view type !")
+    }
+
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val item = getItem(position)
+        when (holder) {
+            is HeaderViewHolder -> holder.onBind(item as ConditionCopyItem.HeaderItem)
+            is SubHeaderViewHolder -> holder.onBind(item as ConditionCopyItem.SubHeaderItem)
+            is ConditionViewHolder -> holder.onBindCondition(
+                item as ConditionCopyItem.ConditionItem, conditionClickedListener
+            )
+        }
+
     }
 }
 
 /** DiffUtil Callback comparing two Conditions when updating the [ConditionCopyAdapter] list. */
-object ConditionDiffUtilCallback : DiffUtil.ItemCallback<Condition>() {
-    override fun areItemsTheSame(oldItem: Condition, newItem: Condition): Boolean = oldItem.id == newItem.id
-    override fun areContentsTheSame(oldItem: Condition, newItem: Condition): Boolean = oldItem == newItem
+object ConditionDiffUtilCallback : DiffUtil.ItemCallback<ConditionCopyItem>() {
+    override fun areItemsTheSame(oldItem: ConditionCopyItem, newItem: ConditionCopyItem): Boolean =
+        when {
+            oldItem is ConditionCopyItem.HeaderItem && newItem is ConditionCopyItem.HeaderItem -> true
+            oldItem is ConditionCopyItem.SubHeaderItem && newItem is ConditionCopyItem.SubHeaderItem -> true
+            oldItem is ConditionCopyItem.ConditionItem && newItem is ConditionCopyItem.ConditionItem ->
+                oldItem.condition!!.id == newItem.condition!!.id
+
+            else -> false
+        }
+
+    override fun areContentsTheSame(oldItem: ConditionCopyItem, newItem: ConditionCopyItem): Boolean = oldItem == newItem
+}
+
+/**
+ * View holder displaying a header in the [ActionCopyAdapter].
+ * @param viewBinding the view binding for this header.
+ */
+class HeaderViewHolder(
+    private val viewBinding: ItemCopyHeaderBinding,
+) : RecyclerView.ViewHolder(viewBinding.root) {
+
+    fun onBind(header: ConditionCopyItem.HeaderItem) {
+        viewBinding.textHeader.setText(header.title)
+    }
+}
+
+/**
+ * View holder displaying a sub header in the [ActionCopyAdapter].
+ * @param viewBinding the view binding for this header.
+ */
+class SubHeaderViewHolder(
+    private val viewBinding: ItemCopySubHeaderBinding,
+) : RecyclerView.ViewHolder(viewBinding.root) {
+
+    fun onBind(header: ConditionCopyItem.SubHeaderItem) {
+        viewBinding.textHeader.setText(header.title)
+    }
 }
 
 /**
@@ -77,7 +150,8 @@ class ConditionViewHolder(
      * @param condition the condition to be represented by this item.
      * @param conditionClickedListener listener notified upon user click on this item.
      */
-    fun onBindCondition(condition: Condition, conditionClickedListener: (Condition) -> Unit) {
+    fun onBindCondition(conditionItem: ConditionCopyItem.ConditionItem, conditionClickedListener: (Condition) -> Unit) {
+        val condition = conditionItem.condition
         viewBinding.apply {
             conditionName.text = condition.name
 

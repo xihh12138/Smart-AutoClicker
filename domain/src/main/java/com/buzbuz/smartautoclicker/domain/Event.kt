@@ -90,7 +90,7 @@ data class Event(
 }
 
 /** @return the event for this entity. */
-internal fun EventEntity.toEvent() = Event(id, scenarioId, name, conditionOperator, priority, stopAfter = stopAfter)
+internal fun EventEntity.toCompleteEvent() = Event(id, scenarioId, name, conditionOperator, priority, stopAfter = stopAfter)
 
 /** @return the event for this entity. */
 internal suspend fun EventEntity.toCompleteEvent(context: Context): Event {
@@ -99,7 +99,7 @@ internal suspend fun EventEntity.toCompleteEvent(context: Context): Event {
 }
 
 /** @return the complete event for this entity. */
-internal suspend fun CompleteEventEntity.toEvent() = withContext(Dispatchers.IO) {
+internal suspend fun CompleteEventEntity.toCompleteEvent() = withContext(Dispatchers.IO) {
     Event(
         id = event.id,
         scenarioId = event.scenarioId,

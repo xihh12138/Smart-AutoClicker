@@ -28,6 +28,7 @@ import com.buzbuz.smartautoclicker.R
 import com.buzbuz.smartautoclicker.domain.Action
 import com.buzbuz.smartautoclicker.databinding.ItemActionBinding
 import com.buzbuz.smartautoclicker.databinding.ItemCopyHeaderBinding
+import com.buzbuz.smartautoclicker.databinding.ItemCopySubHeaderBinding
 import com.buzbuz.smartautoclicker.overlays.copy.actions.ActionCopyModel.ActionCopyItem
 
 /**
@@ -36,38 +37,49 @@ import com.buzbuz.smartautoclicker.overlays.copy.actions.ActionCopyModel.ActionC
  */
 class ActionCopyAdapter(
     private val onActionSelected: (Action) -> Unit
-): ListAdapter<ActionCopyItem, RecyclerView.ViewHolder>(DiffUtilCallback) {
+) : ListAdapter<ActionCopyItem, RecyclerView.ViewHolder>(DiffUtilCallback) {
 
-    override fun getItemViewType(position: Int): Int =
-        when(getItem(position)) {
-            is ActionCopyItem.HeaderItem -> R.layout.item_copy_header
-            is ActionCopyItem.ActionItem -> R.layout.item_action
-        }
+    override fun getItemViewType(position: Int): Int = when (getItem(position)) {
+        is ActionCopyItem.HeaderItem -> R.layout.item_copy_header
+        is ActionCopyItem.SubHeaderItem -> R.layout.item_copy_sub_header
+        is ActionCopyItem.ActionItem -> R.layout.item_action
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
         when (viewType) {
             R.layout.item_copy_header -> HeaderViewHolder(
-                ItemCopyHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+                ItemCopyHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            )
+
+            R.layout.item_copy_sub_header -> SubHeaderViewHolder(
+                ItemCopySubHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            )
+
             R.layout.item_action -> ActionViewHolder(
-                ItemActionBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+                ItemActionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            )
+
             else -> throw IllegalArgumentException("Unsupported view type !")
         }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is HeaderViewHolder -> holder.onBind(getItem(position) as ActionCopyItem.HeaderItem)
+            is SubHeaderViewHolder -> holder.onBind(getItem(position) as ActionCopyItem.SubHeaderItem)
             is ActionViewHolder -> holder.onBind(getItem(position) as ActionCopyItem.ActionItem, onActionSelected)
         }
     }
 }
 
 /** DiffUtil Callback comparing two items when updating the [ActionCopyAdapter] list. */
-object DiffUtilCallback: DiffUtil.ItemCallback<ActionCopyItem>(){
+object DiffUtilCallback : DiffUtil.ItemCallback<ActionCopyItem>() {
     override fun areItemsTheSame(oldItem: ActionCopyItem, newItem: ActionCopyItem): Boolean =
         when {
             oldItem is ActionCopyItem.HeaderItem && newItem is ActionCopyItem.HeaderItem -> true
+            oldItem is ActionCopyItem.SubHeaderItem && newItem is ActionCopyItem.SubHeaderItem -> true
             oldItem is ActionCopyItem.ActionItem && newItem is ActionCopyItem.ActionItem ->
                 oldItem.action!!.id == newItem.action!!.id
+
             else -> false
         }
 
@@ -83,6 +95,19 @@ class HeaderViewHolder(
 ) : RecyclerView.ViewHolder(viewBinding.root) {
 
     fun onBind(header: ActionCopyItem.HeaderItem) {
+        viewBinding.textHeader.setText(header.title)
+    }
+}
+
+/**
+ * View holder displaying a sub header in the [ActionCopyAdapter].
+ * @param viewBinding the view binding for this header.
+ */
+class SubHeaderViewHolder(
+    private val viewBinding: ItemCopySubHeaderBinding,
+) : RecyclerView.ViewHolder(viewBinding.root) {
+
+    fun onBind(header: ActionCopyItem.SubHeaderItem) {
         viewBinding.textHeader.setText(header.title)
     }
 }

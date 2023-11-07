@@ -34,6 +34,9 @@ sealed class Condition {
     /** the identifier of the event for this condition. */
     abstract var eventId: Long
 
+    /** The order of the condition. */
+    abstract var priority: Int
+
     /** the name of the condition. */
     abstract val name: String
 
@@ -63,6 +66,7 @@ sealed class Condition {
     data class Capture(
         override var id: Long,
         override var eventId: Long,
+        override var priority: Int,
         override val name: String,
         override val shouldBeDetected: Boolean,
         var path: String? = null,
@@ -105,6 +109,7 @@ sealed class Condition {
     data class Process(
         override var id: Long,
         override var eventId: Long,
+        override var priority: Int,
         override val name: String,
         override val shouldBeDetected: Boolean,
         val processName: String
@@ -130,6 +135,7 @@ internal fun ConditionEntity.toCondition(): Condition = when (type) {
     ConditionType.CAPTURE -> Condition.Capture(
         id,
         eventId,
+        priority,
         name,
         shouldBeDetected,
         path,
@@ -142,6 +148,7 @@ internal fun ConditionEntity.toCondition(): Condition = when (type) {
     ConditionType.PROCESS -> Condition.Process(
         id,
         eventId,
+        priority,
         name,
         shouldBeDetected,
         processName!!

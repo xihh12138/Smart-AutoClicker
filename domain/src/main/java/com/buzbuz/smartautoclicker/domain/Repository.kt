@@ -63,6 +63,9 @@ interface Repository {
     /** The list of scenarios. */
     val scenarios: Flow<List<Scenario>>
 
+    /** The list of scenarios. */
+    val completeScenarios: Flow<List<CompleteScenario>>
+
     /**
      * Add a new scenario.
      *

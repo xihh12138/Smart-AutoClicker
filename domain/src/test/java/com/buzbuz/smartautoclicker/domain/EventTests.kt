@@ -95,7 +95,7 @@ class EventTests {
     fun toDomain() {
         assertEquals(
             TestsData.getNewEvent(scenarioId = TestsData.SCENARIO_ID, priority = 0),
-            TestsData.getNewEventEntity(scenarioId = TestsData.SCENARIO_ID, priority = 0).toEvent()
+            TestsData.getNewEventEntity(scenarioId = TestsData.SCENARIO_ID, priority = 0).toCompleteEvent()
         )
     }
 
@@ -120,7 +120,7 @@ class EventTests {
                 TestsData.getNewPauseEntity(eventId = TestsData.EVENT_ID, priority = 0)
             ),
             conditions = mutableListOf(TestsData.getNewConditionEntity(eventId = TestsData.EVENT_ID)),
-        ).toEvent()
+        ).toCompleteEvent()
 
         assertEquals("Complete event is not as expected", expectedEvent, completeEvent)
     }

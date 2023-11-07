@@ -145,7 +145,8 @@
     <string name="dialog_action_copy_pause_details">Pendant %1$s</string>
     <string name="dialog_action_copy_intent_details_action">Envoyer %1$s</string>
     <string name="dialog_action_copy_intent_details_action_component">Envoyer %1$s à %2$s</string>
-    <string name="dialog_action_copy_header_event">Actions de cet évènement</string>
+    <string name="dialog_action_copy_sub_header_event">Actions de cet évènement</string>
+    <string name="dialog_action_copy_header_scenario">Événements sous ce script</string>
     <string name="dialog_action_copy_header_all">Actions de tous les évènements</string>
     <string name="dialog_action_copy_search">Chercher par nom d\'action</string>
     <string name="content_desc_action_icon">L\'icone du type de l\'action.</string>

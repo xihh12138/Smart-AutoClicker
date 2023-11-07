@@ -19,9 +19,13 @@ package com.buzbuz.smartautoclicker.overlays.copy.conditions
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.core.graphics.drawable.toBitmap
+import com.buzbuz.smartautoclicker.R
 import com.buzbuz.smartautoclicker.baseui.OverlayViewModel
+import com.buzbuz.smartautoclicker.domain.CompleteScenario
 import com.buzbuz.smartautoclicker.domain.Condition
+import com.buzbuz.smartautoclicker.domain.Event
 import com.buzbuz.smartautoclicker.domain.Repository
+import com.buzbuz.smartautoclicker.domain.Scenario
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -44,20 +48,58 @@ class ConditionCopyModel(context: Context) : OverlayViewModel(context) {
     private val eventConditions = MutableStateFlow<List<Condition>?>(null)
 
     /** List of all conditions. */
-    val conditionList: Flow<List<Condition>?> = repository.getAllConditions()
-        .combine(eventConditions) { dbConditions, eventConditions ->
+    val conditionList: Flow<List<ConditionCopyItem>?> = repository.completeScenarios
+        .combine(eventConditions) { completeScenarios, eventConditions ->
             if (eventConditions == null) return@combine null
 
-            val allConditions = mutableListOf<Condition>()
-            allConditions.addAll(eventConditions)
-            val otherEventConditions = dbConditions.toMutableList().apply {
-                removeIf { allAction ->
-                    eventConditions.find { allAction.id == it.id } != null
+            val allItems = mutableListOf<ConditionCopyItem>()
+
+            // First, add the actions from the current event
+            var currentCompleteScenario: CompleteScenario? = null
+            if (eventConditions.isNotEmpty()) {
+                val firstEventAction = eventConditions.first()
+                val currentEvent = completeScenarios.firstNotNullOf { completeScenario ->
+                    completeScenario.events.first { event ->
+                        event.conditions?.contains(firstEventAction) == true
+                    }
+                }
+                currentCompleteScenario = completeScenarios.first { completeScenario ->
+                    completeScenario.events.any { it == currentEvent }
+                }
+
+                val currentScenario = currentCompleteScenario.scenario
+
+                allItems.add(ConditionCopyItem.HeaderItem(context.getString(R.string.dialog_action_copy_header_scenario)))
+                allItems.add(ConditionCopyItem.SubHeaderItem(context.getString(R.string.dialog_action_copy_sub_header_event)))
+                allItems.addAll(currentEvent.conditions!!.sortedBy { it.priority }
+                    .map { it.toConditionItem(currentEvent, currentScenario) }
+                    .distinct())
+
+                currentCompleteScenario.events.forEach { otherEvent ->
+                    if (otherEvent != currentEvent) {
+                        allItems.add(ConditionCopyItem.SubHeaderItem(otherEvent.name))
+                        allItems.addAll(otherEvent.conditions?.sortedBy { it.priority }
+                            ?.map { it.toConditionItem(otherEvent, currentScenario) }
+                            ?.distinct() ?: emptyList())
+                    }
                 }
             }
-            allConditions.addAll(otherEventConditions)
 
-            allConditions
+            completeScenarios.forEach { completeScenario ->
+                if (completeScenario != currentCompleteScenario) {
+                    val currentScenario = completeScenario.scenario
+
+                    allItems.add(ConditionCopyItem.HeaderItem(completeScenario.scenario.name))
+                    completeScenario.events.forEach { event ->
+                        allItems.add(ConditionCopyItem.SubHeaderItem(event.name))
+                        allItems.addAll(event.conditions?.sortedBy { it.priority }
+                            ?.map { it.toConditionItem(event, currentScenario) }
+                            ?.distinct() ?: emptyList())
+                    }
+                }
+            }
+
+            allItems
         }
 
     /**
@@ -124,5 +166,49 @@ class ConditionCopyModel(context: Context) : OverlayViewModel(context) {
         onBitmapLoaded(null)
 
         return null
+    }
+
+    private fun Condition.toConditionItem(event: Event, scenario: Scenario): ConditionCopyItem.ConditionItem {
+        val item = ConditionCopyItem.ConditionItem(this).apply {
+            belongEvent = event
+            belongScenario = scenario
+        }
+
+        return item
+    }
+
+    /** Types of items in the action copy list. */
+    sealed class ConditionCopyItem {
+
+        /**
+         * Header item, delimiting sections.
+         * @param title the title for the header.
+         */
+        data class HeaderItem(
+            val title: String,
+        ) : ConditionCopyItem()
+
+        /**
+         * Sub header item, delimiting sections.
+         * @param title the title for the header.
+         */
+        data class SubHeaderItem(
+            val title: String,
+        ) : ConditionCopyItem()
+
+        /**
+         * Condition item.
+         * @param condition  Condition represented by this item.
+         */
+        data class ConditionItem(
+            val condition: Condition
+        ) : ConditionCopyItem() {
+
+            /** The event to which the [condition] belongs  */
+            var belongEvent: Event? = null
+
+            /** The scenario to which the [belongEvent] belongs  */
+            var belongScenario: Scenario? = null
+        }
     }
 }

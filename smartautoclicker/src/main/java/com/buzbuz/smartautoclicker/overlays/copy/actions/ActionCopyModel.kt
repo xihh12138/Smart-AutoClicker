@@ -19,14 +19,18 @@ package com.buzbuz.smartautoclicker.overlays.copy.actions
 import android.content.Context
 import android.util.Log
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import com.buzbuz.smartautoclicker.R
 import com.buzbuz.smartautoclicker.baseui.OverlayViewModel
 import com.buzbuz.smartautoclicker.domain.Action
+import com.buzbuz.smartautoclicker.domain.CompleteScenario
+import com.buzbuz.smartautoclicker.domain.Event
 import com.buzbuz.smartautoclicker.domain.Repository
+import com.buzbuz.smartautoclicker.domain.Scenario
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.ExperimentalTime
 
@@ -51,41 +55,74 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
      * This list can contains all events with headers, or the search result depending on the current search query.
      */
     val actionList: Flow<List<ActionCopyItem>?> =
-        combine(repository.getAllActions(), eventActions, searchQuery) { dbActions, eventActions, query ->
+        combine(repository.completeScenarios, eventActions, searchQuery) { completeScenarios, eventActions, query ->
             eventActions ?: return@combine null
-            if (query.isNullOrEmpty()) getAllItems(dbActions, eventActions) else getSearchedItems(dbActions, query)
+            if (query.isNullOrEmpty()) {
+                getAllItems(completeScenarios, eventActions)
+            } else {
+                getSearchedItems(completeScenarios, query)
+            }
         }
 
     /**
      * Get all items with the headers.
-     * @param dbActions all actions in the database.
+     * @param completeScenarios all complete scenarios in the database.
      * @param eventActions all actions in the current event.
      * @return the complete list of action items.
      */
-    private fun getAllItems(dbActions: List<Action>, eventActions: List<Action>): List<ActionCopyItem> {
+    private suspend fun getAllItems(
+        completeScenarios: List<CompleteScenario>, eventActions: List<Action>
+    ): List<ActionCopyItem> = withContext(Dispatchers.IO) {
         val allItems = mutableListOf<ActionCopyItem>()
 
         // First, add the actions from the current event
-        val eventItems = eventActions.sortedBy { it.name }.map { it.toActionItem() }.distinct()
-        if (eventItems.isNotEmpty()) allItems.add(ActionCopyItem.HeaderItem(R.string.dialog_action_copy_header_event))
-        allItems.addAll(eventItems)
-
-        // Then, add all other actions. Remove the one already in this event.
-        val actions = dbActions
-            .map { it.toActionItem() }
-            .toMutableList()
-            .apply {
-                removeIf { allItem ->
-                    eventItems.find {
-                        allItem.action!!.id == it.action!!.id || allItem == it
-                    } != null
+        var currentCompleteScenario: CompleteScenario? = null
+        if (eventActions.isNotEmpty()) {
+            val firstEventAction = eventActions.first()
+            val currentEvent = completeScenarios.firstNotNullOf { completeScenario ->
+                completeScenario.events.first { event ->
+                    event.actions?.contains(firstEventAction) == true
                 }
             }
-            .distinct()
-        if (actions.isNotEmpty()) allItems.add(ActionCopyItem.HeaderItem(R.string.dialog_action_copy_header_all))
-        allItems.addAll(actions)
+            currentCompleteScenario = completeScenarios.first { completeScenario ->
+                completeScenario.events.any { it == currentEvent }
+            }
 
-        return allItems
+            val currentScenario = currentCompleteScenario.scenario
+
+            allItems.add(ActionCopyItem.HeaderItem(context.getString(R.string.dialog_action_copy_header_scenario)))
+            allItems.add(ActionCopyItem.SubHeaderItem(context.getString(R.string.dialog_action_copy_sub_header_event)))
+            allItems.addAll(currentEvent.actions!!.sortedBy { it.priority }
+                .map { it.toActionItem(currentEvent, currentScenario) }.distinct())
+
+            currentCompleteScenario.events.forEach { otherEvent ->
+                if (otherEvent != currentEvent) {
+                    allItems.add(ActionCopyItem.SubHeaderItem(otherEvent.name))
+                    allItems.addAll(
+                        otherEvent.actions?.sortedBy { it.priority }
+                            ?.map { it.toActionItem(otherEvent, currentScenario) }?.distinct()
+                            ?: emptyList()
+                    )
+                }
+            }
+        }
+
+        completeScenarios.forEach { completeScenario ->
+            if (completeScenario != currentCompleteScenario) {
+                val currentScenario = completeScenario.scenario
+
+                allItems.add(ActionCopyItem.HeaderItem(completeScenario.scenario.name))
+                completeScenario.events.forEach { event ->
+                    allItems.add(ActionCopyItem.SubHeaderItem(event.name))
+                    allItems.addAll(
+                        event.actions?.sortedBy { it.priority }?.map { it.toActionItem(event, currentScenario) }
+                            ?.distinct() ?: emptyList()
+                    )
+                }
+            }
+        }
+
+        allItems
     }
 
     /**
@@ -93,12 +130,23 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
      * @param dbActions all actions in the database.
      * @param query the current search query.
      */
-    private fun getSearchedItems(dbActions: List<Action>, query: String): List<ActionCopyItem> = dbActions
-        .filter { action ->
-            action.name!!.contains(query, true)
+    private fun getSearchedItems(completeScenarios: List<CompleteScenario>, query: String): List<ActionCopyItem> {
+        val allItems = mutableListOf<ActionCopyItem>()
+
+        completeScenarios.forEach { completeScenario ->
+            val currentScenario = completeScenario.scenario
+
+            allItems.add(ActionCopyItem.HeaderItem(completeScenario.scenario.name))
+            completeScenario.events.forEach { event ->
+                allItems.add(ActionCopyItem.SubHeaderItem(event.name))
+                allItems.addAll(event.actions?.filter { it.name?.contains(query, true) == true }
+                    ?.sortedBy { it.priority }
+                    ?.map { it.toActionItem(event, currentScenario) }?.distinct() ?: emptyList())
+            }
         }
-        .map { it.toActionItem() }
-        .distinct()
+
+        return allItems
+    }
 
     /**
      * Set the current event actions.
@@ -120,16 +168,15 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
      * Get a new action based on the provided one.
      * @param action the acton to copy.
      */
-    fun getNewActionForCopy(action: Action): Action =
-        when (action) {
-            is Action.Click -> action.copy(id = 0, name = "" + action.name)
-            is Action.Swipe -> action.copy(id = 0, name = "" + action.name)
-            is Action.Pause -> action.copy(id = 0, name = "" + action.name)
-            is Action.Intent -> action.copy(id = 0, name = "" + action.name)
-        }
+    fun getNewActionForCopy(action: Action): Action = when (action) {
+        is Action.Click -> action.copy(id = 0, name = "" + action.name)
+        is Action.Swipe -> action.copy(id = 0, name = "" + action.name)
+        is Action.Pause -> action.copy(id = 0, name = "" + action.name)
+        is Action.Intent -> action.copy(id = 0, name = "" + action.name)
+    }
 
     /** @return the [ActionCopyItem.ActionItem] corresponding to this action. */
-    private fun Action.toActionItem(): ActionCopyItem.ActionItem {
+    private fun Action.toActionItem(event: Event, scenario: Scenario): ActionCopyItem.ActionItem {
         val item = when (this) {
             is Action.Click -> ActionCopyItem.ActionItem(
                 icon = R.drawable.ic_click,
@@ -137,8 +184,7 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
                 details = when (clickType) {
                     Action.Click.CLICK_TYPE_EXACT -> {
                         context.getString(
-                            R.string.dialog_action_copy_click_details,
-                            formatDuration(pressDuration!!), x, y
+                            R.string.dialog_action_copy_click_details, formatDuration(pressDuration!!), x, y
                         )
                     }
 
@@ -148,16 +194,19 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
 
                     Action.Click.CLICK_TYPE_RANDOM -> {
                         context.getString(
-                            R.string.dialog_action_copy_click_random, formatDuration(pressDuration!!),
-                            randomArea?.left, randomArea?.top, randomArea?.right, randomArea?.bottom
+                            R.string.dialog_action_copy_click_random,
+                            formatDuration(pressDuration!!),
+                            randomArea?.left,
+                            randomArea?.top,
+                            randomArea?.right,
+                            randomArea?.bottom
                         )
                     }
 
                     else -> {
                         if (clickOnCondition) context.getString(R.string.dialog_action_config_click_position_on_condition)
                         else context.getString(
-                            R.string.dialog_action_copy_click_details,
-                            formatDuration(pressDuration!!), x, y
+                            R.string.dialog_action_copy_click_details, formatDuration(pressDuration!!), x, y
                         )
                     }
                 },
@@ -167,8 +216,7 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
                 icon = R.drawable.ic_swipe,
                 name = name!!,
                 details = context.getString(
-                    R.string.dialog_action_copy_swipe_details,
-                    formatDuration(swipeDuration!!), fromX, fromY, toX, toY
+                    R.string.dialog_action_copy_swipe_details, formatDuration(swipeDuration!!), fromX, fromY, toX, toY
                 ),
             )
 
@@ -176,8 +224,7 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
                 icon = R.drawable.ic_wait,
                 name = name!!,
                 details = context.getString(
-                    R.string.dialog_action_copy_pause_details,
-                    formatDuration(pauseDuration!!)
+                    R.string.dialog_action_copy_pause_details, formatDuration(pauseDuration!!)
                 ),
             )
 
@@ -189,6 +236,8 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
         }
 
         item.action = this
+        item.belongEvent = event
+        item.belongScenario = scenario
         return item
     }
 
@@ -232,9 +281,7 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
         if (dotIndex != -1 && dotIndex < action.lastIndex) {
             action = action.substring(dotIndex + 1)
 
-            if (intent.isBroadcast == false && intent.componentName != null
-                && action.length < INTENT_COMPONENT_DISPLAYED_ACTION_LENGTH_LIMIT
-            ) {
+            if (intent.isBroadcast == false && intent.componentName != null && action.length < INTENT_COMPONENT_DISPLAYED_ACTION_LENGTH_LIMIT) {
 
                 var componentName = intent.componentName!!.flattenToString()
                 val dotIndex2 = componentName.lastIndexOf('.')
@@ -263,7 +310,15 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
          * @param title the title for the header.
          */
         data class HeaderItem(
-            @StringRes val title: Int,
+            val title: String,
+        ) : ActionCopyItem()
+
+        /**
+         * Sub header item, delimiting sections.
+         * @param title the title for the header.
+         */
+        data class SubHeaderItem(
+            val title: String,
         ) : ActionCopyItem()
 
         /**
@@ -280,6 +335,12 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
 
             /** Action represented by this item. */
             var action: Action? = null
+
+            /** The event to which the [action] belongs  */
+            var belongEvent: Event? = null
+
+            /** The scenario to which the [belongEvent] belongs  */
+            var belongScenario: Scenario? = null
         }
     }
 }
