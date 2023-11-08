@@ -54,37 +54,42 @@ class ConditionCopyModel(context: Context) : OverlayViewModel(context) {
 
             val allItems = mutableListOf<ConditionCopyItem>()
 
-            // First, add the actions from the current event
+            // First, add the actions from the current scenario and event
             var currentCompleteScenario: CompleteScenario? = null
             if (eventConditions.isNotEmpty()) {
                 val firstEventAction = eventConditions.first()
-                val currentEvent = completeScenarios.firstNotNullOf { completeScenario ->
+                val currentEvent = completeScenarios.firstNotNullOfOrNull { completeScenario ->
                     completeScenario.events.firstOrNull { event ->
                         event.conditions?.contains(firstEventAction) == true
                     }
                 }
-                currentCompleteScenario = completeScenarios.first { completeScenario ->
+                currentCompleteScenario = completeScenarios.firstOrNull { completeScenario ->
                     completeScenario.events.any { it == currentEvent }
                 }
 
-                val currentScenario = currentCompleteScenario.scenario
+                // --- currentEvent could be null when creating a new event ---
+                if (currentEvent != null && currentCompleteScenario != null) {
+                    allItems.add(ConditionCopyItem.HeaderItem(context.getString(R.string.dialog_action_copy_header_scenario)))
 
-                allItems.add(ConditionCopyItem.HeaderItem(context.getString(R.string.dialog_action_copy_header_scenario)))
-                allItems.add(ConditionCopyItem.SubHeaderItem(context.getString(R.string.dialog_action_copy_sub_header_event)))
-                allItems.addAll(currentEvent.conditions!!.sortedBy { it.priority }
-                    .map { it.toConditionItem(currentEvent, currentScenario) }
-                    .distinct())
+                    val currentScenario = currentCompleteScenario.scenario
 
-                currentCompleteScenario.events.forEach { otherEvent ->
-                    if (otherEvent != currentEvent) {
-                        allItems.add(ConditionCopyItem.SubHeaderItem(otherEvent.name))
-                        allItems.addAll(otherEvent.conditions?.sortedBy { it.priority }
-                            ?.map { it.toConditionItem(otherEvent, currentScenario) }
-                            ?.distinct() ?: emptyList())
+                    allItems.add(ConditionCopyItem.SubHeaderItem(context.getString(R.string.dialog_action_copy_sub_header_event)))
+                    allItems.addAll(currentEvent.conditions!!.sortedBy { it.priority }
+                        .map { it.toConditionItem(currentEvent, currentScenario) }
+                        .distinct())
+
+                    currentCompleteScenario.events.forEach { otherEvent ->
+                        if (otherEvent != currentEvent) {
+                            allItems.add(ConditionCopyItem.SubHeaderItem(otherEvent.name))
+                            allItems.addAll(otherEvent.conditions?.sortedBy { it.priority }
+                                ?.map { it.toConditionItem(otherEvent, currentScenario) }
+                                ?.distinct() ?: emptyList())
+                        }
                     }
                 }
             }
 
+            // --- Then,add other scenario's condition ---
             completeScenarios.forEach { completeScenario ->
                 if (completeScenario != currentCompleteScenario) {
                     val currentScenario = completeScenario.scenario

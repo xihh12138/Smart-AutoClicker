@@ -79,34 +79,41 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
         var currentCompleteScenario: CompleteScenario? = null
         if (eventActions.isNotEmpty()) {
             val firstEventAction = eventActions.first()
-            val currentEvent = completeScenarios.firstNotNullOf { completeScenario ->
+            val currentEvent = completeScenarios.firstNotNullOfOrNull { completeScenario ->
                 completeScenario.events.firstOrNull { event ->
                     event.actions?.contains(firstEventAction) == true
                 }
             }
-            currentCompleteScenario = completeScenarios.first { completeScenario ->
+            currentCompleteScenario = completeScenarios.firstOrNull { completeScenario ->
                 completeScenario.events.any { it == currentEvent }
             }
 
-            val currentScenario = currentCompleteScenario.scenario
+            // --- currentEvent could be null when creating a new event ---
+            if (currentEvent != null && currentCompleteScenario != null) {
+                allItems.add(ActionCopyItem.HeaderItem(context.getString(R.string.dialog_action_copy_header_scenario)))
 
-            allItems.add(ActionCopyItem.HeaderItem(context.getString(R.string.dialog_action_copy_header_scenario)))
-            allItems.add(ActionCopyItem.SubHeaderItem(context.getString(R.string.dialog_action_copy_sub_header_event)))
-            allItems.addAll(currentEvent.actions!!.sortedBy { it.priority }
-                .map { it.toActionItem(currentEvent, currentScenario) }.distinct())
+                val currentScenario = currentCompleteScenario.scenario
 
-            currentCompleteScenario.events.forEach { otherEvent ->
-                if (otherEvent != currentEvent) {
-                    allItems.add(ActionCopyItem.SubHeaderItem(otherEvent.name))
-                    allItems.addAll(
-                        otherEvent.actions?.sortedBy { it.priority }
-                            ?.map { it.toActionItem(otherEvent, currentScenario) }?.distinct()
-                            ?: emptyList()
-                    )
+                allItems.add(ActionCopyItem.SubHeaderItem(context.getString(R.string.dialog_action_copy_sub_header_event)))
+
+                allItems.addAll(currentEvent.actions!!.sortedBy { it.priority }
+                    .map { it.toActionItem(currentEvent, currentScenario) }.distinct())
+
+                currentCompleteScenario.events.forEach { otherEvent ->
+                    if (otherEvent != currentEvent) {
+                        allItems.add(ActionCopyItem.SubHeaderItem(otherEvent.name))
+                        allItems.addAll(
+                            otherEvent.actions?.sortedBy { it.priority }
+                                ?.map { it.toActionItem(otherEvent, currentScenario) }?.distinct()
+                                ?: emptyList()
+                        )
+                    }
                 }
             }
+
         }
 
+        // --- Then,add other scenario's add ---
         completeScenarios.forEach { completeScenario ->
             if (completeScenario != currentCompleteScenario) {
                 val currentScenario = completeScenario.scenario
