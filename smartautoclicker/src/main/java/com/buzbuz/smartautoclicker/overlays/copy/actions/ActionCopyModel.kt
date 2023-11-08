@@ -80,7 +80,7 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
         if (eventActions.isNotEmpty()) {
             val firstEventAction = eventActions.first()
             val currentEvent = completeScenarios.firstNotNullOf { completeScenario ->
-                completeScenario.events.first { event ->
+                completeScenario.events.firstOrNull { event ->
                     event.actions?.contains(firstEventAction) == true
                 }
             }

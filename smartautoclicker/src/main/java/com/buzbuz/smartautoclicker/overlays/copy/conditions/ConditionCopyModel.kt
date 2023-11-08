@@ -59,7 +59,7 @@ class ConditionCopyModel(context: Context) : OverlayViewModel(context) {
             if (eventConditions.isNotEmpty()) {
                 val firstEventAction = eventConditions.first()
                 val currentEvent = completeScenarios.firstNotNullOf { completeScenario ->
-                    completeScenario.events.first { event ->
+                    completeScenario.events.firstOrNull { event ->
                         event.conditions?.contains(firstEventAction) == true
                     }
                 }

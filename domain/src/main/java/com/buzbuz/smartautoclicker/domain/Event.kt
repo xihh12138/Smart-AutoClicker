@@ -78,7 +78,7 @@ data class Event(
         }
 
         val conditionsCopy = conditions?.let { conditionList ->
-            conditionList.map { it }
+            conditionList.map { it.deepCopy() }
         }
 
         return copy(
