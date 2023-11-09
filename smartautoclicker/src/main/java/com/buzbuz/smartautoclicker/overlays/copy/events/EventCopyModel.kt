@@ -53,7 +53,7 @@ class EventCopyModel(context: Context) : OverlayViewModel(context) {
     /** The list of events for the configured scenario. They might be not all available yet in the database. */
     private val scenarioEvents = combine(repository.completeScenarios, scenarioId) { dbScenario, id ->
         dbScenario.find { it.scenario.id == id }?.events ?: emptyList()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     /** The currently searched event name. Null if no is. */
     private val searchQuery = MutableStateFlow<String?>(null)
