@@ -179,7 +179,11 @@ class ActionCopyModel(context: Context) : OverlayViewModel(context) {
         is Action.Click -> action.copy(id = 0, name = "" + action.name)
         is Action.Swipe -> action.copy(id = 0, name = "" + action.name)
         is Action.Pause -> action.copy(id = 0, name = "" + action.name)
-        is Action.Intent -> action.copy(id = 0, name = "" + action.name)
+        is Action.Intent -> action.copy(
+            id = 0,
+            name = "" + action.name,
+            extras = action.extras?.map { it.copy(id = 0) }?.toMutableList()
+        )
     }
 
     /** @return the [ActionCopyItem.ActionItem] corresponding to this action. */
