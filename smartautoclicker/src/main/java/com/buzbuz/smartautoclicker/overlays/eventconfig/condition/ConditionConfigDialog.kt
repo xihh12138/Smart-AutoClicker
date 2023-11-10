@@ -37,6 +37,8 @@ import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.capture.Captur
 import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.capture.setupCaptureUi
 import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.process.ProcessConfigModel
 import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.process.setupCaptureUi
+import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.timer.TimerConfigModel
+import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.timer.setupCaptureUi
 import com.buzbuz.smartautoclicker.overlays.utils.OnAfterTextChangedListener
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -153,6 +155,12 @@ class ConditionConfigDialog(
                                     conditionModel,
                                     condition as Condition.Process,
                                     ::showSubOverlay
+                                )
+
+                                is TimerConfigModel-> viewBinding.setupCaptureUi(
+                                    this@ConditionConfigDialog,
+                                    lifecycleScope,
+                                    conditionModel,
                                 )
                             }
                         }

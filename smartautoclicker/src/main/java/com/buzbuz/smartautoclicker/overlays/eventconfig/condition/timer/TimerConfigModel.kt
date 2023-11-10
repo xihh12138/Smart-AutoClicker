@@ -1,4 +1,4 @@
-package com.buzbuz.smartautoclicker.overlays.eventconfig.condition.process
+package com.buzbuz.smartautoclicker.overlays.eventconfig.condition.timer
 
 import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.ConditionModel
@@ -8,22 +8,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 
-class ProcessConfigModel(
+class TimerConfigModel(
     private val viewModelScope: CoroutineScope,
-    private val configuredCondition: MutableStateFlow<Condition.Process?>,
+    private val configuredCondition: MutableStateFlow<Condition.Timer?>,
 ) : ConditionModel() {
 
     override val isValidCondition: Flow<Boolean> = configuredCondition.map { condition ->
-        condition != null && condition.name.isNotEmpty() && condition.processName.isNotEmpty()
+        condition != null && condition.name.isNotEmpty() && condition.period != 0L
     }
 
-    val processName = configuredCondition.mapNotNull { it?.processName }
+    val period = configuredCondition.mapNotNull { it?.period }
 
-    fun setProcessName(componentName: String) {
+    fun setPeriod(period: Long) {
         configuredCondition.value?.let { condition ->
-            configuredCondition.value = condition.copy(
-                processName = componentName,
-            )
+            configuredCondition.value = condition.copy(period = period)
         }
     }
 }

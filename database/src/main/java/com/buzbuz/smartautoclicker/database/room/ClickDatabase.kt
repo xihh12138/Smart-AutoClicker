@@ -41,6 +41,7 @@ import com.buzbuz.smartautoclicker.database.room.migrations.Migration4to5
 import com.buzbuz.smartautoclicker.database.room.migrations.Migration5to6
 import com.buzbuz.smartautoclicker.database.room.migrations.Migration6to7
 import com.buzbuz.smartautoclicker.database.room.migrations.Migration8to9
+import com.buzbuz.smartautoclicker.database.room.migrations.Migration9to10
 
 /**
  * Database for the scenario and their events.
@@ -108,6 +109,7 @@ abstract class ClickDatabase : RoomDatabase() {
                     Migration5to6,
                     Migration6to7,
                     Migration8to9,
+                    Migration9to10,
                 ).build()
 
                 INSTANCE = instance
@@ -118,4 +120,4 @@ abstract class ClickDatabase : RoomDatabase() {
 }
 
 /** Current version of the database. */
-const val CLICK_DATABASE_VERSION = 9
+const val CLICK_DATABASE_VERSION = 10

@@ -295,7 +295,11 @@ class EventConfigDialog(
                 showSubOverlay(MultiChoiceDialog(
                     context = context,
                     dialogTitle = R.string.dialog_condition_type_title,
-                    choices = listOf(ConditionTypeChoice.Capture, ConditionTypeChoice.Process),
+                    choices = listOf(
+                        ConditionTypeChoice.Capture,
+                        ConditionTypeChoice.Process,
+                        ConditionTypeChoice.Timer
+                    ),
                     onChoiceSelected = { choiceClicked ->
                         viewModel?.let { model ->
                             when (choiceClicked) {
@@ -306,6 +310,12 @@ class EventConfigDialog(
                                 is ConditionTypeChoice.Process -> {
                                     subOverlayViewModel?.requestSubOverlay(
                                         SubOverlay.ConditionConfig(model.createProcessCondition(context))
+                                    )
+                                }
+
+                                is ConditionTypeChoice.Timer -> {
+                                    subOverlayViewModel?.requestSubOverlay(
+                                        SubOverlay.ConditionConfig(model.createTimerCondition(context))
                                     )
                                 }
                             }

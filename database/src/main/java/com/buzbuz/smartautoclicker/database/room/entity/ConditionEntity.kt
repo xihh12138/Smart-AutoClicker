@@ -47,6 +47,11 @@ import kotlinx.serialization.Serializable
  * @param threshold the accepted difference between the conditions and the screen content, in percent (0-100%).
  * @param detectionType the type of detection. Can be any of the values defined in
  *                      [com.buzbuz.smartautoclicker.domain.DetectionType].
+ *
+ *
+ * @param processName The package name of the process which should be detect as a foreground process
+ *
+ * @param period Event interval for triggering conditions in milliseconds。
  */
 @Entity(
     tableName = "condition_table",
@@ -81,7 +86,11 @@ data class ConditionEntity(
     @ColumnInfo(name = "detection_type") val detectionType: Int? = null,
 
     /** [ConditionType.PROCESS] */
-    @ColumnInfo(name = "process_name") val processName: String? = null
+    @ColumnInfo(name = "process_name") val processName: String? = null,
+
+    /** [ConditionType.TIMER] */
+    @ColumnInfo(name = "period") val period: Long? = null,
+    @ColumnInfo(name = "exact_time") val exactTime: String? = null
 )
 
 /**
@@ -97,6 +106,9 @@ enum class ConditionType {
 
     /**  Detect conditions through current process package name*/
     PROCESS,
+
+    /**  Detect conditions through time */
+    TIMER,
 }
 
 fun Iterable<ConditionEntity>.sortByPriority() = sortedWith { o1, o2 ->

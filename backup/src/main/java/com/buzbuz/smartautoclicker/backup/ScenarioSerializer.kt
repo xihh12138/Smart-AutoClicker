@@ -226,6 +226,7 @@ internal class ScenarioSerializer {
             when (getEnum<ConditionType>("type", true)) {
                 ConditionType.CAPTURE -> deserializeCaptureConditionCompat()
                 ConditionType.PROCESS -> deserializeProcessConditionCompat()
+                ConditionType.TIMER -> deserializeTimerConditionCompat()
                 null -> deserializeCaptureConditionCompat()
             }
         }
@@ -291,6 +292,26 @@ internal class ScenarioSerializer {
             type = ConditionType.PROCESS,
             shouldBeDetected = shouldBeDetected,
             processName = processName
+        )
+    }
+
+    internal fun JsonObject.deserializeTimerConditionCompat(): ConditionEntity? {
+        val id = getLong("id", true) ?: return null
+        val eventId = getLong("eventId", true) ?: return null
+        val priority = getInt("priority")?.coerceAtLeast(0) ?: 0
+        val name = getString("name") ?: ""
+        val shouldBeDetected = getBoolean("shouldBeDetected") ?: true
+
+        val period = getLong("period", true) ?: return null
+
+        return ConditionEntity(
+            id = id,
+            eventId = eventId,
+            priority = priority,
+            name = name,
+            type = ConditionType.PROCESS,
+            shouldBeDetected = shouldBeDetected,
+            period = period
         )
     }
 

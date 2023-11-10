@@ -57,10 +57,10 @@
 
     <string name="dialog_event_copy_header_event">此脚本中的事件</string>
     <string name="dialog_event_copy_header_all">所有脚本中的事件</string>
-    <string name="dialog_event_copy_search">按动作名搜索</string>
-    <string name="dialog_event_copy_empty">没找到动作</string>
+    <string name="dialog_event_copy_search">按事件名搜索</string>
+    <string name="dialog_event_copy_empty">没找到事件作</string>
 
-    <string name="dialog_event_config_title">动作配置</string>
+    <string name="dialog_event_config_title">事件配置</string>
     <string name="dialog_event_config_name_title">名称</string>
     <string name="dialog_event_config_condition_title">需匹配的图像</string>
     <string name="dialog_event_config_actions_title">操作</string>
@@ -81,6 +81,7 @@
     <string name="dialog_action_type_intent">意图</string>
 
     <string name="dialog_condition_type_capture">截图</string>
+    <string name="dialog_condition_period_tint">触发间隔 (毫秒)</string>
     <string name="dialog_condition_type_process">进程</string>
 
     <string name="dialog_action_config_click_press_duration_title">点击持续时间(ms)</string>
@@ -148,8 +149,8 @@
     <string name="dialog_condition_type_detect_area">在检测区域内</string>
     <string name="dialog_condition_threshold_title">容差</string>
     <string name="dialog_condition_threshold_value">容差: %1$d %%</string>
-    <string name="dialog_condition_should_be_detected">当条件可见时触发</string>
-    <string name="dialog_condition_should_not_be_detected">当条件不可见时触发</string>
+    <string name="dialog_condition_should_be_detected">当判定条件成立时触发</string>
+    <string name="dialog_condition_should_not_be_detected">当判定条件不成立时触发</string>
     <string name="dialog_condition_error">条件图像未能找到</string>
     <string name="dialog_condition_new_title">新条件</string>
     <string name="dialog_condition_new_create">创建</string>
@@ -239,4 +240,5 @@
 
     <string name="toast_start_scenario_x">开启脚本 %1$s</string>
     <string name="dialog_end_condition_config_finish_event_title">结束时执行事件</string>
+    <string name="dialog_condition_type_timer">定时器</string>
 </resources>

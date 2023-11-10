@@ -65,6 +65,16 @@
             app:layout_constraintTop_toBottomOf="@id/condition_h1_separator"
             tools:src="@drawable/ic_click" />
 
+        <TextView
+            android:id="@+id/condition_period"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="@dimen/margin_vertical_default"
+            android:gravity="center"
+            android:textSize="@dimen/text_size_large"
+            app:layout_constraintBottom_toTopOf="@id/condition_h2_separator"
+            app:layout_constraintTop_toBottomOf="@id/condition_h1_separator" />
+
         <View
             android:id="@+id/condition_h2_separator"
             style="@style/Separator"
@@ -140,6 +150,7 @@
             android:gravity="center"
             android:singleLine="true"
             android:textSize="@dimen/text_size_list_item_text_small"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@id/condition_v1_separator"
@@ -150,6 +161,7 @@
             android:id="@+id/condition_group_capture"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             app:constraint_referenced_ids="condition_detection_type,condition_v2_separator,condition_threshold" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

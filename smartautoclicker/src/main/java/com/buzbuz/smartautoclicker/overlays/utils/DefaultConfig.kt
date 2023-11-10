@@ -79,11 +79,9 @@ fun newDefaultConditionCapture(context: Context, eventId: Long, area: Rect, bitm
     )
 
 /**
- * Creates a new default capture condition.
+ * Creates a new default process condition.
  * @param context the Android context.
  * @param eventId the event for this new action.
- * @param area the area of the condition to create.
- * @param bitmap the image for the condition to create.
  * @return the new condition.
  */
 fun newDefaultConditionProcess(context: Context, eventId: Long, processName: String = "") =
@@ -94,6 +92,22 @@ fun newDefaultConditionProcess(context: Context, eventId: Long, processName: Str
         name = context.resources.getString(R.string.default_condition_name),
         shouldBeDetected = true,
         processName = processName,
+    )
+
+/**
+ * Creates a new default timer condition.
+ * @param context the Android context.
+ * @param eventId the event for this new action.
+ * @return the new condition.
+ */
+fun newDefaultConditionTimer(context: Context, eventId: Long, defaultPeriod: Long = 0) =
+    Condition.Timer(
+        id = 0,
+        eventId = eventId,
+        priority = 0,
+        name = context.resources.getString(R.string.default_condition_name),
+        shouldBeDetected = true,
+        period = defaultPeriod,
     )
 
 /**

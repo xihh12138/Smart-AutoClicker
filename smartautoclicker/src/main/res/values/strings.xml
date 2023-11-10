@@ -85,6 +85,7 @@
 
     <string name="dialog_condition_type_capture">Capture</string>
     <string name="dialog_condition_type_process">Process</string>
+    <string name="dialog_condition_type_timer">Timer</string>
 
     <string name="dialog_action_config_click_press_duration_title">Press duration</string>
     <string name="dialog_action_config_click_position_title">Click position</string>
@@ -151,8 +152,9 @@
     <string name="dialog_condition_type_detect_area">Within the detection area</string>
     <string name="dialog_condition_threshold_title">Tolerated difference</string>
     <string name="dialog_condition_threshold_value">Tolerance: %1$d %%</string>
+    <string name="dialog_condition_period_tint">Trigger interval (ms)</string>
     <string name="dialog_condition_should_be_detected">Visible</string>
-    <string name="dialog_condition_should_not_be_detected">Not visible</string>
+    <string name="dialog_condition_should_not_be_detected">Triggered when the judgment condition is true</string>
     <string name="dialog_condition_error">The condition image can\'t be found.</string>
     <string name="dialog_condition_new_title">New Condition</string>
     <string name="dialog_condition_new_create">Create</string>

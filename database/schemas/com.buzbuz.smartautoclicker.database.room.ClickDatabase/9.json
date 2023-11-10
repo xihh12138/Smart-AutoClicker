@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 9,
-    "identityHash": "3a7c766e2027f297effc64da32673d98",
+    "identityHash": "311a51b1f0bab837c3f51d781e3fed33",
     "entities": [
       {
         "tableName": "action_table",
@@ -302,7 +302,7 @@
       },
       {
         "tableName": "condition_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `eventId` INTEGER NOT NULL, `priority` INTEGER NOT NULL DEFAULT 0, `name` TEXT NOT NULL, `type` TEXT NOT NULL DEFAULT 'CAPTURE', `shouldBeDetected` INTEGER NOT NULL, `path` TEXT, `area_left` INTEGER, `area_top` INTEGER, `area_right` INTEGER, `area_bottom` INTEGER, `detect_area_left` INTEGER DEFAULT 0, `detect_area_top` INTEGER DEFAULT 0, `detect_area_right` INTEGER DEFAULT 0, `detect_area_bottom` INTEGER DEFAULT 0, `threshold` INTEGER DEFAULT 1, `detection_type` INTEGER, `process_name` TEXT, FOREIGN KEY(`eventId`) REFERENCES `event_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `eventId` INTEGER NOT NULL, `priority` INTEGER NOT NULL DEFAULT 0, `name` TEXT NOT NULL, `type` TEXT NOT NULL DEFAULT 'CAPTURE', `shouldBeDetected` INTEGER NOT NULL, `path` TEXT, `area_left` INTEGER, `area_top` INTEGER, `area_right` INTEGER, `area_bottom` INTEGER, `detect_area_left` INTEGER DEFAULT 0, `detect_area_top` INTEGER DEFAULT 0, `detect_area_right` INTEGER DEFAULT 0, `detect_area_bottom` INTEGER DEFAULT 0, `threshold` INTEGER DEFAULT 1, `detection_type` INTEGER, `process_name` TEXT, `period` INTEGER, `exact_time` TEXT, FOREIGN KEY(`eventId`) REFERENCES `event_table`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -416,6 +416,18 @@
           {
             "fieldPath": "processName",
             "columnName": "process_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "period",
+            "columnName": "period",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "exactTime",
+            "columnName": "exact_time",
             "affinity": "TEXT",
             "notNull": false
           }
@@ -627,7 +639,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3a7c766e2027f297effc64da32673d98')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '311a51b1f0bab837c3f51d781e3fed33')"
     ]
   }
 }

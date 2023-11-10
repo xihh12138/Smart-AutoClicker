@@ -20,8 +20,10 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -34,6 +36,8 @@ import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.domain.EXACT
 import kotlinx.coroutines.Job
 import com.buzbuz.smartautoclicker.overlays.copy.conditions.ConditionCopyModel.ConditionCopyItem
+import java.text.DateFormat
+import java.util.Locale
 
 /**
  * Adapter displaying all conditions in a list.
@@ -97,7 +101,7 @@ object ConditionDiffUtilCallback : DiffUtil.ItemCallback<ConditionCopyItem>() {
             oldItem is ConditionCopyItem.HeaderItem && newItem is ConditionCopyItem.HeaderItem -> true
             oldItem is ConditionCopyItem.SubHeaderItem && newItem is ConditionCopyItem.SubHeaderItem -> true
             oldItem is ConditionCopyItem.ConditionItem && newItem is ConditionCopyItem.ConditionItem ->
-                oldItem.condition!!.id == newItem.condition!!.id
+                oldItem.condition.id == newItem.condition.id
 
             else -> false
         }
@@ -165,8 +169,14 @@ class ConditionViewHolder(
 
             when (condition) {
                 is Condition.Capture -> {
+                    conditionImage.isVisible = true
                     conditionGroupCapture.isVisible = true
                     conditionProcessName.isVisible = false
+                    conditionPeriod.isVisible = false
+                    conditionV1Separator.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                        endToStart = conditionDetectionType.id
+                        endToEnd = -1
+                    }
 
                     conditionThreshold.text = itemView.context.getString(
                         R.string.dialog_condition_copy_threshold,
@@ -175,26 +185,58 @@ class ConditionViewHolder(
                     conditionDetectionType.setImageResource(
                         if (condition.detectionType == EXACT) R.drawable.ic_detect_exact else R.drawable.ic_detect_whole_screen
                     )
+
+                    bitmapLoadingJob?.cancel()
+                    bitmapLoadingJob = bitmapProvider.invoke(condition) { bitmap ->
+                        if (bitmap != null) {
+                            conditionImage.setImageBitmap(bitmap)
+                        } else {
+                            conditionImage.setImageDrawable(
+                                ContextCompat.getDrawable(itemView.context, R.drawable.ic_cancel)?.apply {
+                                    setTint(Color.RED)
+                                }
+                            )
+                        }
+                    }
                 }
 
                 is Condition.Process -> {
+                    conditionImage.isVisible = true
                     conditionGroupCapture.isVisible = false
                     conditionProcessName.isVisible = true
+                    conditionPeriod.isVisible = false
+                    conditionV1Separator.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                        endToStart = conditionProcessName.id
+                        endToEnd = -1
+                    }
 
                     conditionProcessName.text = condition.processName
-                }
-            }
 
-            bitmapLoadingJob?.cancel()
-            bitmapLoadingJob = bitmapProvider.invoke(condition) { bitmap ->
-                if (bitmap != null) {
-                    conditionImage.setImageBitmap(bitmap)
-                } else {
-                    conditionImage.setImageDrawable(
-                        ContextCompat.getDrawable(itemView.context, R.drawable.ic_cancel)?.apply {
-                            setTint(Color.RED)
+                    bitmapLoadingJob?.cancel()
+                    bitmapLoadingJob = bitmapProvider.invoke(condition) { bitmap ->
+                        if (bitmap != null) {
+                            conditionImage.setImageBitmap(bitmap)
+                        } else {
+                            conditionImage.setImageDrawable(
+                                ContextCompat.getDrawable(itemView.context, R.drawable.ic_cancel)?.apply {
+                                    setTint(Color.RED)
+                                }
+                            )
                         }
-                    )
+                    }
+                }
+
+                is Condition.Timer -> {
+                    conditionImage.isVisible = false
+                    conditionGroupCapture.isVisible = false
+                    conditionProcessName.isVisible = false
+                    conditionPeriod.isVisible = true
+                    conditionV1Separator.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                        endToStart = -1
+                        endToEnd = 0
+                    }
+
+                    conditionPeriod.text = DateFormat.getTimeInstance().numberFormat.format(condition.period)
                 }
             }
         }

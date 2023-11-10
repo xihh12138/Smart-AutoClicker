@@ -104,7 +104,7 @@ sealed class Condition {
     }
 
     /**
-     * @param processName the package name of the process which should be detect as a foreground process
+     * @param processName The package name of the process which should be detect as a foreground process
      * */
     data class Process(
         override var id: Long,
@@ -126,7 +126,29 @@ sealed class Condition {
         override fun deepCopy(): Process = copy(
             processName = processName
         )
+    }
 
+    /**
+     * @param period Event interval for triggering conditions in milliseconds。
+     * */
+    data class Timer(
+        override var id: Long,
+        override var eventId: Long,
+        override var priority: Int,
+        override val name: String,
+        override val shouldBeDetected: Boolean,
+        val period: Long
+    ) : Condition() {
+        override fun toEntity(): ConditionEntity = ConditionEntity(
+            id = id,
+            eventId = eventId,
+            name = name,
+            type = ConditionType.TIMER,
+            shouldBeDetected = shouldBeDetected,
+            period = period
+        )
+
+        override fun deepCopy(): Condition =copy()
     }
 }
 
@@ -152,6 +174,15 @@ internal fun ConditionEntity.toCondition(): Condition = when (type) {
         name,
         shouldBeDetected,
         processName!!
+    )
+
+    ConditionType.TIMER -> Condition.Timer(
+        id,
+        eventId,
+        priority,
+        name,
+        shouldBeDetected,
+        period!!
     )
 }
 

@@ -25,6 +25,7 @@ import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.domain.Repository
 import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.capture.CaptureConfigModel
 import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.process.ProcessConfigModel
+import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.timer.TimerConfigModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -71,6 +72,9 @@ class ConditionConfigModel(context: Context) : OverlayViewModel(context) {
 
                 is Condition.Process ->
                     ProcessConfigModel(viewModelScope, configuredCondition as MutableStateFlow<Condition.Process?>)
+
+                is Condition.Timer ->
+                    TimerConfigModel(viewModelScope, configuredCondition as MutableStateFlow<Condition.Timer?>)
             }
         }
         .take(1)
@@ -109,6 +113,7 @@ class ConditionConfigModel(context: Context) : OverlayViewModel(context) {
             configuredCondition.value = when (condition) {
                 is Condition.Capture -> condition.copy(name = name)
                 is Condition.Process -> condition.copy(name = name)
+                is Condition.Timer -> condition.copy(name = name)
             }
         } ?: throw IllegalStateException("Can't set condition name, condition is null!")
     }
@@ -119,6 +124,7 @@ class ConditionConfigModel(context: Context) : OverlayViewModel(context) {
             configuredCondition.value = when (condition) {
                 is Condition.Capture -> condition.copy(shouldBeDetected = !condition.shouldBeDetected)
                 is Condition.Process -> condition.copy(shouldBeDetected = !condition.shouldBeDetected)
+                is Condition.Timer -> condition.copy(shouldBeDetected = !condition.shouldBeDetected)
             }
         } ?: throw IllegalStateException("Can't toggle condition should be detected, condition is null!")
     }
@@ -160,6 +166,8 @@ class ConditionConfigModel(context: Context) : OverlayViewModel(context) {
                     e.printStackTrace()
                 }
             }
+
+            is Condition.Timer -> return null
         }
 
         onBitmapLoaded(null)

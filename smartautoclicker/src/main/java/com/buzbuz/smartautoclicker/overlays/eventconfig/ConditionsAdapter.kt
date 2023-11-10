@@ -34,8 +34,10 @@ import com.buzbuz.smartautoclicker.databinding.ItemNewCopyCardBinding
 import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.domain.EXACT
 import com.buzbuz.smartautoclicker.extensions.setLeftCompoundDrawable
+import com.buzbuz.smartautoclicker.extensions.toFormatHmsString
 import com.buzbuz.smartautoclicker.overlays.utils.setIconTint
 import kotlinx.coroutines.Job
+import java.text.DateFormat
 import java.util.Collections
 
 /**
@@ -185,6 +187,9 @@ class ConditionViewHolder(
             is Condition.Capture -> {
                 viewBinding.conditionGroupCapture.isVisible = true
                 viewBinding.conditionProcessName.isVisible = false
+                viewBinding.imageCondition.isVisible = true
+                viewBinding.conditionBackground.isVisible = true
+                viewBinding.conditionPeriod.isVisible = false
 
                 if (condition.shouldBeDetected) {
                     viewBinding.conditionShouldBeDetected.apply {
@@ -202,11 +207,27 @@ class ConditionViewHolder(
                     if (condition.detectionType == EXACT) R.drawable.ic_detect_exact else R.drawable.ic_detect_whole_screen
                 )
                 viewBinding.conditionDetectionType.setIconTint(R.color.overlayMenuButtons)
+
+                bitmapLoadingJob?.cancel()
+                bitmapLoadingJob = bitmapProvider.invoke(condition) { bitmap ->
+                    if (bitmap != null) {
+                        viewBinding.imageCondition.setImageBitmap(bitmap)
+                    } else {
+                        viewBinding.imageCondition.setImageDrawable(
+                            ContextCompat.getDrawable(itemView.context, R.drawable.ic_cancel)?.apply {
+                                setTint(Color.RED)
+                            }
+                        )
+                    }
+                }
             }
 
             is Condition.Process -> {
                 viewBinding.conditionGroupCapture.isVisible = false
                 viewBinding.conditionProcessName.isVisible = true
+                viewBinding.imageCondition.isVisible = true
+                viewBinding.conditionBackground.isVisible = true
+                viewBinding.conditionPeriod.isVisible = false
 
                 viewBinding.conditionProcessName.text = condition.processName
 
@@ -221,19 +242,29 @@ class ConditionViewHolder(
                         ContextCompat.getColor(viewBinding.conditionProcessName.context, R.color.overlayMenuButtons)
                     )
                 }
-            }
-        }
 
-        bitmapLoadingJob?.cancel()
-        bitmapLoadingJob = bitmapProvider.invoke(condition) { bitmap ->
-            if (bitmap != null) {
-                viewBinding.imageCondition.setImageBitmap(bitmap)
-            } else {
-                viewBinding.imageCondition.setImageDrawable(
-                    ContextCompat.getDrawable(itemView.context, R.drawable.ic_cancel)?.apply {
-                        setTint(Color.RED)
+                bitmapLoadingJob?.cancel()
+                bitmapLoadingJob = bitmapProvider.invoke(condition) { bitmap ->
+                    if (bitmap != null) {
+                        viewBinding.imageCondition.setImageBitmap(bitmap)
+                    } else {
+                        viewBinding.imageCondition.setImageDrawable(
+                            ContextCompat.getDrawable(itemView.context, R.drawable.ic_cancel)?.apply {
+                                setTint(Color.RED)
+                            }
+                        )
                     }
-                )
+                }
+            }
+
+            is Condition.Timer -> {
+                viewBinding.conditionGroupCapture.isVisible = false
+                viewBinding.conditionProcessName.isVisible = false
+                viewBinding.imageCondition.isVisible = false
+                viewBinding.conditionBackground.isVisible = false
+                viewBinding.conditionPeriod.isVisible = true
+
+                viewBinding.conditionPeriod.text = condition.period.toFormatHmsString()
             }
         }
     }

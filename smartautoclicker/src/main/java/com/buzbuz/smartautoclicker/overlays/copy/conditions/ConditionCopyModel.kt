@@ -127,6 +127,8 @@ class ConditionCopyModel(context: Context) : OverlayViewModel(context) {
         )
 
         is Condition.Process -> condition.copy(id = 0, name = "" + condition.name)
+
+        is Condition.Timer -> condition.copy(id = 0, name = "" + condition.name)
     }
 
     /**
@@ -166,6 +168,8 @@ class ConditionCopyModel(context: Context) : OverlayViewModel(context) {
                     e.printStackTrace()
                 }
             }
+
+            is Condition.Timer -> return null
         }
 
         onBitmapLoaded(null)

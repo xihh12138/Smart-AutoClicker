@@ -21,6 +21,7 @@ import android.media.Image
 import com.buzbuz.smartautoclicker.detection.AccessibilityEventDetector
 import com.buzbuz.smartautoclicker.detection.DetectionResult
 import com.buzbuz.smartautoclicker.detection.ImageDetector
+import com.buzbuz.smartautoclicker.detection.TimerDetector
 import com.buzbuz.smartautoclicker.domain.AND
 import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.domain.ConditionOperator
@@ -49,6 +50,7 @@ import kotlinx.coroutines.yield
 internal class ScenarioProcessor(
     private val imageDetector: ImageDetector,
     private val accessibilityEventDetector: AccessibilityEventDetector,
+    private val timerDetector: TimerDetector,
     private val detectionQuality: Int,
     private val events: List<Event>,
     private val bitmapSupplier: (String, bitmapWidth: Int, bitmapHeight: Int) -> Bitmap?,
@@ -216,6 +218,10 @@ internal class ScenarioProcessor(
         is Condition.Process -> {
             detect(condition)
         }
+
+        is Condition.Timer -> {
+            detect(condition)
+        }
     }
 
     /**
@@ -246,6 +252,16 @@ internal class ScenarioProcessor(
     private fun detect(condition: Condition.Process): DetectionResult.Event =
         accessibilityEventDetector.detectCondition(condition.processName)
 
+    /**
+     * Detect the condition of current process.
+     *
+     * @param condition the condition to be detected.
+     *
+     * @return the result of the detection.
+     */
+    private fun detect(condition: Condition.Timer): DetectionResult.Timer =
+        timerDetector.detectCondition(condition.id, condition.period)
+
     fun newProcessor(
         detectionQuality: Int,
         events: List<Event>,
@@ -257,6 +273,7 @@ internal class ScenarioProcessor(
     ): ScenarioProcessor = ScenarioProcessor(
         imageDetector,
         accessibilityEventDetector,
+        timerDetector,
         detectionQuality,
         events,
         bitmapSupplier,

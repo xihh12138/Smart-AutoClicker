@@ -27,6 +27,8 @@ import com.buzbuz.smartautoclicker.baseui.ScreenMetrics
 import com.buzbuz.smartautoclicker.detection.AccessibilityEventDetector
 import com.buzbuz.smartautoclicker.detection.ImageDetector
 import com.buzbuz.smartautoclicker.detection.NativeDetector
+import com.buzbuz.smartautoclicker.detection.TimerDetector
+import com.buzbuz.smartautoclicker.detection.TimerDetectorImpl
 import com.buzbuz.smartautoclicker.domain.EndCondition
 import com.buzbuz.smartautoclicker.domain.Event
 import com.buzbuz.smartautoclicker.domain.Repository
@@ -102,6 +104,9 @@ class DetectorEngine(context: Context) {
 
     /** Detect the condition images on the screen image. */
     private var imageDetector: ImageDetector? = null
+
+    /** Detect the condition time. */
+    private var timerDetector: TimerDetector? = null
 
     /** The executor for the actions requiring an interaction with Android. */
     private var androidExecutor: AndroidExecutor? = null
@@ -218,7 +223,7 @@ class DetectorEngine(context: Context) {
     /**
      * Capture the provided area on the next [Image] of the screen.
      *
-     * After calling this method, the next [Image] processed by the [processScreenImages] will be cropped to the provided area
+     * After calling this method, the next [Image] processed by the [process] will be cropped to the provided area
      * and a bitmap will be generated from it, then notified through the provided callback.
      * [state] should be RECORDING to capture. Calling [stopScreenRecord] will drop any capture info provided here.
      *
@@ -274,6 +279,7 @@ class DetectorEngine(context: Context) {
 
         processingJob = processingScope?.launch {
             imageDetector = NativeDetector()
+            timerDetector = TimerDetectorImpl()
 
             val shouldDebug = debugInstantData || debugReport
             _debugEngine.value =
@@ -284,6 +290,7 @@ class DetectorEngine(context: Context) {
             scenarioProcessor = ScenarioProcessor(
                 imageDetector = imageDetector!!,
                 accessibilityEventDetector = AccessibilityEventDetector.INSTANCE!!,
+                timerDetector = timerDetector!!,
                 detectionQuality = scenarioEndConditions.value!!.first.detectionQuality,
                 events = scenarioEvents.value,
                 bitmapSupplier = { path, width, height ->
@@ -299,7 +306,7 @@ class DetectorEngine(context: Context) {
                 debugEngine = _debugEngine.value,
             )
 
-            processScreenImages()
+            process()
         }
     }
 
@@ -323,7 +330,7 @@ class DetectorEngine(context: Context) {
 
             if (_state.value == DetectorState.DETECTING) {
                 processingJob = processingScope?.launch {
-                    processScreenImages()
+                    process()
                 }
             }
         }
@@ -362,7 +369,7 @@ class DetectorEngine(context: Context) {
 
         // ---------- At last,launch the ScreenImagesProcessing job ----------
         processingJob = processingScope?.launch {
-            processScreenImages()
+            process()
         }
     }
 
@@ -387,6 +394,7 @@ class DetectorEngine(context: Context) {
             processingJob = null
             imageDetector?.close()
             imageDetector = null
+            timerDetector = null
             scenarioProcessor = null
             _debugEngine.value?.onSessionEnded()
 
@@ -428,7 +436,7 @@ class DetectorEngine(context: Context) {
     }
 
     /** Process the latest images provided by the [ScreenRecorder]. */
-    private suspend fun processScreenImages() {
+    private suspend fun process() {
         _state.emit(DetectorState.DETECTING)
 
         scenarioProcessor?.invalidateScreenMetrics()

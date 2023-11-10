@@ -53,43 +53,36 @@ object Migration8to9 : Migration(8, 9) {
         }
     }
 
-    /** Create the table for the end conditions. */
     private val addConditionPriorityColumn = """
         ALTER TABLE `condition_table`
         ADD COLUMN `priority` INTEGER DEFAULT 0 NOT NULL
     """.trimIndent()
 
-    /** Create the table for the end conditions. */
     private val addConditionDetectAreaLeftColumn = """
         ALTER TABLE `condition_table`
         ADD COLUMN `detect_area_left` INTEGER
     """.trimIndent()
 
-    /** Create the table for the end conditions. */
     private val addConditionDetectAreaTopColumn = """
         ALTER TABLE `condition_table`
         ADD COLUMN `detect_area_top` INTEGER
     """.trimIndent()
 
-    /** Create the table for the end conditions. */
     private val addConditionDetectAreaRightColumn = """
         ALTER TABLE `condition_table`
         ADD COLUMN `detect_area_right` INTEGER
     """.trimIndent()
 
-    /** Create the table for the end conditions. */
     private val addConditionDetectAreaBottomColumn = """
         ALTER TABLE `condition_table`
         ADD COLUMN `detect_area_bottom` INTEGER
     """.trimIndent()
 
-    /** Create the table for the end conditions. */
     private val renameConditionTableToOld = """
         ALTER TABLE `condition_table`
         RENAME TO `condition_table_old`
     """.trimIndent()
 
-    /** Create the table for the end conditions. */
     private val createConditionTableNew = """
         CREATE TABLE IF NOT EXISTS `condition_table` (
         `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,

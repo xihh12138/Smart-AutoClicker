@@ -38,7 +38,11 @@ sealed class DetectionResult {
 
     data class Event(
         override var isDetected: Boolean = false
-    ) : DetectionResult() {
+    ) : DetectionResult()
 
-    }
+    data class Timer(
+        override var isDetected: Boolean = false,
+        val elapsedTime: Long,
+        val triggerTimes: Int
+    ) : DetectionResult()
 }

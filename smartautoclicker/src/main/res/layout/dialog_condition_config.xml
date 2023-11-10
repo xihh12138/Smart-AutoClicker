@@ -167,8 +167,19 @@
                         android:paddingHorizontal="@dimen/margin_horizontal_small"
                         android:src="@drawable/ic_chevron" />
 
-
                 </LinearLayout>
+
+                <EditText
+                    android:id="@+id/et_condition_period"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/item_height"
+                    android:layout_marginStart="@dimen/margin_horizontal_small"
+                    android:layout_marginEnd="@dimen/margin_horizontal_small"
+                    android:inputType="number"
+                    android:visibility="gone"
+                    tools:visibility="visible"
+                    android:importantForAutofill="no"
+                    android:hint="@string/dialog_condition_period_tint" />
 
             </LinearLayout>
 

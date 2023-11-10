@@ -236,6 +236,22 @@ class EventConfigModel(context: Context) : OverlayViewModel(context) {
      * @param area the area of the condition to create.
      * @param bitmap the image for the condition to create.
      */
+    fun createCaptureCondition(context: Context, area: Rect, bitmap: Bitmap): Condition {
+        configuredEvent.value?.let { event ->
+            return newDefaultConditionCapture(
+                context = context,
+                eventId = event.id,
+                bitmap = bitmap,
+                area = area,
+            )
+        } ?: throw IllegalStateException("Can't create a condition, event is null!")
+    }
+
+    /**
+     * Create a new condition with the default values from configuration.
+     *
+     * @param context the Android Context.
+     */
     fun createProcessCondition(context: Context): Condition {
         configuredEvent.value?.let { event ->
             return newDefaultConditionProcess(context, event.id)
@@ -246,17 +262,10 @@ class EventConfigModel(context: Context) : OverlayViewModel(context) {
      * Create a new condition with the default values from configuration.
      *
      * @param context the Android Context.
-     * @param area the area of the condition to create.
-     * @param bitmap the image for the condition to create.
      */
-    fun createCaptureCondition(context: Context, area: Rect, bitmap: Bitmap): Condition {
+    fun createTimerCondition(context: Context): Condition {
         configuredEvent.value?.let { event ->
-            return newDefaultConditionCapture(
-                context = context,
-                eventId = event.id,
-                bitmap = bitmap,
-                area = area,
-            )
+            return newDefaultConditionTimer(context, event.id)
         } ?: throw IllegalStateException("Can't create a condition, event is null!")
     }
 
@@ -361,6 +370,8 @@ class EventConfigModel(context: Context) : OverlayViewModel(context) {
                     e.printStackTrace()
                 }
             }
+
+            is Condition.Timer -> return null
         }
 
         onBitmapLoaded(null)
@@ -410,4 +421,7 @@ sealed class ConditionTypeChoice(title: Int, iconId: Int?) : DialogChoice(title,
 
     /** Process Condition choice. */
     object Process : ConditionTypeChoice(R.string.dialog_condition_type_process, R.drawable.ic_intent)
+
+    /** Timer Condition choice. */
+    object Timer : ConditionTypeChoice(R.string.dialog_condition_type_timer, R.drawable.ic_wait)
 }

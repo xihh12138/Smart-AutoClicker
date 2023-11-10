@@ -285,4 +285,4 @@ private class MaxInputFilter : InputFilter {
 }
 
 /** Maximum number of executions. */
-private const val EXECUTIONS_MAX_COUNT = 99
+private const val EXECUTIONS_MAX_COUNT = 10000
