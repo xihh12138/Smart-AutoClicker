@@ -263,6 +263,7 @@ internal class ScenarioProcessor(
         timerDetector.detectCondition(condition.id, condition.period)
 
     fun newProcessor(
+        timerDetector: TimerDetector,
         detectionQuality: Int,
         events: List<Event>,
         @ConditionOperator endConditionOperator: Int,

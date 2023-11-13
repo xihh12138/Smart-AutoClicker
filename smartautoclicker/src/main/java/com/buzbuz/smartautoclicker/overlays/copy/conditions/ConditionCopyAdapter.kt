@@ -34,6 +34,7 @@ import com.buzbuz.smartautoclicker.databinding.ItemCopyHeaderBinding
 import com.buzbuz.smartautoclicker.databinding.ItemCopySubHeaderBinding
 import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.domain.EXACT
+import com.buzbuz.smartautoclicker.extensions.toFormatHmsString
 import kotlinx.coroutines.Job
 import com.buzbuz.smartautoclicker.overlays.copy.conditions.ConditionCopyModel.ConditionCopyItem
 import java.text.DateFormat
@@ -173,9 +174,9 @@ class ConditionViewHolder(
                     conditionGroupCapture.isVisible = true
                     conditionProcessName.isVisible = false
                     conditionPeriod.isVisible = false
+                    conditionV1Separator.isVisible = true
                     conditionV1Separator.updateLayoutParams<ConstraintLayout.LayoutParams> {
                         endToStart = conditionDetectionType.id
-                        endToEnd = -1
                     }
 
                     conditionThreshold.text = itemView.context.getString(
@@ -205,9 +206,9 @@ class ConditionViewHolder(
                     conditionGroupCapture.isVisible = false
                     conditionProcessName.isVisible = true
                     conditionPeriod.isVisible = false
+                    conditionV1Separator.isVisible = true
                     conditionV1Separator.updateLayoutParams<ConstraintLayout.LayoutParams> {
                         endToStart = conditionProcessName.id
-                        endToEnd = -1
                     }
 
                     conditionProcessName.text = condition.processName
@@ -231,12 +232,9 @@ class ConditionViewHolder(
                     conditionGroupCapture.isVisible = false
                     conditionProcessName.isVisible = false
                     conditionPeriod.isVisible = true
-                    conditionV1Separator.updateLayoutParams<ConstraintLayout.LayoutParams> {
-                        endToStart = -1
-                        endToEnd = 0
-                    }
+                    conditionV1Separator.isVisible = false
 
-                    conditionPeriod.text = DateFormat.getTimeInstance().numberFormat.format(condition.period)
+                    conditionPeriod.text = condition.period.toFormatHmsString()
                 }
             }
         }

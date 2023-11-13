@@ -148,7 +148,7 @@ sealed class Condition {
             period = period
         )
 
-        override fun deepCopy(): Condition =copy()
+        override fun deepCopy(): Condition = copy()
     }
 }
 

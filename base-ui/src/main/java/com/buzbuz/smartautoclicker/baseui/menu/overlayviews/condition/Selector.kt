@@ -348,10 +348,10 @@ internal class Selector(
 }
 
 /** The ratio of the maximum width to be considered as the minimum width. */
-private const val SELECTOR_MINIMUM_WIDTH_RATIO = 0.10f
+private const val SELECTOR_MINIMUM_WIDTH_RATIO = 0.025f
 
 /** The ratio of the maximum height to be considered as the minimum height. */
-private const val SELECTOR_MINIMUM_HEIGHT_RATIO = 0.05f
+private const val SELECTOR_MINIMUM_HEIGHT_RATIO = 0.0125f
 
 /** Ratio between the handle and the inner handle */
 private const val INNER_HANDLE_RATIO = 3f

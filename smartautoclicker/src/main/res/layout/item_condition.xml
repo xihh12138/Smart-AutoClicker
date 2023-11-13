@@ -46,34 +46,41 @@
         <View
             android:id="@+id/condition_h1_separator"
             style="@style/Separator"
-            app:layout_constraintBottom_toTopOf="@id/condition_image"
+            app:layout_constraintBottom_toTopOf="@id/layout_condition_container"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/condition_name" />
 
-        <ImageView
-            android:id="@+id/condition_image"
-            android:layout_width="@dimen/dialog_item_condition_copy_condition_height"
-            android:layout_height="@dimen/dialog_item_condition_copy_condition_height"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginVertical="@dimen/margin_vertical_default"
-            android:contentDescription="@string/content_desc_image_condition"
-            android:scaleType="fitCenter"
+        <FrameLayout
+            android:id="@+id/layout_condition_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             app:layout_constraintBottom_toTopOf="@id/condition_h2_separator"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/condition_h1_separator"
-            tools:src="@drawable/ic_click" />
+            app:layout_constraintTop_toBottomOf="@id/condition_h1_separator">
 
-        <TextView
-            android:id="@+id/condition_period"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginVertical="@dimen/margin_vertical_default"
-            android:gravity="center"
-            android:textSize="@dimen/text_size_large"
-            app:layout_constraintBottom_toTopOf="@id/condition_h2_separator"
-            app:layout_constraintTop_toBottomOf="@id/condition_h1_separator" />
+            <ImageView
+                android:id="@+id/condition_image"
+                android:layout_width="@dimen/dialog_item_condition_copy_condition_height"
+                android:layout_height="@dimen/dialog_item_condition_copy_condition_height"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginVertical="@dimen/margin_vertical_default"
+                android:contentDescription="@string/content_desc_image_condition"
+                android:scaleType="fitCenter"
+                tools:src="@drawable/ic_click" />
+
+            <TextView
+                android:id="@+id/condition_period"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginVertical="@dimen/margin_vertical_default"
+                android:gravity="center"
+                android:textSize="@dimen/text_size_large"
+                android:visibility="gone" />
+
+        </FrameLayout>
 
         <View
             android:id="@+id/condition_h2_separator"
@@ -81,7 +88,7 @@
             app:layout_constraintBottom_toTopOf="@id/condition_should_be_detected"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/condition_image" />
+            app:layout_constraintTop_toBottomOf="@id/layout_condition_container" />
 
         <ImageView
             android:id="@+id/condition_should_be_detected"

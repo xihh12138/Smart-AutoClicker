@@ -17,12 +17,13 @@ class TimerDetectorImpl : TimerDetector {
         val currentTimeMills = System.currentTimeMillis()
 
         val elapsedTime = currentTimeMills - startTimeMills
+
         return if (record * period + period > elapsedTime) {
+            DetectionResult.Timer(false, elapsedTime, record)
+        } else {
             conditionRecorder[conditionId] = record + 1
 
             DetectionResult.Timer(true, elapsedTime, record + 1)
-        } else {
-            DetectionResult.Timer(false, elapsedTime, record)
         }
     }
 }

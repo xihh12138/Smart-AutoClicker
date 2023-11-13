@@ -185,6 +185,6 @@ abstract class ConditionModel {
 }
 
 /** The maximum threshold value selectable by the user. */
-const val MAX_THRESHOLD = 20
+const val MAX_THRESHOLD = 30
 
 data class DetectionTypeAndValue(val type: Int, val area: Rect)

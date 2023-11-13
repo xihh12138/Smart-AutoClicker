@@ -45,7 +45,7 @@ fun DialogConditionConfigBinding.setupCaptureUi(
                     } else {
                         etConditionPeriod.setText(period.toString())
                     }
-                    etConditionPeriod.setSelection(etConditionPeriod.selectionEnd)
+                    etConditionPeriod.setSelection(etConditionPeriod.text.length)
                 }
             }
         }

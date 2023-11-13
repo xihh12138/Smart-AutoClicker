@@ -358,6 +358,7 @@ class DetectorEngine(context: Context) {
             _debugEngine.emit(DebugEngine(it.instantData, it.generateReport, scenario, scenarioEvents))
         }
         scenarioProcessor = scenarioProcessor?.newProcessor(
+            timerDetector = TimerDetectorImpl(),
             detectionQuality = scenarioEndConditions.first.detectionQuality,
             events = scenarioEvents,
             androidExecutor = androidExecutor!!,
