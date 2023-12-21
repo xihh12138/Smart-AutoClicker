@@ -114,6 +114,7 @@ internal class ScenarioProcessor(
             // If conditions are fulfilled, execute this event's actions !
             if (result.eventMatched) {
                 event.actions?.let { actions ->
+                    println("ScenarioProcessor: executeActions actions=$actions")
                     actionExecutor.executeActions(actions, result.detectionResult?.asImage()?.position)
                 }
 
@@ -150,6 +151,7 @@ internal class ScenarioProcessor(
             // Verify if the condition is fulfilled.
             debugEngine?.onConditionProcessingStarted(condition)
             val result = checkCondition(condition)
+            println("ScenarioProcessor: verifyConditions result=$result")
             debugEngine?.onConditionProcessingCompleted(result)
 
             if (result.isDetected xor condition.shouldBeDetected) {

@@ -341,22 +341,31 @@ class DetectorEngine(context: Context) {
      * this method will also update [_debugEngine] and [scenarioProcessor], because they are related to scenario
      **/
     fun updateScenario(scenario: Scenario) = processingScope?.launch {
+        Log.d(TAG, "updateScenario: emit")
         _scenario.emit(scenario)
 
-        // ---------- if oldState is DetectorState.RECORDING,we needn't do anything ----------
+        // ---------- if oldState isn't DetectorState.RECORDING,we needn't do anything ----------
         if (_state.value != DetectorState.DETECTING) return@launch
 
+        Log.d(TAG, "updateScenario: cancel processingJob")
         processingJob?.cancelAndJoin()
 
+        Log.d(TAG, "updateScenario: update state to DetectorState.TRANSITIONING")
         _state.value = DetectorState.TRANSITIONING
 
+        Log.d(TAG, "updateScenario: get scenarioEvents")
         val scenarioEvents = withTimeoutOrNull(3_000) { scenarioEvents.take(2).lastOrNull() } ?: scenarioEvents.value
-        val scenarioEndConditions = scenarioEndConditions.value!!
+        Log.d(TAG, "updateScenario: get scenarioEndConditions")
+        val scenarioEndConditions =
+            withTimeoutOrNull(3_000) { scenarioEndConditions.take(2).lastOrNull() } ?: scenarioEndConditions.value!!
 
         _debugEngine.value?.let {
+            Log.d(TAG, "updateScenario: update DebugEngine")
             it.cancelCurrentProcessing()
             _debugEngine.emit(DebugEngine(it.instantData, it.generateReport, scenario, scenarioEvents))
         }
+        
+        Log.d(TAG, "updateScenario: create new scenarioProcessor")
         scenarioProcessor = scenarioProcessor?.newProcessor(
             timerDetector = TimerDetectorImpl(),
             detectionQuality = scenarioEndConditions.first.detectionQuality,
@@ -368,6 +377,10 @@ class DetectorEngine(context: Context) {
             debugEngine = _debugEngine.value,
         )
 
+        Log.d(TAG, "updateScenario: process")
+        Log.d(TAG, "updateScenario: process scenario=${scenarioEndConditions.first}")
+        Log.d(TAG, "updateScenario: process scenarioEvents=${scenarioEvents.joinToString()}")
+        Log.d(TAG, "updateScenario: process scenarioEndConditions=${scenarioEndConditions.second.joinToString()}")
         // ---------- At last,launch the ScreenImagesProcessing job ----------
         processingJob = processingScope?.launch {
             process()

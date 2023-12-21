@@ -5,9 +5,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import com.buzbuz.smartautoclicker.baseui.OverlayController
 import com.buzbuz.smartautoclicker.databinding.DialogConditionConfigBinding
-import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.overlays.utils.OnAfterTextChangedListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -26,12 +24,7 @@ fun DialogConditionConfigBinding.setupCaptureUi(
         setSelectAllOnFocus(true)
         addTextChangedListener(object : OnAfterTextChangedListener() {
             override fun afterTextChanged(s: Editable?) {
-                val period = try {
-                    etConditionPeriod.text.toString().toLong()
-                } catch (nfe: java.lang.NumberFormatException) {
-                    0
-                }
-                viewModel.setPeriod(period)
+                viewModel.setPeriod(s?.toString()?.toLongOrNull() ?: 0)
             }
         })
     }
@@ -40,11 +33,7 @@ fun DialogConditionConfigBinding.setupCaptureUi(
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             launch {
                 viewModel.period.collect { period ->
-                    if (period == 0L) {
-                        etConditionPeriod.setText("")
-                    } else {
-                        etConditionPeriod.setText(period.toString())
-                    }
+                    etConditionPeriod.setText(period.toString())
                     etConditionPeriod.setSelection(etConditionPeriod.text.length)
                 }
             }

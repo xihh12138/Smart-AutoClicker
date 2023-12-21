@@ -1,5 +1,6 @@
 package com.buzbuz.smartautoclicker.overlays.eventconfig.condition.process
 
+import com.buzbuz.smartautoclicker.detection.AccessibilityEventDetector
 import com.buzbuz.smartautoclicker.domain.Condition
 import com.buzbuz.smartautoclicker.overlays.eventconfig.condition.ConditionModel
 import kotlinx.coroutines.CoroutineScope
@@ -17,13 +18,13 @@ class ProcessConfigModel(
         condition != null && condition.name.isNotEmpty() && condition.processName.isNotEmpty()
     }
 
-    val processName = configuredCondition.mapNotNull { it?.processName }
+    val processName = configuredCondition.mapNotNull {
+        it?.processName?.ifBlank { AccessibilityEventDetector.INSTANCE?.getCurrentWindowProcessName() }
+    }
 
     fun setProcessName(componentName: String) {
         configuredCondition.value?.let { condition ->
-            configuredCondition.value = condition.copy(
-                processName = componentName,
-            )
+            configuredCondition.value = condition.copy(processName = componentName)
         }
     }
 }

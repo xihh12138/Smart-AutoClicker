@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.take
 
 class TimerConfigModel(
     private val viewModelScope: CoroutineScope,
@@ -17,11 +18,11 @@ class TimerConfigModel(
         condition != null && condition.name.isNotEmpty() && condition.period != 0L
     }
 
-    val period = configuredCondition.mapNotNull { it?.period }
+    val period = configuredCondition.mapNotNull { it?.period }.take(1)
 
-    fun setPeriod(period: Long) {
+    fun setPeriod(period: Long?) {
         configuredCondition.value?.let { condition ->
-            configuredCondition.value = condition.copy(period = period)
+            configuredCondition.value = condition.copy(period = period ?: 0)
         }
     }
 }

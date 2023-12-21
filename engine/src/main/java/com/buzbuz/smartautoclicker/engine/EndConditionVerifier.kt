@@ -59,7 +59,10 @@ internal class EndConditionVerifier(
 
         // Increment the execution count and verify if this event end condition is fulfilled. If not, return false.
         triggeredEventInfo.executionCount++
+
+        println("EndConditionVerifier: executionCount(${triggeredEventInfo.executionCount}/${triggeredEventInfo.maxExecutionCount}) event=$event")
         if (!triggeredEventInfo.conditionIsFulfilled()) return false
+        println("EndConditionVerifier: conditionIsFulfilled endCondition=$endCondition")
 
         // If the operator is OR, we only need one condition fulfilled, notify end and return true.
         if (conditionOperator == OR) {

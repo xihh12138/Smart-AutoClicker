@@ -1,7 +1,6 @@
 package com.buzbuz.smartautoclicker.detection
 
 import android.accessibilityservice.AccessibilityService
-import android.app.ActivityManager
 import android.content.Intent
 import android.view.accessibility.AccessibilityEvent
 
@@ -39,6 +38,8 @@ abstract class AccessibilityEventDetector : AccessibilityService() {
             ) else currentPackageName.contains(processName)
         )
     }
+
+    fun getCurrentWindowProcessName() = rootInActiveWindow?.packageName as? String
 
     override fun onServiceConnected() {
         super.onServiceConnected()

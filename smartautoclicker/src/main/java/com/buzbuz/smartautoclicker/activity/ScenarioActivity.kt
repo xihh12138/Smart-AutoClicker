@@ -18,23 +18,13 @@ package com.buzbuz.smartautoclicker.activity
 
 import android.content.Intent
 import android.os.Bundle
-
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.viewModelScope
-
 import com.buzbuz.smartautoclicker.R
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.dropWhile
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.lastOrNull
-import kotlinx.coroutines.flow.onSubscription
-import kotlinx.coroutines.flow.takeWhile
-import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
+
 
 /**
  * Entry point activity for the application.

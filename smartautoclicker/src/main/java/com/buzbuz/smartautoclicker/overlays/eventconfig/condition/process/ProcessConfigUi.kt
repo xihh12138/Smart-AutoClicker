@@ -1,7 +1,6 @@
 package com.buzbuz.smartautoclicker.overlays.eventconfig.condition.process
 
 import androidx.core.view.isVisible
-import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
